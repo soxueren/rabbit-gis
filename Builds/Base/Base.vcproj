@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Include\Base\RColor.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Include\Base\RDataSource.h"
 				>
 			</File>
