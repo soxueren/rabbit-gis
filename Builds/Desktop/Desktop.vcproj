@@ -57,7 +57,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="qtmain.lib QtCore4.lib QtGui4.lib agg.lib gdal_i.lib"
-				OutputFile="..\Bin\Rabbit-Viewer.exe"
+				OutputFile="..\Bin\RViewer.exe"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;&quot;..\..\..\gdal-1.9.0\libs\bin&quot;;&quot;..\..\..\agg\agg-2.5\agg\bin&quot;"
 				GenerateDebugInformation="false"
 				SubSystem="2"
@@ -126,7 +126,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="qtmaind.lib QtCored4.lib QtGuid4.lib agg.lib gdal_i.lib"
-				OutputFile="..\BinD\Rabbit-Viewer.exe"
+				OutputFile="..\BinD\RViewer.exe"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;&quot;..\..\..\gdal-1.9.0\libs\bind&quot;;&quot;..\..\..\agg\agg-2.5\agg\bind&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
