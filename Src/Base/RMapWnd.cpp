@@ -32,6 +32,20 @@
 #include "Base/RLog.h"
 #include <process.h>
 
+#include "Base/RColor.h"
+
+// 产生随机颜色
+int GetRandColor(void )
+{
+ 	int iCount=0;
+ 	while (iColors[iCount]!=-1)
+ 	{
+ 		iCount++;
+ 	}
+
+ 	int i = rand()%(iCount+1); //产生[0～iCount]之间的随机数
+	return iColors[i];
+}
 //////////////////////////////////////////////////////////////////////////
 
 RLayer::RLayer() 
@@ -302,6 +316,7 @@ void RLayer::Draw(OGRLayer* pLayer, int iWidth, int iHeight, unsigned char *& pB
 		clock_t t1=clock();
 		pLayer->ResetReading();
 		RStyle layStyle;
+		layStyle.m_iColor=GetRandColor();
 
 		/*map<string, string>::const_iterator iterstyle = m_layStyles.find("color");
 		if(iterstyle != m_layStyles.end()){
