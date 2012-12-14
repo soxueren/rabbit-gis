@@ -140,15 +140,13 @@ void Rabbit::createActions()
 	m_act_dsMgr = new QAction(tr("DataSource"), this);
 	connect(m_act_dsMgr, SIGNAL(triggered()), this, SLOT(actionDSDialog()));
 	
-
-
 	m_actOpen = new QAction(QIcon("images/fileopen.png"), tr("&Open File"), this);
-	m_actOpen->setShortcuts(QKeySequence::Open);
+	m_actOpen->setShortcut(QKeySequence::Open);
 	//m_actOpen->setStatusTip(tr("Open an existing file"));
 	connect(m_actOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
 
 	m_actClose = new QAction(QString("&Close File"), this);
-	m_actOpen->setShortcuts(QKeySequence::Close);
+	m_actClose->setShortcuts(QKeySequence::Close);
 	connect(m_actClose, SIGNAL(triggered()), this, SLOT(actionClose()));
 
 	m_act_exit = new QAction(QIcon("images/button-close.png"), tr("&Exit"), this);
@@ -192,6 +190,7 @@ void Rabbit::createActions()
 	connect(m_actAdd2CurrMap, SIGNAL(triggered()), this, SLOT(actionAdd2CurrMap()));
 	
 	m_actCloseOne = new QAction(tr("Close"), this);
+	m_actCloseOne->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_W));
 	connect(m_actCloseOne, SIGNAL(triggered()), m_pMdiArea, SLOT(closeActiveSubWindow()));
 
 	m_actCloseAll = new QAction(tr("Close All"), this);
