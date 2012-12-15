@@ -15,7 +15,7 @@
 
 #define MMPERPIXEL 3 // 1mm¶àÉÙ¸öÏñËØ, Éè±¸ÎÞ¹ØµÄÏÔÊ¾²ÎÊý£¬ÒÔºóÒª¿ª·Åµ½ÅäÖÃÎÄ¼þ
 
-RDrawParms::RDrawParms() : m_bcancel(false),
+RDrawParameters::RDrawParameters() : m_bcancel(false),
 m_ileft(0), m_itop(0), m_iright(0), m_ibottom(0),
 m_dleft(0), m_dtop(0), m_dright(0), m_dbottom(0),
 m_dviewleft(0), m_dviewtop(0), m_dviewright(0), m_dviewbottom(0),
@@ -24,7 +24,7 @@ m_dRatioCustom(0)
 {
 
 }
-RDrawParms::~RDrawParms()
+RDrawParameters::~RDrawParameters()
 {
 
 }
@@ -33,7 +33,7 @@ RDrawParms::~RDrawParms()
 /************************************************************************/
 /*  ´°¿Ú·´ÏòÒÆ¶¯                                                                     */
 /************************************************************************/
-void RDrawParms::Pan(int offsetx, int offsety)
+void RDrawParameters::Pan(int offsetx, int offsety)
 {
 	double dx=(double)offsetx / m_dRatio; // 
 	double dy = (double)offsety / m_dRatio;
@@ -49,7 +49,7 @@ void RDrawParms::Pan(int offsetx, int offsety)
 #endif
 	}
 
-void RDrawParms::Zoom(int ix, int iy, double dscale)
+void RDrawParameters::Zoom(int ix, int iy, double dscale)
 {
 
 #ifdef use_affine_trans
@@ -131,7 +131,7 @@ void RDrawParms::Zoom(int ix, int iy, double dscale)
 	2. ÔÙ°´ÕÕµØÍ¼ÖÐÐÄµãËõ·ÅÖÁÆÁÄ»´óÐ¡
 */
 /************************************************************************/
-void RDrawParms::ZoomEntire()
+void RDrawParameters::ZoomEntire()
 {
 	double dmapw = fabs(m_dright-m_dleft); //  µØÍ¼¿í
 	double dmaph = fabs(m_dbottom-m_dtop); //  µØÍ¼¸ß
@@ -188,7 +188,7 @@ void RDrawParms::ZoomEntire()
 }
 
 //; // Ëõ·Åµ½Ô­Ê¼·Ö±æÂÊ, ÄÇ¾ÍÊÇËµ£¬ÆÁÄ»Ò»¸öÏñËØ¶ÔÓ¦Í¼ÏñÒ»¸öÏñËØ
-void RDrawParms::ZoomResolution(int imgw, int imgh)
+void RDrawParameters::ZoomResolution(int imgw, int imgh)
 {
 	double dmapw = fabs(m_dright-m_dleft); //  µØÍ¼¿í
 	double dmaph = fabs(m_dbottom-m_dtop); //  µØÍ¼¸ß
@@ -219,7 +219,7 @@ void RDrawParms::ZoomResolution(int imgw, int imgh)
 }
 
 
-void RDrawParms::ZoomRect(int ileft, int itop, int iright, int ibottom, bool bZoomIn/*=true*/)//; // ¿òÑ¡·Å´ó
+void RDrawParameters::ZoomRect(int ileft, int itop, int iright, int ibottom, bool bZoomIn/*=true*/)//; // ¿òÑ¡·Å´ó
 {
 	// 1. Çó³ö¿òÑ¡·¶Î§µÄÊÓ¿Ú£¨Éè±¸£©ÖÐÐÄµã
 	int icentx=ileft + (iright-ileft)*0.5;
@@ -290,7 +290,7 @@ void RDrawParms::ZoomRect(int ileft, int itop, int iright, int ibottom, bool bZo
 }
 
 
-void RDrawParms::Init(int il, int it, int ir, int ib, double dl, double dt, double dr, double db)
+void RDrawParameters::Init(int il, int it, int ir, int ib, double dl, double dt, double dr, double db)
 {
 	if(!is_changed(il, it, ir, ib, dl, dt, dr, db))
 		return;
@@ -303,7 +303,7 @@ void RDrawParms::Init(int il, int it, int ir, int ib, double dl, double dt, doub
 	return;
 }
 
-bool RDrawParms::is_changed(int il, int it, int ir, int ib, double dl, double dt, double dr, double db)
+bool RDrawParameters::is_changed(int il, int it, int ir, int ib, double dl, double dt, double dr, double db)
 {
 	if(m_ileft!=il || m_itop!=it || m_iright!=ir || m_ibottom!=ib)
 		return true;
@@ -315,7 +315,7 @@ bool RDrawParms::is_changed(int il, int it, int ir, int ib, double dl, double dt
 }
 
 
-void RDrawParms::DPtoLP(int ix, int iy, double* dx, double* dy)
+void RDrawParameters::DPtoLP(int ix, int iy, double* dx, double* dy)
 {
 	double dsrcx=ix, dsrcy=iy;
 
@@ -351,7 +351,7 @@ void RDrawParms::DPtoLP(int ix, int iy, double* dx, double* dy)
 //	x' = (x - WOrgx) * VExtx / WExtx + VOrgx;
 // y' = (y - WOrgy) * VExty / WExty + VOrgy;
 
-void RDrawParms::MPtoDP(double dx, double dy, double* ix, double* iy) // µØÍ¼×ø±ê¡ª¡ª¡·Éè±¸×ø±ê
+void RDrawParameters::MPtoDP(double dx, double dy, double* ix, double* iy) // µØÍ¼×ø±ê¡ª¡ª¡·Éè±¸×ø±ê
 {
 #ifdef use_affine_trans
 	agg::trans_affine mtx=m_mtx;
@@ -375,7 +375,7 @@ void RDrawParms::MPtoDP(double dx, double dy, double* ix, double* iy) // µØÍ¼×ø±
 }
 
 
-void RDrawParms::ChangeDP(int iWidth, int iHeight)
+void RDrawParameters::ChangeDP(int iWidth, int iHeight)
 {
 	m_iright = m_ileft+iWidth;
 	m_ibottom = m_itop+iHeight;
@@ -388,7 +388,7 @@ void RDrawParms::ChangeDP(int iWidth, int iHeight)
 	m_dviewbottom =  m_dviewtop - dviewheight;
 }
 
-void RDrawParms::GetViewBound(double* dviewleft, double* dviewtop, double* dviewright, double* dviewbottom)
+void RDrawParameters::GetViewBound(double* dviewleft, double* dviewtop, double* dviewright, double* dviewbottom)
 {
 	*dviewleft=m_dviewleft;
 	*dviewtop=m_dviewtop;
@@ -396,7 +396,7 @@ void RDrawParms::GetViewBound(double* dviewleft, double* dviewtop, double* dview
 	*dviewbottom=m_dviewbottom;
 }
 
-void RDrawParms::GetMapBound(double* dleft, double* dtop, double* dright, double* dbottom)
+void RDrawParameters::GetMapBound(double* dleft, double* dtop, double* dright, double* dbottom)
 {
 	*dleft=m_dleft;
 	*dtop=m_dtop;
@@ -406,7 +406,7 @@ void RDrawParms::GetMapBound(double* dleft, double* dtop, double* dright, double
 
 
 // µÃµ½Ó°ÏñµÄ±ä»»¾ØÕó
-const agg::trans_affine& RDrawParms::get_mtx(int iimgw, int iimgh)
+const agg::trans_affine& RDrawParameters::get_mtx(int iimgw, int iimgh)
 {
 	agg::trans_affine mtx; // ¹¹½¨Í¼ÏñµÄ±ä»»¾ØÕó
 	double dratio = GetRatio();
@@ -461,7 +461,7 @@ void RDrawFactory::Init(int iw, int ih, unsigned char* pbuf)
 }
 
 
-void RDrawFactory::DrawGeometry(RDrawParms* pDrawParms, OGRGeometry ** pGeometry,  int iCount, RStyle* layStyle)
+void RDrawFactory::DrawGeometry(RDrawParameters* pDrawParms, OGRGeometry ** pGeometry,  int iCount, RStyle* layStyle)
 {
 	if(pDrawParms==NULL && pGeometry==NULL && iCount>0)
 		return;
@@ -502,7 +502,7 @@ void RDrawFactory::DrawGeometry(RDrawParms* pDrawParms, OGRGeometry ** pGeometry
 
 }
 
-void RDrawFactory::DrawGeoPoint(RDrawParms* pDrawParms, OGRPoint** pGeometry, int iCount, RStyle* layStyle)
+void RDrawFactory::DrawGeoPoint(RDrawParameters* pDrawParms, OGRPoint** pGeometry, int iCount, RStyle* layStyle)
 {
 	agg::rendering_buffer rbuf_win(m_pbuf, m_iwidth, m_iheight, m_ibytesPerLine);
 
@@ -535,7 +535,7 @@ void RDrawFactory::DrawGeoPoint(RDrawParms* pDrawParms, OGRPoint** pGeometry, in
 }
 
 
-void RDrawFactory::DrawGeoLineString(RDrawParms* pDrawParms, OGRLineString** pGeometry, int iCount, RStyle* layStyle)
+void RDrawFactory::DrawGeoLineString(RDrawParameters* pDrawParms, OGRLineString** pGeometry, int iCount, RStyle* layStyle)
 {
 	agg::rendering_buffer rbuf_win(m_pbuf, m_iwidth, m_iheight, m_ibytesPerLine);
 
@@ -577,7 +577,7 @@ void RDrawFactory::DrawGeoLineString(RDrawParms* pDrawParms, OGRLineString** pGe
 
 
 }
-void RDrawFactory::DrawGeoPolygon(RDrawParms* pDrawParms, OGRPolygon** pGeometry, int iCount, RStyle* layStyle)
+void RDrawFactory::DrawGeoPolygon(RDrawParameters* pDrawParms, OGRPolygon** pGeometry, int iCount, RStyle* layStyle)
 {
 	agg::rendering_buffer rbuf_win(m_pbuf, m_iwidth, m_iheight, m_ibytesPerLine);
 

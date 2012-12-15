@@ -732,7 +732,7 @@ unsigned int  __stdcall OGRLayerOnDrawThread(void *pParams)
 
 	OGREnvelope extView;// 地图可显示范围
 	OGREnvelope geometryView; // 对象范围
-	RDrawParms* pDrawParams=pOnDrawBackground->GetDrawParams();
+	RDrawParameters* pDrawParams=pOnDrawBackground->GetDrawParams();
 	pDrawParams->GetViewBound(&extView.MinX, &extView.MaxY, &extView.MaxX, &extView.MinY);
 	pLayer->SetSpatialFilterRect(extView.MinX, extView.MinY, extView.MaxX, extView.MaxY); // 按范围过滤查询
 
@@ -795,7 +795,7 @@ void ROGRLayerOnDrawBackground::SetOGRLayer(OGRLayer* pLayer)
 {
 	m_pLayer=pLayer;
 }
-void ROGRLayerOnDrawBackground::SetDrawParams(RDrawParms* pDrawParams)
+void ROGRLayerOnDrawBackground::SetDrawParams(RDrawParameters* pDrawParams)
 {
 	m_pDrawParams=pDrawParams;
 }
