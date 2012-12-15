@@ -1091,6 +1091,18 @@ void RMap::DrawOnFirstTime(int idcWidth, int idcHeight)
 					}
 				}
 			}
+			else if (m_pDataSource->GetType() == RDataSource::RDsFileRaster)
+			{
+				RDataSourceRaster* pDSR = (RDataSourceRaster *)m_pDataSource;
+				RFileRaster* pFileRaster = pDSR->GetFileRaster();
+				string strName = pFileRaster->GetName();
+				OGREnvelope layBound;
+				pFileRaster->GetBound(&layBound.MinX, &layBound.MaxY, &layBound.MaxX, &layBound.MinY);
+				mapBound.Merge(layBound);
+				m_drawPrams.Init(0, 0, idcWidth, idcHeight, mapBound.MinX, mapBound.MaxY, mapBound.MaxX, mapBound.MinY);
+				m_drawPrams.ZoomResolution(pFileRaster->GetWidth(), pFileRaster->GetHeight());
+				break;
+			}
 
 			/*
 			string strLayerName = layer->GetName();
@@ -1115,17 +1127,7 @@ void RMap::DrawOnFirstTime(int idcWidth, int idcHeight)
 			}
 //			else if(iType == RLayer::RLyrRaster)
 			{
-				RFileRaster* pFileRaster = (RFileRaster*)layer->GetDataSource();
-				string strName = pFileRaster->GetName();
-				if(strcmp(strName.c_str(), strDsName.c_str()) == 0)
-				{
-					OGREnvelope layBound;
-					pFileRaster->GetBound(&layBound.MinX, &layBound.MaxY, &layBound.MaxX, &layBound.MinY);
-					mapBound.Merge(layBound);
-					m_drawPrams.Init(0, 0, idcWidth, idcHeight, mapBound.MinX, mapBound.MaxY, mapBound.MaxX, mapBound.MinY);
-					m_drawPrams.ZoomResolution(pFileRaster->GetWidth(), pFileRaster->GetHeight());
-					break;
-				}
+				
 			}*/
 		
 		}
@@ -1179,6 +1181,12 @@ void RMap::Draw(int iw, int ih, unsigned char*& buf)
 					}
 				}
 			}
+			else if (pDs->GetType()==RDataSource::RDsFileRaster)
+			{
+				RDataSourceRaster* pDSR = (RDataSourceRaster *)m_pDataSource;
+				RFileRaster* pFileRaster = pDSR->GetFileRaster();
+				layer->Draw(pFileRaster, iw, ih, buf);
+			}
 
 
 			/*
@@ -1189,11 +1197,7 @@ void RMap::Draw(int iw, int ih, unsigned char*& buf)
 				layer->SetRRenderDataPreparedFun(m_pRRenderDataPreparedFun, m_pWndHandler);
 				layer->Draw(pLayer, iw, ih, buf);
 			}
-			//else if(layer->GetType() == RLayer::RLyrRaster)
-			{
-				RFileRaster* pFileRaster = GetLayerRaster(layer->GetDataSource()->GetName(), layer->GetName());
-				layer->Draw(pFileRaster, iw, ih, buf);
-			}
+		
 //			else if(layer->GetType() == RLayer::RLyrWeb)
 			{
 				RDataSource *pDataSource = (RDataSource *)layer->GetDataSource();
@@ -1243,22 +1247,6 @@ OGRLayer* RMap::GetLayerVector(const string& strDsName, const string& strLayerNa
 	return NULL;
 }
 
-RFileRaster* RMap::GetLayerRaster(const string& strDsName, const string& strLayerName)
-{
-	if(m_pMainWnd==NULL)
-		return NULL;
-
-// 	int iDsCount = m_pMainWnd->m_arrFileRasters.size();
-// 	for(int i=0; i<iDsCount; ++i){
-// 		RFileRaster* pDs = m_pMainWnd->m_arrFileRasters[i];
-// 		if(strcmp(strDsName.c_str(), pDs->GetName().c_str()) == 0)
-// 		{
-// 			return pDs;
-// 		}
-// 	}
-
-	return NULL;
-}
 
 RDataset* RMap::GetLayerWeb(const string& strDsName, const string& strLayerName)
 {
