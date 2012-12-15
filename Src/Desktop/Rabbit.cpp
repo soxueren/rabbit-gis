@@ -192,6 +192,7 @@ void Rabbit::createActions()
 	m_actCloseOne = new QAction(tr("Close"), this);
 	m_actCloseOne->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_W));
 	connect(m_actCloseOne, SIGNAL(triggered()), m_pMdiArea, SLOT(closeActiveSubWindow()));
+	//bool btest = connect(m_actCloseOne, SIGNAL(activated()), m_pMdiArea, SLOT(closeActiveSubWindow()));
 
 	m_actCloseAll = new QAction(tr("Close All"), this);
 	connect(m_actCloseAll, SIGNAL(triggered()), m_pMdiArea, SLOT(closeAllSubWindows()));
@@ -549,38 +550,35 @@ void Rabbit::actionOpen()
 	}
 
 	string strfileName = strfile.toLocal8Bit().data();
-	CRFile::FClass fcType = CRFile::GetClassByName(strfileName);
-	if(fcType == CRFile::fcRaster){
-		RFileRaster* pFileRaster = new RFileRaster;		
-		if(pFileRaster->Open(strfileName)){
-			m_arrFileRasters.push_back(pFileRaster);
+	// 打开文件，获取到数据源
+	RDataSource* pDs = m_pWkspc->AddDataSource(strfileName);
+	if(pDs != NULL)
+	{
+		if(pDs->GetType() == RDataSource::RDsFileVector)
+		{
+			RDataSourceVector* pDsVector = (RDataSourceVector*)pDs;
+			OGRDataSource* poDs = pDsVector->GetOGRDataSource();
+			int iCount = poDs->GetLayerCount();
+			vector<string> arrDtNames;
+			for(int i=0; i<iCount; i++)
+			{
+				string strName = poDs->GetLayer(i)->GetName();
+				arrDtNames.push_back(strName);
+			}
+
+			m_pDsTreeViewCtrl->AddItem(strfileName, arrDtNames);
+		}
+		else if(pDs->GetType() == RDataSource::RDsFileRaster)
+		{
+			RDataSourceRaster* pDsRaster = (RDataSourceRaster*)pDs;
+			RFileRaster* pFileRaster = pDsRaster->GetFileRaster();
 			string strDtName = CRFile::GetTitleNameFromPath(strfileName);
 			vector<string> arrDtNames;
 			arrDtNames.push_back(strDtName);
 			m_pDsTreeViewCtrl->AddItem(strfileName, arrDtNames);
 		}
 	}
-	else if (fcType == CRFile::fcVector)	{
-		// 打开文件，获取到数据源
-		RDataSource* pDs = m_pWkspc->AddDataSource(strfileName);
-		if(pDs != NULL)
-		{
-			if(pDs->GetType() == RDataSource::RDsFileVector)
-			{
-				RDataSourceVector* pDsVector = (RDataSourceVector*)pDs;
-				OGRDataSource* poDs = pDsVector->GetOGRDataSource();
-				int iCount = poDs->GetLayerCount();
-				vector<string> arrDtNames;
-				for(int i=0; i<iCount; i++)
-				{
-					string strName = poDs->GetLayer(i)->GetName();
-					arrDtNames.push_back(strName);
-				}
 
-				m_pDsTreeViewCtrl->AddItem(strfileName, arrDtNames);
-			}
-		}
-	}
 
 	m_pWnd->SetRedrawFlag();
 	string strLog = "打开文件成功.";
