@@ -35,8 +35,8 @@ public:
 	void SetOGRLayer(OGRLayer* pLayer);
 	OGRLayer* GetOGRLayer(){return m_pLayer;}
 
-	void SetDrawParams(RDrawParms* pDrawParams);
-	RDrawParms* GetDrawParams(){return m_pDrawParams;}
+	void SetDrawParams(RDrawParameters* pDrawParams);
+	RDrawParameters* GetDrawParams(){return m_pDrawParams;}
 
 	void SetDeviceContext(int idcWidth, int idcHeight, unsigned char* pBuf);
 	void GetDeviceContext(int& iWidth, int& iHeight, unsigned char*& pBuf);
@@ -54,7 +54,7 @@ public:
 
 private:
 	OGRLayer* m_pLayer;
-	RDrawParms* m_pDrawParams;
+	RDrawParameters* m_pDrawParams;
 	int m_iWinWidth, m_iWinHeight;
 	unsigned char* m_pBuf;
 
@@ -92,8 +92,8 @@ public:
 		m_layerOnDrawBackground.SetRRenderDataPreparedFun(pRRenderDataPreparedFun, pWnd);
 	}
 
-	void SetDrawParams(RDrawParms* pDrawParams) {m_pDrawParams=pDrawParams;}
-	RDrawParms* GetDrawParams() const {return m_pDrawParams;}
+	void SetDrawParams(RDrawParameters* pDrawParams) {m_pDrawParams=pDrawParams;}
+	RDrawParameters* GetDrawParams() const {return m_pDrawParams;}
 
 	void AddStyle(const string& strKey, const string& strValue);
 
@@ -113,7 +113,7 @@ private:
 	ROGRLayerOnDrawBackground m_layerOnDrawBackground;
 	string m_strName; // 图层名称
 
-	RDrawParms* m_pDrawParams;
+	RDrawParameters* m_pDrawParams;
 	RDataSource * m_pDataSource; // 图层所在的数据源
 	RMap* m_pMap; // 地图
 
@@ -217,7 +217,7 @@ public:
 	void MouseMove(int idx, int idy); // 参数是偏移量
 	//}}
 
-	RDrawParms* GetDrawParms() { return &m_drawPrams;}
+	RDrawParameters* GetDrawParms() { return &m_drawPrams;}
 
 	RLayers* GetLayers() { return &m_arrLayers; }
 
@@ -271,7 +271,7 @@ private:
 	bool m_bFirstOnDraw; // 地图第一次打开 
 	RTrackingLayer m_layerTracking; // 屏幕跟踪层几何对象,用于实时显示鼠标轨迹
 
-	RDrawParms m_drawPrams;
+	RDrawParameters m_drawPrams;
 	RLayers m_arrLayers; // 用于显示的图层数组
 	unsigned int m_pWndHandler; // 窗口指针
 	RRenderDataPreparedFun m_pRRenderDataPreparedFun;
