@@ -162,6 +162,8 @@ public:
 
 	virtual bool Open(const string& strName);
 
+	RFileRaster* GetFileRaster() {return m_pFileRaster;}
+
 private:
 	RFileRaster* m_pFileRaster;
 };
