@@ -255,7 +255,6 @@ protected:
 
 private:
 	OGRLayer* GetLayerVector(const string& strDsName, const string& strLayerName);
-	RFileRaster* GetLayerRaster(const string& strDsName, const string& strLayerName);
 	RDataset* GetLayerWeb(const string& strDsName, const string& strLayerName);
 
 private:
