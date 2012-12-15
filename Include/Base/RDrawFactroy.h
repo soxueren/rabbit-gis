@@ -33,11 +33,11 @@
 #include <map>
 using namespace std;
 
-class  BASE_API RDrawParms
+class  BASE_API RDrawParameters //RDrawParameters
 {
 public:
-	RDrawParms();
-	~RDrawParms();
+	RDrawParameters();
+	~RDrawParameters();
 
 	void Init(int il, int it, int ir, int ib, double dl, double dt, double dr, double db);
 	void Pan(int offsetx, int offsety);
@@ -114,13 +114,13 @@ public:
 
 	void Init(int iw, int ih, unsigned char* pbuf);//{m_iheight=ih; m_iwidth=iw; m_pbuf=pbuf;}
 
-	void DrawGeometry(RDrawParms* pDrawParms, OGRGeometry ** pGeometry,  int iCount, RStyle* layStyle);
+	void DrawGeometry(RDrawParameters* pDrawParms, OGRGeometry ** pGeometry,  int iCount, RStyle* layStyle);
 
 protected:
 
-	void DrawGeoPoint(RDrawParms* pDrawParms, OGRPoint** pGeometry, int iCount, RStyle* layStyle);
-	void DrawGeoLineString(RDrawParms* pDrawParms, OGRLineString** pGeometry, int iCount, RStyle* layStyle);
-	void DrawGeoPolygon(RDrawParms* pDrawParms, OGRPolygon** pGeometry, int iCount, RStyle* layStyle);
+	void DrawGeoPoint(RDrawParameters* pDrawParms, OGRPoint** pGeometry, int iCount, RStyle* layStyle);
+	void DrawGeoLineString(RDrawParameters* pDrawParms, OGRLineString** pGeometry, int iCount, RStyle* layStyle);
+	void DrawGeoPolygon(RDrawParameters* pDrawParms, OGRPolygon** pGeometry, int iCount, RStyle* layStyle);
 
 private:
 
