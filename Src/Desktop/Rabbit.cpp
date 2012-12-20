@@ -140,40 +140,47 @@ void Rabbit::createActions()
 	m_act_dsMgr = new QAction(tr("DataSource"), this);
 	connect(m_act_dsMgr, SIGNAL(triggered()), this, SLOT(actionDSDialog()));
 	
-	m_actOpen = new QAction(QIcon("images/fileopen.png"), tr("&Open File"), this);
+	m_actOpen = new QAction(QIcon("images/fileopen.png"), QString::fromLocal8Bit("打开"), this);
 	m_actOpen->setShortcut(QKeySequence::Open);
 	//m_actOpen->setStatusTip(tr("Open an existing file"));
 	connect(m_actOpen, SIGNAL(triggered()), this, SLOT(actionOpen()));
 
-	m_actClose = new QAction(QString("&Close File"), this);
+	m_actClose = new QAction(QString::fromLocal8Bit("关闭"), this);
 	m_actClose->setShortcuts(QKeySequence::Close);
 	connect(m_actClose, SIGNAL(triggered()), this, SLOT(actionClose()));
 
-	m_act_exit = new QAction(QIcon("images/button-close.png"), tr("&Exit"), this);
-	m_act_exit->setShortcuts(QKeySequence::Quit);
-	//m_act_exit->setStatusTip(tr("Exit the Rabbit"));
-	connect(m_act_exit, SIGNAL(triggered()), this, SLOT(close()));
+	m_actExit = new QAction(QIcon("images/button-close.png"), QString::fromLocal8Bit("退出"), this);
+	m_actExit->setShortcuts(QKeySequence::Quit);
+	//m_actExit->setStatusTip(tr("Exit the Rabbit"));
+	connect(m_actExit, SIGNAL(triggered()), this, SLOT(close()));
 
-	m_actSelect = new QAction(QIcon("images/cursor-arrow.png"), tr("&Select"), this);
+	m_actSelect = new QAction(QIcon("images/cursor-arrow.png"), QString::fromLocal8Bit("无选择"), this);
 	//m_act_select->setShortcuts()
 	//m_act_select->setStatusTip("Select");
 	connect(m_actSelect, SIGNAL(triggered()), this, SLOT(actionSelect())); // 选择
+	
+	m_actSelectPoint = new QAction(QString::fromLocal8Bit("点选"), this);
+	connect(m_actSelectPoint, SIGNAL(triggered()), this, SLOT(actionSelectPoint())); // 点选择
 
-	m_actPan = new QAction(QIcon("images/cursor-openhand.png"), tr("&Pan"), this);
+
+	m_actSelectRect = new QAction(QString::fromLocal8Bit("框选"), this);
+	connect(m_actSelectRect, SIGNAL(triggered()), this, SLOT(actionSelectRect())); // 框选择
+
+	m_actPan = new QAction(QIcon("images/cursor-openhand.png"), QString::fromLocal8Bit("平移"), this);
 	//m_act_pan->setStatusTip("Pan");
 	connect(m_actPan, SIGNAL(triggered()), this, SLOT(actionPan())); // 平移 
 
-	m_actZoomIn = new QAction(QIcon("images/zoomin.png"), tr("&ZoomIn"), this);
+	m_actZoomIn = new QAction(QIcon("images/zoomin.png"), QString::fromLocal8Bit("放大"), this);
 	//m_actZoomIn->setStatusTip("ZoomIn");
 	connect(m_actZoomIn, SIGNAL(triggered()), this, SLOT(actionZoomIn())); // 放大
 
-	m_actZoomOut = new QAction(QIcon("images/zoomout.png"), tr("&ZoomOut"), this);	
+	m_actZoomOut = new QAction(QIcon("images/zoomout.png"), QString::fromLocal8Bit("缩小"), this);	
 	//m_actZoomOut->setStatusTip("ZoomOut");
 	connect(m_actZoomOut, SIGNAL(triggered()), this, SLOT(actionZoomOut()));
 
-	m_act_reset = new QAction(QIcon("images/fit-page-32.png"), tr("&ZoomEntire"), this);
-	//m_act_reset->setStatusTip("ZoomEntire");
-	connect(m_act_reset, SIGNAL(triggered()), this, SLOT(actionZoomEntire()));
+	m_actZoomEntire = new QAction(QIcon("images/fit-page-32.png"), QString::fromLocal8Bit("全副"), this);
+	//m_actZoomEntire->setStatusTip("ZoomEntire");
+	connect(m_actZoomEntire, SIGNAL(triggered()), this, SLOT(actionZoomEntire()));
 
 	m_act_file_info = new QAction(QIcon("images/fileinfo-32.png"), tr("&FileInfo"), this);
 	//m_act_file_info->setStatusTip("Infomation");
@@ -189,65 +196,77 @@ void Rabbit::createActions()
 	m_actAdd2CurrMap = new QAction(QString::fromLocal8Bit("添加到当前地图"), this);
 	connect(m_actAdd2CurrMap, SIGNAL(triggered()), this, SLOT(actionAdd2CurrMap()));
 	
-	m_actCloseOne = new QAction(tr("Close"), this);
+	m_actCloseOne = new QAction(QString::fromLocal8Bit("关闭"), this);
 	m_actCloseOne->setShortcut(QKeySequence(Qt::CTRL+Qt::Key_W));
 	connect(m_actCloseOne, SIGNAL(triggered()), m_pMdiArea, SLOT(closeActiveSubWindow()));
 	//bool btest = connect(m_actCloseOne, SIGNAL(activated()), m_pMdiArea, SLOT(closeActiveSubWindow()));
 
-	m_actCloseAll = new QAction(tr("Close All"), this);
+	m_actCloseAll = new QAction(QString::fromLocal8Bit("关闭所有"), this);
 	connect(m_actCloseAll, SIGNAL(triggered()), m_pMdiArea, SLOT(closeAllSubWindows()));
 
-	m_actTitle = new QAction(tr("Tile"), this);
+	m_actTitle = new QAction(QString::fromLocal8Bit("平铺"), this);
 	connect(m_actTitle, SIGNAL(triggered()), m_pMdiArea, SLOT(tileSubWindows()));
 
 
-	m_actCascade = new QAction(tr("&Cascade"), this);
+	m_actCascade = new QAction(QString::fromLocal8Bit("层叠"), this);
 	connect(m_actCascade, SIGNAL(triggered()), m_pMdiArea, SLOT(cascadeSubWindows()));
 
 }
 void Rabbit::createMenus()
 {
-	m_fileMenu = menuBar()->addMenu(tr("&File"));
-	m_fileMenu->addAction(m_actOpen);
-	m_fileMenu->addAction(m_actClose);
-	m_fileMenu->addAction(m_act_dbDialog);
-	m_fileMenu->addSeparator();
-	m_fileMenu->addAction(m_act_exit);
-	
-	m_viewMenu = menuBar()->addMenu(tr("&View"));
+	m_menuFile = menuBar()->addMenu(QString::fromLocal8Bit("文件"));
+	m_menuFile->addAction(m_actOpen);
+	m_menuFile->addAction(m_actClose);
+	m_menuFile->addAction(m_act_dbDialog);
+	m_menuFile->addSeparator();
+	m_menuFile->addAction(m_actExit);
 
-	m_windowMenu = menuBar()->addMenu(tr("&Window"));
+	m_menuMapCtrl = menuBar()->addMenu(QString::fromLocal8Bit("操作"));
+	QMenu* menuSelect = m_menuMapCtrl->addMenu(QString::fromLocal8Bit("选择"));
+	menuSelect->addAction(m_actSelect);
+	menuSelect->addAction(m_actSelectPoint);
+	menuSelect->addAction(m_actSelectRect);
+
+
+	m_menuMapCtrl->addAction(m_actPan);
+	m_menuMapCtrl->addAction(m_actZoomIn);
+	m_menuMapCtrl->addAction(m_actZoomOut);
+	m_menuMapCtrl->addAction(m_actZoomEntire);
+	
+	m_menuView = menuBar()->addMenu(QString::fromLocal8Bit("查看"));
+
+	m_menuWindow = menuBar()->addMenu(QString::fromLocal8Bit("窗口"));
 	updateWindowMenu();
 
-	m_helpMenu = menuBar()->addMenu(tr("&Help"));
-	m_helpMenu->addAction(m_act_about);
+	m_menuHelp = menuBar()->addMenu(QString::fromLocal8Bit("帮助"));
+	m_menuHelp->addAction(m_act_about);
 
-	m_rightBtnMenu =  new QMenu;
-	m_rightBtnMenu->addSeparator();
+	m_menuRightBtn =  new QMenu;
+	m_menuRightBtn->addSeparator();
 
-	//m_rightBtnMenu->addAction(m_act_layControl);
-	//m_rightBtnMenu->addAction(m_act_dsMgr);
-	m_rightBtnMenu->addAction(m_actSelect);
-	m_rightBtnMenu->addAction(m_actPan);
-	m_rightBtnMenu->addAction(m_actZoomIn);
-	m_rightBtnMenu->addAction(m_actZoomOut);
-	m_rightBtnMenu->addAction(m_act_reset);
+	//m_menuRightBtn->addAction(m_act_layControl);
+	//m_menuRightBtn->addAction(m_act_dsMgr);
+	m_menuRightBtn->addAction(m_actSelect);
+	m_menuRightBtn->addAction(m_actPan);
+	m_menuRightBtn->addAction(m_actZoomIn);
+	m_menuRightBtn->addAction(m_actZoomOut);
+	m_menuRightBtn->addAction(m_actZoomEntire);
 
-	m_rightBtnMenuDataset = new QMenu;
-	m_rightBtnMenuDataset->addAction(m_actAdd2NewMap);
-	m_rightBtnMenuDataset->addAction(m_actAdd2CurrMap);
+	m_menuRightBtnDataset = new QMenu;
+	m_menuRightBtnDataset->addAction(m_actAdd2NewMap);
+	m_menuRightBtnDataset->addAction(m_actAdd2CurrMap);
 
 }
 
 void Rabbit::updateWindowMenu()
 {
-	m_windowMenu->clear();
-	m_windowMenu->addAction(m_actCloseOne);
-	m_windowMenu->addAction(m_actCloseAll);
-	m_windowMenu->addSeparator();
+	m_menuWindow->clear();
+	m_menuWindow->addAction(m_actCloseOne);
+	m_menuWindow->addAction(m_actCloseAll);
+	m_menuWindow->addSeparator();
 
-	m_windowMenu->addAction(m_actTitle);
-	m_windowMenu->addAction(m_actCascade);
+	m_menuWindow->addAction(m_actTitle);
+	m_menuWindow->addAction(m_actCascade);
 
 
 }
@@ -285,7 +304,8 @@ void Rabbit::actionAdd2CurrMap()
 	GetRightBtnSelectDsAndDtNames(strDsName, strDtName);
 
 	RMapWidget* pActiveMap = activeMap();
-	if(pActiveMap!=NULL){
+	if(pActiveMap!=NULL)
+	{
 		pActiveMap->AddLayer(strDsName, strDtName);
 		pActiveMap->GetMap()->SetRedrawFlag(true); // 新增了图层，需要刷新地图
 		pActiveMap->update();
@@ -295,19 +315,19 @@ void Rabbit::actionAdd2CurrMap()
 
 void Rabbit::createToolBars()
 {
-	m_fileToolBar = addToolBar(tr("File"));
+	m_fileToolBar = addToolBar(QString::fromLocal8Bit("文件操作工具"));
 	m_fileToolBar->addAction(m_actOpen);
-	//m_fileToolBar->addAction(m_act_exit);
-	m_viewMenu->addAction(m_fileToolBar->toggleViewAction());
+	//m_fileToolBar->addAction(m_actExit);
+	m_menuView->addAction(m_fileToolBar->toggleViewAction());
 
-	m_mapToolBar = addToolBar(tr("Map"));
+	m_mapToolBar = addToolBar(QString::fromLocal8Bit("地图操作工具"));
 	m_mapToolBar->addAction(m_actSelect);
 	m_mapToolBar->addAction(m_actPan);
 	m_mapToolBar->addAction(m_actZoomIn);
 	m_mapToolBar->addAction(m_actZoomOut);
-	m_mapToolBar->addAction(m_act_reset);
+	m_mapToolBar->addAction(m_actZoomEntire);
 	m_mapToolBar->addAction(m_act_file_info);
-	m_viewMenu->addAction(m_mapToolBar->toggleViewAction());
+	m_menuView->addAction(m_mapToolBar->toggleViewAction());
 
 	//connect(m_fileToolBar, SIGNAL(movableChanged(bool)), this, SLOT(set_redraw_flag(bool)));
 }
@@ -319,7 +339,7 @@ void Rabbit::createDockWindows()
 	m_pDsTreeViewCtrl = new RDataSourceCtrl(dock);
 	dock->setWidget(m_pDsTreeViewCtrl);
 	addDockWidget(Qt::LeftDockWidgetArea, dock);
-	m_viewMenu->addAction(dock->toggleViewAction());
+	m_menuView->addAction(dock->toggleViewAction());
 
 	// 数据集双击事件注册
 	bool bt = connect(m_pDsTreeViewCtrl, SIGNAL(doubleClicked(const QModelIndex)), 
@@ -329,7 +349,7 @@ void Rabbit::createDockWindows()
 
 	//////////////////////////////////////////////////////////////////////////
 
-	dock = new QDockWidget(QString::fromLocal8Bit("输出"), this);
+	dock = new QDockWidget(QString::fromLocal8Bit("输出窗口"), this);
 	dock->setAllowedAreas(Qt::BottomDockWidgetArea);
 	m_pOutPutWnd = new QTextEdit(dock);
 	dock->setWidget(m_pOutPutWnd);
@@ -337,7 +357,7 @@ void Rabbit::createDockWindows()
 	RLog::SetHandle((unsigned long) m_pOutPutWnd);
 	RLog::SetCallBackFunc(&PrintLog); // 设置日志输出到输出窗口
 	addDockWidget(Qt::BottomDockWidgetArea, dock);
-	m_viewMenu->addAction(dock->toggleViewAction());
+	m_menuView->addAction(dock->toggleViewAction());
 }
 
 
@@ -388,7 +408,7 @@ void Rabbit::OnTreeViewRightBntDown(const QModelIndex& modelIndex)
 		SetRightBtnSelectDsAndDtNames(strDsName, strDtName);
 
 		QPoint Pos = QCursor::pos();
-		m_rightBtnMenuDataset->exec(Pos);
+		m_menuRightBtnDataset->exec(Pos);
 	}
 }
 
@@ -612,6 +632,25 @@ void Rabbit::actionSelect()
 	if(pMapWnd != NULL)
 	{
 		pMapWnd->ActionSelect();
+	}
+}
+
+
+void Rabbit::actionSelectPoint()
+{
+	RMapWidget* pMapWnd = activeMap();
+	if(pMapWnd != NULL)
+	{
+		//pMapWnd->ActionSelect();
+	}
+}
+
+void Rabbit::actionSelectRect()
+{
+	RMapWidget* pMapWnd = activeMap();
+	if(pMapWnd != NULL)
+	{
+		//pMapWnd->ActionSelect();
 	}
 }
 
