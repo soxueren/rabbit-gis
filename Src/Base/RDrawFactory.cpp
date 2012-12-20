@@ -415,11 +415,11 @@ double RDrawParameters::GetScale()
 	
 	if(m_pOGRSpatialReference!=NULL && m_pOGRSpatialReference->IsGeographic()) // 地理坐标
 	{			
-		double dSemiMajor = m_pOGRSpatialReference->GetSemiMajor(); // 椭球长半轴 单位千米
+		double dSemiMajor = m_pOGRSpatialReference->GetSemiMajor(); // 椭球长半轴 单位:米
 		char* pchUnits=NULL;
 		m_pOGRSpatialReference->GetAngularUnits(&pchUnits);
 
-		double dLength = 2*PI*dSemiMajor; // 椭球沿长半轴的周长 单位千米
+		double dLength = 2*PI*dSemiMajor; // 椭球沿长半轴的周长 单位:米
 		double dDcResolution = 25.4/m_iDPI; // 设备分辨率: 一个像素点的逻辑长度 单位 mm
 		double dScale = m_dDcResolution*(dLength*1000.0/360.0); // 一个像素点对应逻辑的长度 单位mm
 		dScale = dDcResolution/dScale;
@@ -432,7 +432,6 @@ double RDrawParameters::GetScale()
 		OGRSpatialReference* pSpatialReference = m_pOGRSpatialReference->CloneGeogCS();
 		pSpatialReference->GetLinearUnits(&pchUnits);
 		double dUnits = pSpatialReference->GetAngularUnits(&pchUnits);
-
 
 		double dSemiMajor = pSpatialReference->GetSemiMajor(); // 椭球长半轴 单位千米
 		double dLength = 2*PI*dSemiMajor; // 椭球沿长半轴的周长 单位千米
