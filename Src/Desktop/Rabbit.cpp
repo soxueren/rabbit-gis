@@ -641,7 +641,7 @@ void Rabbit::actionSelectPoint()
 	RMapWidget* pMapWnd = activeMap();
 	if(pMapWnd != NULL)
 	{
-		//pMapWnd->ActionSelect();
+		pMapWnd->ActionSelectPoint();
 	}
 }
 
@@ -650,7 +650,7 @@ void Rabbit::actionSelectRect()
 	RMapWidget* pMapWnd = activeMap();
 	if(pMapWnd != NULL)
 	{
-		//pMapWnd->ActionSelect();
+		pMapWnd->ActionSelectRect();
 	}
 }
 
