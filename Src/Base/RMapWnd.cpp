@@ -184,8 +184,8 @@ void RLayer::Draw(int iwidth, int iheight, unsigned char *& buf)
 			int ibottom = interBound.MinY / dRatioy;
 
 			double dleft, dtop, dright, dbottom; // 可显示范围对应的 设备坐标范围
-			m_pDrawParams->MPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
-			m_pDrawParams->MPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
+			m_pDrawParams->LPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
+			m_pDrawParams->LPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
 
 			// 图层可显示的宽度与高度
 			int iViewWidth = dright-dleft;
@@ -239,8 +239,8 @@ void RLayer::Draw(int iwidth, int iheight, unsigned char *& buf)
 			}
 
 			double dleft, dtop, dright, dbottom; // 可显示范围对应的 设备坐标范围
-			m_pDrawParams->MPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
-			m_pDrawParams->MPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
+			m_pDrawParams->LPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
+			m_pDrawParams->LPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
 
 			// 图层可显示的宽度与高度
 			int iViewWidth = dright-dleft;
@@ -418,8 +418,8 @@ void RLayer::Draw(RFileRaster* pFileRaster, int iWidth, int iHeight, unsigned ch
 		int ibottom = (imgBound.MaxY-interBound.MinY) / dRatioy;
 
 		double dleft, dtop, dright, dbottom; // 可显示范围对应的 设备坐标范围
-		m_pDrawParams->MPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
-		m_pDrawParams->MPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
+		m_pDrawParams->LPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
+		m_pDrawParams->LPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
 
 		// 图层可显示的宽度与高度
 		int iViewWidth = dright-dleft;
@@ -470,8 +470,8 @@ void RLayer::Draw(RFileRaster* pFileRaster, int iWidth, int iHeight, unsigned ch
 		}
 
 		double dleft, dtop, dright, dbottom; // 可显示范围对应的 设备坐标范围
-		m_pDrawParams->MPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
-		m_pDrawParams->MPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
+		m_pDrawParams->LPtoDP(interBound.MinX, interBound.MaxY, &dleft, &dtop);
+		m_pDrawParams->LPtoDP(interBound.MaxX, interBound.MinY, &dright, &dbottom);
 
 		// 图层可显示的宽度与高度
 		int iViewWidth = dright-dleft;
@@ -536,7 +536,7 @@ void RLayer::Draw(RDataset* pDataset, int iWidth, int iHeight, unsigned char*& p
 
 
 	double d2xPIxR = 20037508.342789244*2; // 地球赤道周长
-	double dRatio = m_pDrawParams->GetRatio(); // 坐标转换比率： 设备坐标/地理坐标（逻辑坐标）
+	double dRatio;// = m_pDrawParams->GetRatio(); // 坐标转换比率： 设备坐标/地理坐标（逻辑坐标）
 	double dResolution = (256*4) / 360.0; // 像素坐标/地理坐标
 	int iLevel  = dRatio / dResolution;
 
@@ -1087,6 +1087,11 @@ void RMap::DrawOnFirstTime(int idcWidth, int idcHeight)
 						poDs->GetLayer(ilayer)->GetExtent(&layBound);
 						mapBound.Merge(layBound);
 						m_drawPrams.Init(0, 0, idcWidth, idcHeight, mapBound.MinX, mapBound.MaxY, mapBound.MaxX, mapBound.MinY);
+						OGRSpatialReference* pSRS = poDs->GetLayer(ilayer)->GetSpatialRef();
+						m_drawPrams.SetSpatialReference(pSRS);
+						//m_drawPrams.SetScale(1.0/10000);
+						double dScale = m_drawPrams.GetScale();
+						dScale = 1.0/dScale;
 						break;;
 					}
 				}
