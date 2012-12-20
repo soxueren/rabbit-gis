@@ -33,21 +33,54 @@
 #include <map>
 using namespace std;
 
-class  BASE_API RDrawParameters //RDrawParameters
+class OGRSpatialReference;
+
+// 绘制参数类
+class  BASE_API RDrawParameters 
 {
 public:
 	RDrawParameters();
 	~RDrawParameters();
 
 	void Init(int il, int it, int ir, int ib, double dl, double dt, double dr, double db);
-	void Pan(int offsetx, int offsety);
-	void Zoom(int ix, int iy, double dscale);
+
+	// 用户操作
+	/*! \brief 平移
+	*  \param [in] iOffsetX (设备坐标).
+	*  \param [in] iOffsetY 设备坐标）.
+	*  \return void.
+	*/
+	void Pan(int iOffsetX, int iOffsetY);
+	
+	/*! \brief 缩放
+	*  \param [in] iX (设备坐标).
+	*  \param [in] iY (设备坐标）.
+	*  \param [in] dScale 缩放比率.
+	*  \return void.
+	*/
+	void Zoom(int iX, int iY, double dScale);
+
 	void ZoomEntire();
 	void ZoomResolution(int imgw, int imgh); // 缩放到原始分辨率, 针对影像数据有效
 	void ZoomRect(int ileft, int itop, int iright, int ibottom, bool bZoomIn=true); // 框选放大
 
-	void DPtoLP(int ix, int iy, double* dx, double* dy); // 设备坐标——》逻辑坐标 (地图坐标)
-	void MPtoDP(double dx, double dy, double* ix, double* iy); // 地图坐标——》设备坐标
+	/*! \brief 设备坐标转逻辑坐标
+	*  \param [in] iX (设备坐标).
+	*  \param [in] iY (设备坐标）.
+	*  \param [out] dX (逻辑坐标).
+	*  \param [out] dX (逻辑坐标).
+	*  \return void.
+	*/
+	void DPtoLP(int iX, int iY, double* dX, double* dY); // 设备坐标——》逻辑坐标 (地图坐标)
+
+	/*! \brief 逻辑坐标转设备坐标
+	*  \param [in] dX (逻辑坐标).
+	*  \param [in] dX (逻辑坐标).
+	*  \param [out] iX (设备坐标).
+	*  \param [out] iY (设备坐标）.
+	*  \return void.
+	*/
+	void LPtoDP(double dX, double dY, double* iX, double* iY); // 地图坐标——》设备坐标
 	
 	/*! \brief 调整设备宽度,用于设备窗口缩放
 	*  \param [in] iWidth 窗口宽度(设备坐标).
@@ -61,8 +94,11 @@ public:
 
 	//!\brief 地图地理范围
 	void GetMapBound(double* dleft, double* dtop, double* dright, double* dbottom);
-	double GetRatio() {return m_dRatio;}
-	void SetRatio(double dRatio){m_dRatio=dRatio;}
+	//double GetRatio() {return m_dRatio;}
+	//void SetRatio(double dRatio){m_dRatio=dRatio;}
+
+	void SetScale(double dScale);
+	double GetScale();
 
 	//bool GetCustomRatio(){}
 	//void SetCustomRatio(bool bUse){}
@@ -75,19 +111,34 @@ public:
 	bool GetCancel() {return m_bcancel;}
 	void SetCancel(bool bcancel=true){ m_bcancel=bcancel; }
 
+	void SetSpatialReference(OGRSpatialReference* pSpatialReference) { m_pOGRSpatialReference=pSpatialReference;}
+	OGRSpatialReference* GetSpatialReference() {return m_pOGRSpatialReference;}
+
 protected:
 	bool is_changed(int il, int it, int ir, int ib, double dl, double dt, double dr, double db);
 	bool m_bcancel; // 取消渲染标志
 
 private:
 
-	int m_ileft, m_itop, m_iright, m_ibottom; // 设备坐标范围 m_itop<m_ibottom
-	double m_dleft, m_dtop, m_dright, m_dbottom; // 地图地理坐标范围
-	double m_dviewleft, m_dviewtop, m_dviewright, m_dviewbottom; // 地图的显示范围（渲染范围）
+	int m_iLeft, m_iTop, m_iRight, m_iBottom; // 设备坐标范围 m_itop<m_ibottom
+	double m_dLeft, m_dTop, m_dRight, m_dBottom; // 地图地理坐标范围
+	double m_dViewLeft, m_dViewTop, m_dViewRight, m_dViewBottom; // 地图的显示范围（渲染范围）
 
-	double m_dRatio; // 坐标转换比率 （设备坐标/逻辑坐标）
+	// 坐标转换比率 (设备坐标/逻辑坐标)
+	/*
+	
+
+	*/
+	double m_dScale;
+
+	//double m_dRatio;
+	double m_dDcResolution; // 设备分辨率： 单个像素点对应的地理长度
+	int m_iDPI;
 	double m_dRatioCustom; // 使用自定义的转换比率
 	agg::trans_affine m_mtx; // 地理坐标变换矩阵
+
+	// 用于坐标系统转换
+	OGRSpatialReference* m_pOGRSpatialReference;
 };
 
 class OGRGeometry;
