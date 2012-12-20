@@ -39,7 +39,7 @@ public:
 	//typedef void (Rabbit::*CallBackProgress) (int iMin, int iMax, int iValue); // 进度信息回调
 
 
-	QMenu* GetRightBtnMenu() {return m_rightBtnMenu;}
+	QMenu* GetRightBtnMenu() {return m_menuRightBtn;}
 
 protected:
 	
@@ -57,10 +57,12 @@ protected:
 	/************************************************************************/
 	virtual void closeEvent ( QCloseEvent * event );
 
-	private slots:
+	private slots: // 事件插槽
 		void actionOpen();
 		void actionClose();
 		void actionSelect();
+		void actionSelectPoint();
+		void actionSelectRect();
 		void actionPan();
 		void actionZoomIn(); // 放大
 		void actionZoomOut(); // 缩小
@@ -121,24 +123,28 @@ private:
 	QMdiArea *m_pMdiArea;
 
 
-	QMenu *m_fileMenu;
-	QMenu *m_helpMenu;
-	QMenu *m_viewMenu;
-	QMenu *m_windowMenu;
-	QMenu *m_rightBtnMenu; // 右键菜单
-	QMenu* m_rightBtnMenuDataset; // 数据集右键
+	QMenu *m_menuFile;
+	QMenu *m_menuMapCtrl; // 地图操作
+	QMenu *m_menuHelp;
+	QMenu *m_menuView;
+	QMenu *m_menuWindow;
+	QMenu *m_menuRightBtn; // 右键菜单
+	QMenu* m_menuRightBtnDataset; // 数据集右键
 
 	QToolBar *m_fileToolBar;
 	QToolBar *m_mapToolBar; // 地图操作工具
 
 	QAction* m_actOpen;
 	QAction* m_actClose;
-	QAction* m_act_exit;
+	QAction* m_actExit;
 	QAction* m_actSelect;
+	QAction* m_actSelectPoint; //  点选
+	QAction* m_actSelectRect; // 框选
+
 	QAction* m_actPan;
 	QAction* m_actZoomIn;
 	QAction* m_actZoomOut;
-	QAction* m_act_reset;
+	QAction* m_actZoomEntire;
 	QAction* m_act_file_info;
 	QAction* m_act_about;
 	QAction* m_act_layControl; // 图层控制
