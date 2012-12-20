@@ -17,12 +17,14 @@ class RQTCORE_API RMapWidget : public QWidget
 public:
 	enum actionType{
 		Select = 0,
-		Pan=1,
-		ZoomIn=2,
-		ZoomOut=3,
+		SelectPoint=1,
+		SelectRect,
+		Pan,
+		ZoomIn,
+		ZoomOut,
 
-		EditRect=4, // 绘制矩形区域
-		EditMove=5, // 移动对象
+		EditRect, // 绘制矩形区域
+		EditMove, // 移动对象
 	};
 
 
@@ -38,6 +40,8 @@ public:
 
 	// 事件
 	void ActionSelect();
+	void ActionSelectPoint();
+	void ActionSelectRect();
 	void ActionPan();
 	void ActionZoomIn();
 	void ActionZoomOut();
@@ -72,8 +76,6 @@ protected:
 	/* 右键菜单                                                                     */
 	/************************************************************************/
 	virtual void	contextMenuEvent ( QContextMenuEvent * event );
-
-	void ChangeCursor(actionType actType);
 
 	RMap m_Map;
 

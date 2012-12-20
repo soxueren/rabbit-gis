@@ -67,78 +67,68 @@ void RMapWidget::ActionSelect()
 {
 	m_actTypeLast = m_actType;
 	m_actType = Select;
-	ChangeCursor(m_actType);
+	QCursor cur(Qt::ArrowCursor);
+	setCursor(cur);
+}
+
+
+void RMapWidget::ActionSelectPoint()
+{
+	m_actTypeLast = m_actType;
+	m_actType=SelectPoint;
+
+}
+
+void RMapWidget::ActionSelectRect()
+{
+	m_actTypeLast = m_actType;
+	m_actType = SelectRect;
 }
 
 void RMapWidget::ActionPan()
 {
 	m_actTypeLast = m_actType;
 	m_actType = Pan;
-	ChangeCursor(m_actType);
+	
+	QCursor cur;// =  cursor();
+	cur.setShape(Qt::OpenHandCursor);
+	setCursor(cur);
 }
 
 void RMapWidget::ActionZoomIn()
 {
 	m_actTypeLast = m_actType;
 	m_actType = ZoomIn;
-	ChangeCursor(m_actType);
+	
+	QString strZoomIn = "images/zoomin.png";
+	QPixmap pxm(strZoomIn);
+	if(!pxm.isNull())
+	{
+		QCursor cur(pxm);
+		setCursor(cur);	
+	}
 }
 
 void RMapWidget::ActionZoomOut()
 {
 	m_actTypeLast = m_actType;
 	m_actType = ZoomOut;
-	ChangeCursor(m_actType);
+	QString strZoom = "images/zoomout.png";
+	QPixmap pxm(strZoom);
+	if(!pxm.isNull())
+	{
+		QCursor cur(pxm);
+		setCursor(cur);	
+	}
 }
 void RMapWidget::ActionEditRect()
 {
 	m_actTypeLast = m_actType;
 	m_actType = EditRect;
-	ChangeCursor(m_actType);
+	QCursor cur(Qt::CrossCursor);
+	setCursor(cur);
 }
 
-void RMapWidget::ChangeCursor(actionType actType)
-{
-	if(actType == Select)
-	{
-		QCursor cur(Qt::ArrowCursor);
-		setCursor(cur);
-	}
-	else if (actType == Pan)
-	{
-		QCursor cur;// =  cursor();
-		cur.setShape(Qt::OpenHandCursor);
-		setCursor(cur);
-	}
-	else if (actType == ZoomIn)
-	{
-		QString strZoomIn = "images/zoomin.png";
-		QPixmap pxm(strZoomIn);
-		if(!pxm.isNull()){
-			QCursor cur(pxm);
-			setCursor(cur);	
-		}
-	}
-	else if (actType == ZoomOut)
-	{
-		QString strZoom = "images/zoomout.png";
-		QPixmap pxm(strZoom);
-		if(!pxm.isNull()){
-			QCursor cur(pxm);
-			setCursor(cur);	
-		}
-	}
-	else if (actType == EditRect)
-	{
-		QCursor cur(Qt::CrossCursor);
-		setCursor(cur);
-	}
-	else if (actType == EditMove)
-	{
-		QCursor cur(Qt::SizeAllCursor);
-		setCursor(cur);
-	}
-}
 
 
 void RMapWidget::paintEvent(QPaintEvent * event)
