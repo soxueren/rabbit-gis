@@ -276,6 +276,7 @@ void RMapWidget::mouseReleaseEvent(QMouseEvent *event)
 	}
 	else if(m_actType == Select)
 	{
+		// 选中对象并高亮显示
 		//m_Map.SetRedrawFlag();
 		//m_bDrawCacheL2=true; // 清除跟踪层对象
 		//update();
@@ -310,6 +311,7 @@ void RMapWidget::mouseMoveEvent(QMouseEvent* event)
 	double dx=x-iviewOrgx, dy=y-iviewOrgy;
 
 	m_Map.GetDrawParms()->DPtoLP(dx, dy, &dx, &dy);
+	double dScale = m_Map.GetDrawParms()->GetScale();
 // 	double dRatio = m_Map.GetDrawParms()->GetRatio();
 // 	double dResolution = (256*4) / 360.0; // 像素坐标/地理坐标
 // 	int iScale  = dRatio / dResolution;
@@ -322,7 +324,7 @@ void RMapWidget::mouseMoveEvent(QMouseEvent* event)
 
 	char chTmp[256];
 	chTmp[255]='\0';
-	sprintf_s(chTmp, "坐标: %lf, %lf", dx, dy);
+	sprintf_s(chTmp, "坐标: %lf, %lf; 比例尺: 1:%lf", dx, dy, 1.0/dScale);
 	string strMsg=chTmp;
 
 	MapStatusCallBackFun pFunc = GetMap()->GetMapStatusCallBackFun();
