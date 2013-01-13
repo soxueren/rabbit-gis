@@ -72,6 +72,7 @@ protected:
 		void updateMenus();
 		void actionAdd2NewMap();
 		void actionAdd2CurrMap();
+		void actionViewAttribute();
 
 		void action_layerControl(); // 图层控制处理 
 		void actionDBDialog();  // 数据库联系
@@ -152,6 +153,7 @@ private:
 	QAction* m_act_dsMgr; // 数据源管理器事件
 	QAction* m_actAdd2NewMap; // 添加到新地图
 	QAction* m_actAdd2CurrMap; // 添加到当前地图
+	QAction* m_actViewAttributeTable; // 浏览属性表
 
 	QAction* m_actCloseOne; // 关闭当前地图 
 	QAction* m_actCloseAll;
