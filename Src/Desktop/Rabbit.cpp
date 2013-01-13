@@ -22,6 +22,7 @@
 #include <QTextEdit>
 #include <QDockWidget>
  #include <QApplication>
+#include <QTableWidget>
 
 
 #include "Desktop/RMapInit.h"
@@ -38,6 +39,8 @@
 #include "gdal_priv.h"
 #include "Base/RLog.h"
 #include "Base/RRegister.h"
+
+#define ATTRIBUTETABLE "attributetable"
 
 QProgressBar* Rabbit::m_pProgressBar=NULL;
 
@@ -193,6 +196,9 @@ void Rabbit::createActions()
 	//m_act_about->setStatusTip("About");
 	connect(m_act_about, SIGNAL(triggered()), this, SLOT(action_about()));
 
+	m_actViewAttributeTable = new QAction(QString::fromLocal8Bit("浏览属性"), this);
+	connect(m_actViewAttributeTable, SIGNAL(triggered()), this, SLOT(actionViewAttribute()));
+
 	m_actAdd2NewMap = new QAction(QString::fromLocal8Bit("添加到新地图"), this);
 	connect(m_actAdd2NewMap, SIGNAL(triggered()), this, SLOT(actionAdd2NewMap()));
 
@@ -256,6 +262,7 @@ void Rabbit::createMenus()
 	m_menuRightBtn->addAction(m_actZoomEntire);
 
 	m_menuRightBtnDataset = new QMenu;
+	m_menuRightBtnDataset->addAction(m_actViewAttributeTable);
 	m_menuRightBtnDataset->addAction(m_actAdd2NewMap);
 	m_menuRightBtnDataset->addAction(m_actAdd2CurrMap);
 
@@ -277,7 +284,8 @@ void Rabbit::updateWindowMenu()
 void Rabbit::updateMenus()
 {
 	bool bHasMapWnd=false;
-	if(activeMap()!=NULL){
+	QMdiSubWindow *activeSubWindow = m_pMdiArea->activeSubWindow();
+	if(activeSubWindow != NULL){
 		bHasMapWnd=true;
 	}
 
@@ -299,6 +307,17 @@ void Rabbit::actionAdd2NewMap()
 	if(pActiveMap!=NULL){
 		pActiveMap->AddLayer(strDsName, strDtName);
 	}
+}
+
+void Rabbit::actionViewAttribute()
+{
+	QTableWidget* ptableWidget = new QTableWidget(this);
+	ptableWidget->setAccessibleName(ATTRIBUTETABLE); //标识控件类型
+	ptableWidget->setRowCount(10);
+	ptableWidget->setColumnCount(5);
+
+	m_pMdiArea->addSubWindow(ptableWidget);
+	ptableWidget->showMaximized();
 }
 
 void Rabbit::actionAdd2CurrMap()
@@ -410,6 +429,11 @@ void Rabbit::OnTreeViewRightBntDown(const QModelIndex& modelIndex)
 		QString strDsName = indexDs.data().toString();
 		SetRightBtnSelectDsAndDtNames(strDsName, strDtName);
 
+		string strName = strDsName.toLocal8Bit().data();
+		RDataSource* pDs = m_pWkspc->GetDataSource(strName);
+		bool bVector = (pDs->GetType()==RDataSource::RDsFileVector) ? true : false;
+		m_actViewAttributeTable->setEnabled(bVector);
+
 		QPoint Pos = QCursor::pos();
 		m_menuRightBtnDataset->exec(Pos);
 	}
@@ -445,7 +469,12 @@ void Rabbit::NewMap(const QString& strDsName, const QString& strName)
 RMapWidget* Rabbit::activeMap()//; // 活动地图窗口
 {
 	if (QMdiSubWindow *activeSubWindow = m_pMdiArea->activeSubWindow())
-		return qobject_cast<RMapWidget *>(activeSubWindow->widget());
+	{
+		QWidget* pWidget = activeSubWindow->widget();
+		QString strIdentifiedName = pWidget->accessibleName();
+		if(strIdentifiedName != QString(ATTRIBUTETABLE))
+			return qobject_cast<RMapWidget *>(pWidget);
+	}
 	
 	return NULL;
 }
@@ -800,8 +829,9 @@ void Rabbit::actionDSDialog()//; // 数据源管理器
 
 void Rabbit::action_about()
 {
-	QString strabout = QString::fromLocal8Bit("<p><b>Rabbit Map </b>基于个人兴趣开发，作者乐于分享：）</p>"
-		"<p>若需要源码，请联系：<br	>wenyulin.lin@gmail.com"
+	QString strabout = QString::fromLocal8Bit("<p><b>Rabbit GIS </b></p>"
+		"<p>wenyulin.lin@gmail.com"
+		"<br><a href=\"http://code.google.com/p/rabbit-gis/\">http://code.google.com/p/rabbit-gis/</a>"
 		"<br><a href=\"http://www.atolin.net\">www.atolin.net</a></p>");
 	QMessageBox::about(this, tr("About RabbitMap"), strabout);
 }
