@@ -37,6 +37,7 @@
 #include "ogrsf_frmts.h"
 #include "gdal_priv.h"
 #include "Base/RLog.h"
+#include "Base/RRegister.h"
 
 QProgressBar* Rabbit::m_pProgressBar=NULL;
 
@@ -87,6 +88,8 @@ Rabbit::Rabbit(QWidget *parent, Qt::WFlags flags)
 	
 	OGRRegisterAll();
 	GDALAllRegister();
+
+
 }
 
 
@@ -561,9 +564,14 @@ void Rabbit::actionOpen()
 
 	strFilter += strSingleFilter;
 
-
+	string strLastDir = RRegister::GetLastVisitedDirectory();
+	if (strLastDir.empty())
+	{
+		strLastDir="./";
+	}
+	QString strQDir=QString::fromLocal8Bit(strLastDir.c_str());
 	QString strfile = QFileDialog::getOpenFileName(this,
-		tr("Open File"), "./", strFilter);
+		tr("Open File"), strQDir, strFilter);
 
 	if(strfile.isEmpty()){
 		return ;
@@ -603,7 +611,17 @@ void Rabbit::actionOpen()
 	m_pWnd->SetRedrawFlag();
 	string strLog = "打开文件成功.";
 	RLog::Print(RLog::Info, strLog);
-	//update();
+
+	char path_buffer[_MAX_PATH];
+	char drive[_MAX_DRIVE];
+	char dir[_MAX_DIR];
+	char fname[_MAX_FNAME];
+	char ext[_MAX_EXT];
+
+	_splitpath( strfileName.c_str(), drive, dir, fname, ext ); // C4996
+	string strNewDir = string(drive)+string(dir);
+	RRegister::SetLastVisitedDirectory(strNewDir);
+
 	return;
 }
 
