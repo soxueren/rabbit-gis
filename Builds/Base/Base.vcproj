@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Src\Base\Markup.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Src\Base\RDataSource.cpp"
 				>
 			</File>
@@ -202,6 +206,10 @@
 				RelativePath="..\..\Src\Base\RMapWnd.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\..\Src\Base\RRegister.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -210,6 +218,10 @@
 			>
 			<File
 				RelativePath="..\..\Include\Base\FileType.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Include\Base\Markup.h"
 				>
 			</File>
 			<File
@@ -242,6 +254,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Include\Base\RMapWnd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Include\Base\RRegister.h"
 				>
 			</File>
 		</Filter>
