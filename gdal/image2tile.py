@@ -15,6 +15,11 @@ except:
 
 import os
 import math
+import re 
+import numpy
+import imageFile as img
+
+TILESIZE256 = 256
 
 class Image2Tiles(object):
     ''' 将image文件切割为瓦片 '''
@@ -24,65 +29,109 @@ class Image2Tiles(object):
 	pass
     
     def Process(self):
-	if not os.path.isfile(self.fileName):
-	    print 'file[%s] not exits.' % self.fileName
-	    return False
-
-	hDataset = gdal.Open(self.fileName, gdal.GA_ReadOnly)
-	if hDataset is None:
-	    print "unable to open '%s'." % self.fileName
-	    return False
-	
-	#/* -------------------------------------------------------------------- */
-	#/*      Report projection.                                              */
-	#/* -------------------------------------------------------------------- */
-	pszProjection = hDataset.GetProjectionRef()
-	if pszProjection is not None:
-	    hSRS = osr.SpatialReference()
-	    if hSRS.ImportFromWkt(pszProjection ) == gdal.CE_None:
-		pszPrettyWkt = hSRS.ExportToPrettyWkt(False)
-		#print( "Coordinate System is:\n%s" % pszPrettyWkt )
-	    else:
-		pass
-		#print( "Coordinate System is `%s'" % pszProjection )
-	
-
-	self.GetInfo(hDataset)
+	imgList = self.listDir(self.fileName)
+	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
 	pass
 
-    def GetInfo(self, hDataset):
-	''' 获取影像地理范围等信息 '''
+    def calcBoundary(self, imgList):
+	dls=[]
+	dts=[]
+	drs=[]
+	dbs=[]
+	dxs=[]
+	dys=[]
+	for fName in imgList:
+	    fPath = os.path.join(self.fileName, fName)
+	    oneImg = img.ImageFile(fPath)
+	    #print oneImg.getWidth()
+	    #print oneImg.getHeight()
+	    dl, dt, dr, db = oneImg.getBound()
+	    dx, dy = oneImg.getResolution()
+	    dls.append(dl)
+	    dts.append(dt)
+	    drs.append(dr)
+	    dbs.append(db)
+	    dxs.append(dx)
+	    dys.append(dy)
+	    #print oneImg.getProjection()
 
-	xSize, ySize = hDataset.RasterXSize, hDataset.RasterYSize
-	adfGeoTransform = hDataset.GetGeoTransform(can_return_null = True)
-	if adfGeoTransform is None:
-	    return False
+	dleft, dtop, dright, dbottom =  min(dls), max(dts), max(drs), min(dbs)
+	dxres, dyres = min(dxs), min(dys)
+	return dleft, dtop, dright, dbottom, dxres, dyres
 
-	print adfGeoTransform 
-        dMinX = adfGeoTransform[0] + adfGeoTransform[1] * 0 + adfGeoTransform[2] * 0 
-        dMaxY = adfGeoTransform[3] + adfGeoTransform[4] * 0 + adfGeoTransform[5] * 0 
-        dMaxX = adfGeoTransform[0] + adfGeoTransform[1] * xSize + adfGeoTransform[2] * ySize
-        dMinY = adfGeoTransform[3] + adfGeoTransform[4] * xSize + adfGeoTransform[5] * ySize
-	print "(xSize, ySize)", xSize, ySize
-	print "(dMinX, dMinY, dMaxX, dMaxY)", dMinX, dMinY, dMaxX, dMaxY
+    def img2Grid(self, imgList):
+	imgbound={}
+	for fName in imgList:
+	    fPath = os.path.join(self.fileName, fName)
+	    oneImg = img.ImageFile(fPath)
+	    dl, dt, dr, db = oneImg.getBound()
+	    imgbound[fName]=(dl, dt, dr, db)
 	
-	'''
-	print hDataset.RasterXSize, hDataset.RasterYSize, hDataset.RasterCount
-	hBand = hDataset.GetRasterBand(1)
-	print gdal.GetDataTypeName(hBand.DataType)
-        print gdal.GetColorInterpretationName(hBand.GetRasterColorInterpretation()) 
-	'''
+	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
+	dTileXSize=TILESIZE256*dxres # 瓦片的地理范围
+	dTileYSize=TILESIZE256*dyres
+	imgTileBound={}
+	for k,v in imgbound.iteritems():
+	    dl, dt, dr, db=v
+	    print k, v
+	    iColStart = int(math.floor( abs(dl-dleft)/dTileXSize ))
+	    iColEnd = int(math.ceil( abs(dr-dleft)/dTileXSize ))
+	    iRowStart = int(math.floor( abs(dt-dtop)/dTileYSize ))
+	    iRowEnd = int(math.ceil( abs(db-dtop)/dTileYSize ))
+	    i,j=iRowStart,iColStart
+	    imgTileBound[k]=[]
+	    while(i<=iRowEnd):
+		while(j<=iColEnd):
+		    dTileLeft = dleft+j*dTileXSize
+		    dTileTop = dtop-i*dTileYSize
+		    dTileRight = dTileLeft+dTileXSize
+		    dTileBottom = dTileTop-dTileYSize
+		    imgTileBound[k].append((i, j, dTileLeft, dTileTop,
+			    dTileRight, dTileBottom))
+		    j = j+1
+		i = i+1
 
-	self.createBound(dMinX, dMinY, dMaxX, dMaxY)
+	for k,v in imgTileBound.iteritems():
+	    fPath = os.path.join(self.fileName, k)
+	    aimg = img.ImageFile(fPath)
+	    for i,j,l,t,r,b in v:
+		atile = numpy.zeros((TILESIZE256, TILESIZE256),int)
+		aimg.cut(l,t,r,b,dxres,TILESIZE256, atile)
+		fName = '%d_%d.bmp' % (i,j)
+		fName = os.path.join(self.fileName, fName)
+		
+		driverName = 'BMP'
+		drv = gdal.GetDriverByName(driverName)
+		print fName
+		ds=drv.Create(fName,TILESIZE256,TILESIZE256, 3,
+				gdal.GDT_Byte)
 
-	return True
+		if ds is None: continue
+		ds.GetRasterBand(1).WriteArray(atile)
+		ds=None
+		
+	    pass
     
+    def caclLevelInfo(self, dLeft, dTop, dRight, dBottom, dResolution, iTileSize):
+	''' 计算比例尺,行列号信息
+	dLeft 缓存区域的地理范围
+	dTop 缓存区域的地理范围
+	dRight 缓存区域的地理范围
+	dBottom 缓存区域的地理范围 
+	dResolution 影像像素分辨率
+	iTileSize 瓦片的像素宽高(宽==高)
+	'''
+
+	dTileSize = dResolution*iTileSize
+	iRowCount = math.ceil( (dTop-dBottom)/dTileSize )
+	iColCount = math.ceil( (dRight-dLeft)/dTileSize )
+
     def createBound(self, dMinX, dMinY, dMaxX, dMaxY):
 	''' 创建影像的外包矩形 '''
 	shpPath = self.fileName
 	shpPath = shpPath[:-4]+'.shp'
 
-	driverName = 'ESRI Shaplefile'
+	driverName = 'ESRI Shapefile'
 	drv = ogr.GetDriverByName(driverName)
 	if drv is None:
 	    print "%s driver not available.\n" % driverName
@@ -121,14 +170,31 @@ class Image2Tiles(object):
 	feat.Destroy()
 	ds = None
 
+    def listDir(slef, root):
+	''' 得到指定目录下文件列表
+	'''
+	imgList=[]
+	if os.path.isdir(root):
+	    reTif = '[\d\D]*\.tif$' 
+	    reTiff = '[\d\D]*\.tiff$' 
+	    for fName in os.listdir(root):
+		if re.match(reTif,fName,re.IGNORECASE) is not None \
+		    or re.match(reTif,fName,re.IGNORECASE) is not None:
+		    #imgList.append(os.path.join(root, fName))
+		    imgList.append(fName)
+
+	return imgList
+
 # =============================================================================
 # =============================================================================
 # =============================================================================
 
 def unitTest():
-    filePath=r'E:\2013\2013-06\2013-06-14\srtm_47_01.tif'
-    img = Image2Tiles(filePath) 
-    img.Process()
+    filePath=r'E:\2013\2013-06\2013-06-14'
+    imgtile = Image2Tiles(filePath) 
+    imgList = imgtile.listDir(filePath)
+    imgtile.img2Grid(imgList)
+    #imgtile.Process()
     pass
 
 if __name__=='__main__':
