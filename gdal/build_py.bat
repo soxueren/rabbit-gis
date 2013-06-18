@@ -10,6 +10,6 @@ python setup.py build
 
 cd ..\..\
 
-copy /Y .\build\bin\gdal*.dll .\swig\python\build\lib.win32-2.7\osgeo
+copy /Y .\build\bin\*.dll .\swig\python\build\lib.win32-2.7\osgeo
 
 pause
