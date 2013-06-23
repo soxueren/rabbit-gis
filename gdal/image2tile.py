@@ -18,33 +18,28 @@ import math
 import re 
 import numpy
 import imageFile as img
+import smSci
 
 TILESIZE256 = 256
 
 class Image2Tiles(object):
     ''' 将image文件切割为瓦片 '''
 
-    def __init__(self, fileName):
-	self.fileName=fileName
+    def __init__(self, filePath):
+	self.filePath=filePath
 	pass
     
-    def Process(self):
-	imgList = self.listDir(self.fileName)
+    def process(self):
+	imgList = self.listDir(self.filePath)
 	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
 	pass
 
     def calcBoundary(self, imgList):
-	dls=[]
-	dts=[]
-	drs=[]
-	dbs=[]
-	dxs=[]
-	dys=[]
+	''' 计算影像地理范围及分辨率 '''
+	dls, dts, drs, dbs, dxs, dys=[],[],[],[],[],[]
 	for fName in imgList:
-	    fPath = os.path.join(self.fileName, fName)
+	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
-	    #print oneImg.getWidth()
-	    #print oneImg.getHeight()
 	    dl, dt, dr, db = oneImg.getBound()
 	    dx, dy = oneImg.getResolution()
 	    dls.append(dl)
@@ -53,82 +48,56 @@ class Image2Tiles(object):
 	    dbs.append(db)
 	    dxs.append(dx)
 	    dys.append(dy)
-	    #print oneImg.getProjection()
 
-	dleft, dtop, dright, dbottom =  min(dls), max(dts), max(drs), min(dbs)
+	dleft, dtop, dright, dbottom = min(dls), max(dts), max(drs), min(dbs)
 	dxres, dyres = min(dxs), min(dys)
 	return dleft, dtop, dright, dbottom, dxres, dyres
 
-    def img2Grid(self, imgList):
+    def toTiles(self, imgList, level, outPath):
 	imgbound={}
+	gdal.AllRegister()
 	for fName in imgList:
-	    fPath = os.path.join(self.fileName, fName)
+	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
 	    dl, dt, dr, db = oneImg.getBound()
+	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
+	    i,j=rs,cs
+	    while(i<re):
+		while(j<ce):
+		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(i,j,level)
+		    atile = numpy.zeros((TILESIZE256, TILESIZE256),int)
+		    oneImg.cut(l,t,r,b,TILESIZE256, atile)
+		    self.saveOneTile(atile,level, i,j,outPath)
+		    j+=1
+		i+=1
 	    imgbound[fName]=(dl, dt, dr, db)
 	
 	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
 	dTileXSize=TILESIZE256*dxres # 瓦片的地理范围
 	dTileYSize=TILESIZE256*dyres
-	imgTileBound={}
-	for k,v in imgbound.iteritems():
-	    dl, dt, dr, db=v
-	    print k, v
-	    iColStart = int(math.floor( abs(dl-dleft)/dTileXSize ))
-	    iColEnd = int(math.ceil( abs(dr-dleft)/dTileXSize ))
-	    iRowStart = int(math.floor( abs(dt-dtop)/dTileYSize ))
-	    iRowEnd = int(math.ceil( abs(db-dtop)/dTileYSize ))
-	    i,j=iRowStart,iColStart
-	    imgTileBound[k]=[]
-	    while(i<=iRowEnd):
-		while(j<=iColEnd):
-		    dTileLeft = dleft+j*dTileXSize
-		    dTileTop = dtop-i*dTileYSize
-		    dTileRight = dTileLeft+dTileXSize
-		    dTileBottom = dTileTop-dTileYSize
-		    imgTileBound[k].append((i, j, dTileLeft, dTileTop,
-			    dTileRight, dTileBottom))
-		    j = j+1
-		i = i+1
+	return
 
-	for k,v in imgTileBound.iteritems():
-	    fPath = os.path.join(self.fileName, k)
-	    aimg = img.ImageFile(fPath)
-	    for i,j,l,t,r,b in v:
-		atile = numpy.zeros((TILESIZE256, TILESIZE256),int)
-		aimg.cut(l,t,r,b,dxres,TILESIZE256, atile)
-		fName = '%d_%d.bmp' % (i,j)
-		fName = os.path.join(self.fileName, fName)
-		
-		driverName = 'BMP'
-		drv = gdal.GetDriverByName(driverName)
-		print fName
-		ds=drv.Create(fName,TILESIZE256,TILESIZE256, 3,
-				gdal.GDT_Byte)
+    def saveOneTile(self,atile, level, row, col, path):
+	fName = '%04d_%04d_0000.png' % (row,col)
+	rg,cg = smSci.smSci3d.calcRowColGroup(row,col,level)
+	strl, strr, strc = ('%d' % level), ('%04d' % rg), ('%04d' % cg)
+	fPath = os.path.join(path, strl, strr, strc, fName)
+	folder=os.path.dirname(fPath)
+	if not os.path.exists(folder): os.makedirs(folder)
 
-		if ds is None: continue
-		ds.GetRasterBand(1).WriteArray(atile)
-		ds=None
-		
-	    pass
-    
-    def caclLevelInfo(self, dLeft, dTop, dRight, dBottom, dResolution, iTileSize):
-	''' 计算比例尺,行列号信息
-	dLeft 缓存区域的地理范围
-	dTop 缓存区域的地理范围
-	dRight 缓存区域的地理范围
-	dBottom 缓存区域的地理范围 
-	dResolution 影像像素分辨率
-	iTileSize 瓦片的像素宽高(宽==高)
-	'''
+	driverName = 'PNG'
+	out_drv = gdal.GetDriverByName(driverName)
+	mem_drv = gdal.GetDriverByName('MEM')
+	mem_ds=mem_drv.Create('',TILESIZE256, TILESIZE256, 3, gdal.GDT_Byte)
 
-	dTileSize = dResolution*iTileSize
-	iRowCount = math.ceil( (dTop-dBottom)/dTileSize )
-	iColCount = math.ceil( (dRight-dLeft)/dTileSize )
+	if mem_ds is None: return 
+	mem_ds.GetRasterBand(1).WriteArray(atile)
+	out_drv.CreateCopy(fPath, mem_ds, strict=0)
+	mem_ds=None
 
     def createBound(self, dMinX, dMinY, dMaxX, dMaxY):
 	''' 创建影像的外包矩形 '''
-	shpPath = self.fileName
+	shpPath = self.filePath
 	shpPath = shpPath[:-4]+'.shp'
 
 	driverName = 'ESRI Shapefile'
@@ -190,16 +159,21 @@ class Image2Tiles(object):
 # =============================================================================
 
 def unitTest():
-    filePath=r'E:\2013\2013-06\2013-06-14'
+    filePath=r'E:\2013\2013-06\2013-06-17'
+    outPath=r'E:\2013\2013-06\2013-06-17\out'
     imgtile = Image2Tiles(filePath) 
     imgList = imgtile.listDir(filePath)
-    imgtile.img2Grid(imgList)
-    #imgtile.Process()
+    imgtile.toTiles(imgList, 10, outPath)
+    '''
+    icnt=gdal.GetDriverCount()
+    for i in xrange(icnt):
+	print gdal.GetDriver(i).ShortName, gdal.GetDriver(i).LongName
+    '''
+    #imgtile.process()
     pass
 
 if __name__=='__main__':
-    argv = gdal.GeneralCmdLineProcessor( sys.argv )
-    print argv
+    #argv = gdal.GeneralCmdLineprocessor( sys.argv )
     #if len(argv)==1: sys.exit(1) 
     unitTest()
 
