@@ -36,11 +36,8 @@ class ImageFile(object):
 	self.hDataset=None
 	self.process()
 
-    def getWidth(self):
-	return self.xSize
-
-    def getHeight(self):
-	return self.ySize
+    def getWidthHeight(self):
+	return self.xSize, self.ySize
     
     def getResolution(self):
 	return (self.dResolutionX, self.dResolutionX)
@@ -91,13 +88,13 @@ class ImageFile(object):
 	hDataset=None
 	return True
 
-    def cut(self, l, t, r, b, res, ts, tile_data=None):
+    def cut(self, l, t, r, b, ts, tile_data=None):
 	if l>self.dMaxX or t<self.dMinY or r<self.dMinX or b>self.dMaxY:
 	    return None
 
 	((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
 	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd)) \
-	    = self._posOneTile(l, t, r, b, res, ts)
+	    = self._posOneTile(l, t, r, b, ts)
 
 	for iband in range(1, self.iBandNums+1):
 	    band = self.hDataset.GetRasterBand(iband)
@@ -114,10 +111,10 @@ class ImageFile(object):
 	    tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
 
 
-    def _posOneTile(self,l, t, r, b, res, ts):
+    def _posOneTile(self,l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围 '''
-	rowInFileStart=0
-	rowInTileStart=0
+	res = self.dResolutionY
+	rowInFileStart, rowInTileStart=0,0
 	if t<self.dMaxY:
 	    rowInFileStart=int((self.dMaxY-t)/self.dResolutionY)
 	else:
