@@ -160,9 +160,13 @@ class smSci3d(smSci):
 	self.height=1.0
 	self.startl=1
 	self.endl=2
+	self.extName='png'
 
     def setLevels(self, s, e):
 	self.startl, self.endl=s,e
+
+    def setExtName(self, ext):
+	self.extName=ext
 
     def setWidthHeight(self, w, h):
 	''' 影像缓存最高分辨率图像的宽高(最清晰一层)的总尺寸,单位为像素 '''
@@ -206,12 +210,20 @@ class smSci3d(smSci):
 		    newline = line.replace('[Level]', ('%d' % (ils+j)))
 		    self.lines.insert(i+j,newline)
 		return True
+
+    def replaceExtName(self):
+	for i in xrange(len(self.lines)):
+	    line=self.lines[i]
+	    if '[FileExtentName]' in line:
+		newline = line.replace('[FileExtentName]', self.extName)
+		self.lines[i]=newline
     
     def replace(self):
 	self.replaceCacheName()
 	self.replaceWidthHeight()
 	self.replaceBnd()
 	self.replaceLevels()
+	self.replaceExtName()
 
     @staticmethod
     def calcEndLevel(res):
@@ -270,9 +282,18 @@ class smSci3d(smSci):
     def calcBndByRowCol(r,c,level):
 	level0Res = 180.0/256 # 0层分辨率 
 	levelRes = level0Res/(1<<level) # i层分辨率
-	l,t=c*levelRes, r*levelRes
-	r,b=l+levelRes, t-levelRes
+	l,t=c*levelRes*256+(-180.0), 90-r*levelRes*256
+	r,b=l+levelRes*256, t-levelRes*256
 	return l,t,r,b
+
+    @staticmethod
+    def calcTileName(level, row, col, path):
+	fName = '%04d_%04d_0000' % (row,col)
+	rg,cg = smSci3d.calcRowColGroup(row,col,level)
+	strl, strr, strc = ('%d' % level), ('%04d' % rg), ('%04d' % cg)
+	fPath = os.path.join(path, strl, strr, strc, fName)
+	return fPath
+	
 	
 	
 
