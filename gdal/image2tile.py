@@ -29,71 +29,22 @@ class Image2Tiles(object):
 	self.filePath=filePath
 	pass
     
-    def process(self):
-	imgList = self.listDir(self.filePath)
-	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
-	pass
-
-    def calcBoundary(self, imgList):
-	''' 计算影像地理范围及分辨率 '''
-	dls, dts, drs, dbs, dxs, dys=[],[],[],[],[],[]
-	for fName in imgList:
-	    fPath = os.path.join(self.filePath, fName)
-	    oneImg = img.ImageFile(fPath)
-	    dl, dt, dr, db = oneImg.getBound()
-	    dx, dy = oneImg.getResolution()
-	    dls.append(dl)
-	    dts.append(dt)
-	    drs.append(dr)
-	    dbs.append(db)
-	    dxs.append(dx)
-	    dys.append(dy)
-
-	dleft, dtop, dright, dbottom = min(dls), max(dts), max(drs), min(dbs)
-	dxres, dyres = min(dxs), min(dys)
-	return dleft, dtop, dright, dbottom, dxres, dyres
-
     def toTiles(self, imgList, level, outPath):
 	imgbound={}
-	gdal.AllRegister()
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
 	    dl, dt, dr, db = oneImg.getBound()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
-	    i,j=rs,cs
-	    while(i<re):
-		while(j<ce):
-		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(i,j,level)
-		    atile = numpy.zeros((TILESIZE256, TILESIZE256),int)
-		    oneImg.cut(l,t,r,b,TILESIZE256, atile)
-		    self.saveOneTile(atile,level, i,j,outPath)
-		    j+=1
-		i+=1
-	    imgbound[fName]=(dl, dt, dr, db)
-	
-	dleft, dtop, dright, dbottom, dxres, dyres = self.calcBoundary(imgList)
-	dTileXSize=TILESIZE256*dxres # 瓦片的地理范围
-	dTileYSize=TILESIZE256*dyres
-	return
-
-    def saveOneTile(self,atile, level, row, col, path):
-	fName = '%04d_%04d_0000.png' % (row,col)
-	rg,cg = smSci.smSci3d.calcRowColGroup(row,col,level)
-	strl, strr, strc = ('%d' % level), ('%04d' % rg), ('%04d' % cg)
-	fPath = os.path.join(path, strl, strr, strc, fName)
-	folder=os.path.dirname(fPath)
-	if not os.path.exists(folder): os.makedirs(folder)
-
-	driverName = 'PNG'
-	out_drv = gdal.GetDriverByName(driverName)
-	mem_drv = gdal.GetDriverByName('MEM')
-	mem_ds=mem_drv.Create('',TILESIZE256, TILESIZE256, 3, gdal.GDT_Byte)
-
-	if mem_ds is None: return 
-	mem_ds.GetRasterBand(1).WriteArray(atile)
-	out_drv.CreateCopy(fPath, mem_ds, strict=0)
-	mem_ds=None
+	    for row in xrange(rs, re+1):
+		for col in xrange(cs, ce+1):
+		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(row,col,level)
+		    fp = smSci.smSci3d.calcTileName(level,row,col,outPath)+'.jpg'
+		    if not os.path.exists(os.path.dirname(fp)):
+			os.makedirs(os.path.dirname(fp))
+		    oneImg.cut(l,t,r,b,TILESIZE256, fp)
+	    del oneImg
+	return True
 
     def createBound(self, dMinX, dMinY, dMaxX, dMaxY):
 	''' 创建影像的外包矩形 '''
@@ -149,8 +100,8 @@ class Image2Tiles(object):
 	    for fName in os.listdir(root):
 		if re.match(reTif,fName,re.IGNORECASE) is not None \
 		    or re.match(reTif,fName,re.IGNORECASE) is not None:
-		    #imgList.append(os.path.join(root, fName))
-		    imgList.append(fName)
+		    imgList.append(os.path.join(root, fName))
+		    #imgList.append(fName)
 
 	return imgList
 
@@ -161,16 +112,26 @@ class Image2Tiles(object):
 def unitTest():
     filePath=r'E:\2013\2013-06\2013-06-17'
     outPath=r'E:\2013\2013-06\2013-06-17\out'
+    mapname, ext='out', 'jpg'
     imgtile = Image2Tiles(filePath) 
     imgList = imgtile.listDir(filePath)
-    imgtile.toTiles(imgList, 10, outPath)
-    '''
-    icnt=gdal.GetDriverCount()
-    for i in xrange(icnt):
-	print gdal.GetDriver(i).ShortName, gdal.GetDriver(i).LongName
-    '''
-    #imgtile.process()
-    pass
+    #imgList = imgList[:1]
+    l,t,r,b, xres, yres = img.calcBoundary(imgList)
+    mapbnd=l,t,r,b
+
+    endl=smSci.smSci3d.calcEndLevel(xres)
+    startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
+    w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
+    
+    sci = smSci.smSci3d()
+    sci.setParams(mapname, mapbnd, mapbnd, '')
+    sci.setLevels(startl, endl)
+    sci.setExtName(ext)
+    sci.setWidthHeight(w,h)
+    sci.saveSciFile(outPath)
+    
+    for i in xrange(endl, startl, -1):
+	imgtile.toTiles(imgList, i, outPath)
 
 if __name__=='__main__':
     #argv = gdal.GeneralCmdLineprocessor( sys.argv )

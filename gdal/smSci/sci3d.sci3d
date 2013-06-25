@@ -5,7 +5,7 @@
 <sml:CacheName>[CacheName]</sml:CacheName>
 <sml:StoreType>PureFiles</sml:StoreType>
 <sml:Description/>
-<sml:FileExtentName>png</sml:FileExtentName>
+<sml:FileExtentName>[FileExtentName]</sml:FileExtentName>
 <sml:Type>Image</sml:Type>
 <sml:UpdateDataVersion>false</sml:UpdateDataVersion>
 <sml:Width>[Width]</sml:Width>
