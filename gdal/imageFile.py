@@ -106,20 +106,32 @@ class ImageFile(object):
 	if mem_ds is None: return 
 	#print fp
 
-	for iband in range(1, self.iBandNums+1):
+	rowFileSize=rowInFileEnd-rowInFileStart
+	colFileSize=colInFileEnd-colInFileStart
+	rowTileSize=rowInTileEnd-rowInTileStart
+	colTileSize=colInTileEnd-colInTileStart
+
+	if self.iBandNums==1:
 	    tile_data = numpy.zeros((ts, ts), numpy.uint8)
-	    band = self.ds.GetRasterBand(iband)
-	    rowFileSize=rowInFileEnd-rowInFileStart
-	    colFileSize=colInFileEnd-colInFileStart
-	    rowTileSize=rowInTileEnd-rowInTileStart
-	    colTileSize=colInTileEnd-colInTileStart
+	    band = self.ds.GetRasterBand(1)
 	    data = band.ReadAsArray(colInFileStart, rowInFileStart,
 			    colFileSize, rowFileSize, colTileSize, rowTileSize)
-	    #print data.shape, data.dtype
-	    #print tile_data.shape, tile_data.dtype
 	    tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
-	    mem_ds.GetRasterBand(iband).WriteArray(tile_data)
+	    mem_ds.GetRasterBand(1).WriteArray(tile_data)
+	    mem_ds.GetRasterBand(2).WriteArray(tile_data)
+	    mem_ds.GetRasterBand(3).WriteArray(tile_data)
 	    del tile_data
+	else:
+	    for iband in range(1, self.iBandNums+1):
+		tile_data = numpy.zeros((ts, ts), numpy.uint8)
+		band = self.ds.GetRasterBand(iband)
+		data = band.ReadAsArray(colInFileStart, rowInFileStart,
+				colFileSize, rowFileSize, colTileSize, rowTileSize)
+		#print data.shape, data.dtype
+		#print tile_data.shape, tile_data.dtype
+		tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
+		mem_ds.GetRasterBand(iband).WriteArray(tile_data)
+		del tile_data
 	
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
