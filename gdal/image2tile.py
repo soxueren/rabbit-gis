@@ -16,7 +16,6 @@ except:
 import os
 import math
 import re 
-import numpy
 import imageFile as img
 import smSci
 
@@ -27,13 +26,22 @@ class Image2Tiles(object):
 
     def __init__(self, filePath):
 	self.filePath=filePath
+	self.callbackfun=None
 	pass
+    
+    def hook(self, callback):
+	self.callbackfun=callback
+
+    def printLog(self, msg, newline=True):
+	if self.callbackfun is None:return
+	self.callbackfun(msg, newline)
     
     def toTiles(self, imgList, level, outPath):
 	imgbound={}
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
+	    self.printLog(("begin file:%s" % fPath))
 	    dl, dt, dr, db = oneImg.getBound()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
 	    for row in xrange(rs, re+1):
@@ -43,6 +51,7 @@ class Image2Tiles(object):
 		    if not os.path.exists(os.path.dirname(fp)):
 			os.makedirs(os.path.dirname(fp))
 		    oneImg.cut(l,t,r,b,TILESIZE256, fp)
+		    self.printLog(("added tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))), False)
 	    del oneImg
 	return True
 
@@ -90,19 +99,22 @@ class Image2Tiles(object):
 	feat.Destroy()
 	ds = None
 
-    def listDir(slef, root):
-	''' 得到指定目录下文件列表
-	'''
+    @staticmethod
+    def listDir(root, ext):
+	''' 得到指定目录下文件列表 '''
+	reExt='[\d\D]*\.tif$' 
+	if ext.strip('.').upper()=='TIF':
+	    reExt='[\d\D]*\.tif$' 
+	elif ext.strip('.').upper()=='TIFF':
+	    reExt='[\d\D]*\.tiff$' 
+	elif ext.strip('.').upper()=='IMG':
+	    reExt='[\d\D]*\.img$' 
+
 	imgList=[]
 	if os.path.isdir(root):
-	    reTif = '[\d\D]*\.tif$' 
-	    reTiff = '[\d\D]*\.tiff$' 
 	    for fName in os.listdir(root):
-		if re.match(reTif,fName,re.IGNORECASE) is not None \
-		    or re.match(reTif,fName,re.IGNORECASE) is not None:
+		if re.match(reExt,fName,re.IGNORECASE) is not None:
 		    imgList.append(os.path.join(root, fName))
-		    #imgList.append(fName)
-
 	return imgList
 
 # =============================================================================
@@ -114,7 +126,7 @@ def unitTest():
     outPath=r'E:\2013\2013-06\2013-06-17\out'
     mapname, ext='out', 'jpg'
     imgtile = Image2Tiles(filePath) 
-    imgList = imgtile.listDir(filePath)
+    imgList = imgtile.listDir(filePath, 'tif')
     #imgList = imgList[:1]
     l,t,r,b, xres, yres = img.calcBoundary(imgList)
     mapbnd=l,t,r,b
