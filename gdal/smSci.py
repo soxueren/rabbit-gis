@@ -81,7 +81,7 @@ class smSci(object):
 	return True
     
     def loadTemplate(self):
-	srcSciPath = os.path.join(os.getcwd(), 'smSci', self.sciTmpFile)
+	srcSciPath = os.path.join(os.path.dirname(__file__), '..\smSci', self.sciTmpFile)
 	f=open(srcSciPath)
 	lines=f.readlines()
 	f.close()
