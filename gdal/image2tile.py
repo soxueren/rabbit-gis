@@ -27,31 +27,36 @@ class Image2Tiles(object):
     def __init__(self, filePath):
 	self.filePath=filePath
 	self.callbackfun=None
+	self.ext='.jpg'
 	pass
     
     def hook(self, callback):
 	self.callbackfun=callback
 
-    def printLog(self, msg, newline=True):
-	if self.callbackfun is None:return
-	self.callbackfun(msg, newline)
+    def printLog(self, msg):
+	if self.callbackfun is None: return
+	self.callbackfun(msg)
+
+    def setExt(self, ext):
+	self.ext=ext
     
     def toTiles(self, imgList, level, outPath):
 	imgbound={}
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
-	    self.printLog(("begin file:%s" % fPath))
+	    self.printLog(("Reading file: %s" % fPath))
 	    dl, dt, dr, db = oneImg.getBound()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
 	    for row in xrange(rs, re+1):
 		for col in xrange(cs, ce+1):
 		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(row,col,level)
-		    fp = smSci.smSci3d.calcTileName(level,row,col,outPath)+'.jpg'
+		    fp = smSci.smSci3d.calcTileName(level,row,col,outPath)+self.ext
 		    if not os.path.exists(os.path.dirname(fp)):
 			os.makedirs(os.path.dirname(fp))
 		    oneImg.cut(l,t,r,b,TILESIZE256, fp)
-		    self.printLog(("added tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))), False)
+		    #if ((row-rs)*(ce-cs)+col-cs)%100==0:
+		    #self.printLog(("To tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))))
 	    del oneImg
 	return True
 

@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 # --*-- coding:utf-8 --*--
 
-import  wx
+import wx
 import time
 import image2tile as i2t
 import imageFile as imf
 import smSci
+import common as cm
+from wx.lib.wordwrap import wordwrap
+
+try:
+    from agw import advancedsplash as AS
+except ImportError: # if it's not there locally, try the wxPython lib.
+    import wx.lib.agw.advancedsplash as AS
+
+
 #---------------------------------------------------------------------------
 
 g_wildcard = "GeoTiff (*.tif)|*.tif|"     \
@@ -18,8 +27,9 @@ class MyFrame(wx.Frame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         wx.Frame.__init__(self, parent, ID, title, pos, size, style)
+	self._splash()
 	self.fileList=[]
-        panel = wx.Panel(self, -1)
+        self.panel=panel= wx.Panel(self, -1)
 
 	inBox = wx.StaticBox(panel, -1, "")
 	sizerIn = wx.StaticBoxSizer(inBox, wx.VERTICAL)
@@ -73,6 +83,9 @@ class MyFrame(wx.Frame):
 	box.Add(btnOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
+        line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
+	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+
 	labelName = wx.StaticText(panel, -1, "缓存名称:")
 	self.txtName=textName=wx.TextCtrl(panel, -1, "", size=(200,-1))
 	self.rb=rb= wx.RadioBox(panel, -1, "瓦片类型", wx.DefaultPosition, wx.DefaultSize,
@@ -92,14 +105,18 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, rb)
 
 	
-	self.log=logText = wx.TextCtrl(panel,-1,"",size=(880,360),style=wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
+	self.log=logText = wx.TextCtrl(panel,-1,"",size=(750,220),style=wx.TE_READONLY|wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
 	logBox = wx.StaticBox(panel, -1, "日志:")
 	sizerLog = wx.StaticBoxSizer(logBox, wx.HORIZONTAL)
 	sizerLog.Add(logText,0, wx.ALL|wx.EXPAND, 5) 
 
-	sizer = wx.BoxSizer(wx.VERTICAL)
+	self.psizer=sizer = wx.BoxSizer(wx.VERTICAL)
 	sizer.Add(sizerIn, 0, wx.EXPAND|wx.ALL, 25)
 	sizer.Add(sizerLog, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
+        line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
+	sizer.Add(line, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
+
+	self._addBtnOK()
 
 	self.Bind(wx.EVT_BUTTON, self.OnButtonFile, btnFile)
 	self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btnDir)
@@ -114,14 +131,71 @@ class MyFrame(wx.Frame):
 	#self.SetAutoLayout(1)
 	sizer.Fit(self)
 	self.Show()
-	
+    
+    def _addBtnOK(self):
+        btnsizer = wx.StdDialogButtonSizer()
+        if wx.Platform != "__WXMSW__":
+            btn = wx.ContextHelpButton(self)
+            btnsizer.AddButton(btn)
+        
+        btn = wx.Button(self.panel, wx.ID_OK)
+        btn.SetHelpText("The OK button completes the dialog")
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
 
+        btn = wx.Button(self.panel, wx.ID_CANCEL)
+        btn.SetHelpText("The Cancel button cancels the dialog.")
+        btnsizer.AddButton(btn)
+	self.Bind(wx.EVT_BUTTON, self.OnCloseMe, btn)
+
+        btn = wx.Button(self.panel, wx.ID_HELP)
+        btn.SetHelpText("The Cancel button cancels the dialog.")
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+	self.Bind(wx.EVT_BUTTON, self.OnButtonHelp, btn)
+
+        self.psizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
+
+    def _splash(self):
+	try:
+	    dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	pn =os.path.join(dirName, 'logo.png')
+	if not os.path.exists(pn):return 
+        bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
+        shadow = wx.WHITE
+        frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=3000,
+                                  agwStyle=AS.AS_TIMEOUT |
+                                  AS.AS_CENTER_ON_PARENT |
+                                  AS.AS_SHADOW_BITMAP,
+                                  shadowcolour=shadow)
+	    
 
     def OnCloseMe(self, event):
         self.Close(True)
 
     def OnCloseWindow(self, event):
         self.Destroy()
+
+    def OnButtonHelp(self, event):
+	# First we create and fill the info object
+        info = wx.AboutDialogInfo()
+        info.Name = cm.APPNAME 
+        info.Version = cm.VERSION 
+        info.Copyright = "(C) 2006-2013 www.atolin.net"
+	strdes=("生成三维影像缓存.\n\n\t自动拼接,无需入库是其最大特点.\n\n").decode('gb2312')
+	strdes+=("\t可直接将影像切分成的三维影像缓存文件.").decode('gb2312')
+        info.Description = wordwrap('\t'+info.Name+strdes, 
+            350, wx.ClientDC(self))
+        info.WebSite = ("http://www.atolin.net", info.Name)
+        info.Developers = [ "wenyulin.lin@gmail.com" ]
+
+        #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
+        # Then we call wx.AboutBox giving it that info object
+        wx.AboutBox(info)
+        
+	
 
     def OnButtonDirOut(self, event):
 	dlg = wx.DirDialog(self, "Choose a directory:",
@@ -132,7 +206,7 @@ class MyFrame(wx.Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
 	    self.txtOut.Clear()
-	    self.txtOut.WriteText(dlg.GetPath())
+	    self.txtOut.AppendText(dlg.GetPath())
         dlg.Destroy()
 
     def OnButtonDir(self, event):
@@ -144,7 +218,7 @@ class MyFrame(wx.Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
 	    self.txtIn.Clear()
-	    self.txtIn.WriteText(dlg.GetPath())
+	    self.txtIn.AppendText(dlg.GetPath())
         dlg.Destroy()
 	self.fillFileList()
 
@@ -159,10 +233,10 @@ class MyFrame(wx.Frame):
             paths = dlg.GetPaths()
 	    self.txtIn.Clear()
 	    if len(paths)==1:
-		self.txtIn.WriteText(paths[0])
+		self.txtIn.AppendText(paths[0])
 	    else:
 		path=','.join(paths)
-		self.txtIn.WriteText(path)
+		self.txtIn.AppendText(path)
         dlg.Destroy()
 	self.fillFileList()
 
@@ -197,7 +271,7 @@ class MyFrame(wx.Frame):
 	
 	
     def EvtRadioBox(self, event):
-        self.log.WriteText('EvtRadioBox: %d\n' % event.GetInt())
+        self.log.AppendText('EvtRadioBox: %d\n' % event.GetInt())
 
     def OnSpinBeg(self, event):
         self.txtLvlBeg.SetValue(str(event.GetPosition()))
@@ -207,12 +281,12 @@ class MyFrame(wx.Frame):
 	
 	
     def logPrint(self, msg, newline=True):
-	strtime=time.strftime("%Y-%m-%d %H:%M:%S>")
-	strlog=strtime+" "+msg
+	strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
+	strlog=strtime+msg
 	if newline: 
-	    self.log.WriteText(strlog+"\n")
+	    self.log.AppendText(strlog+"\n")
 	else:
-	    self.log.WriteText(strlog+"\r")
+	    self.log.AppendText(strlog+"\r")
 
     def check(self):
 	if self.txtIn.GetValue()=="":
@@ -230,7 +304,7 @@ class MyFrame(wx.Frame):
     def OnButtonRun(self, event):
 	if not self.check():return False
 	mapname=self.txtName.GetValue()
-	ext='png' if self.rb.GetSelection()==1 else 'jpg'
+	ext='png' if self.rb.GetSelection()==0 else 'jpg'
 	outPath=self.txtOut.GetValue()
 	outPath=os.path.join(outPath, mapname)
 	if not os.path.exists(outPath): os.makedirs(outPath)
@@ -253,11 +327,16 @@ class MyFrame(wx.Frame):
 	sci.setWidthHeight(w,h)
 	sci.saveSciFile(outPath)
     
+	if ext=='png': ext='.png'
+	if ext=='jpg': ext='.jpg'
 	imgtile = i2t.Image2Tiles(outPath) 
 	imgtile.hook(self.logPrint)
-	for i in xrange(endl, startl, -1):
+	imgtile.setExt(ext)
+	for i in xrange(endl, startl-1, -1):
+	    self.logPrint(('开始处理第%d层数据...' % i))
 	    imgtile.toTiles(self.fileList, i, outPath)
 	self.logPrint('All done.')
+	del imgtile,sci 
 
 #---------------------------------------------------------------------------
 
