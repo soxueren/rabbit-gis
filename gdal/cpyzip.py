@@ -6,7 +6,8 @@ import shutil
 import common as cm
 import zipfile
 
-dirname=cm.APPNAME+'-'+cm.VERSION+'-Win32'
+dirname=cm.APPNAME+'-'+cm.VERSION+'-win32'
+tozipfile=cm.APPNAME+'-'+cm.VERSION+'-win32.zip'
 
 def copyfiles():
     pf=os.path.join(os.getcwd(), 'build', 'exe.win32-2.7')
@@ -22,7 +23,6 @@ def copyfiles():
 	    shutil.copy2(src,dst)
 
 def zipfiles():
-    tozipfile=cm.APPNAME+'-'+cm.VERSION+'-Win32.zip'
     pf=os.path.join(os.getcwd(), dirname)
     if not os.path.exists(pf):return
     with zipfile.ZipFile(tozipfile, 'w') as myzip:
@@ -32,8 +32,17 @@ def zipfiles():
 		dst=src[src.find(dirname):]
 		print 'zipped ', src
 		myzip.write(dst)
+def movefiles():
+    pf=os.path.join(os.getcwd(), dirname)
+    pt=os.path.join(os.getcwd(), 'dist', dirname)
+    if os.path.exists(pt):shutil.rmtree(pt)
+    shutil.move(pf, pt)
+    pt=os.path.join(os.getcwd(), 'dist',tozipfile)
+    if os.path.isfile(pt):shuti.remove(pt)
+    shutil.move(tozipfile,pt)
 
 if __name__=='__main__':
     copyfiles()
     zipfiles()
+    movefiles()
 

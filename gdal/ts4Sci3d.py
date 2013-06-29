@@ -184,9 +184,9 @@ class MyFrame(wx.Frame):
         info.Name = cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net"
-	strdes=("生成三维影像缓存.\n\n\t自动拼接,无需入库是其最大特点.\n\n").decode('gb2312')
-	strdes+=("\t可直接将影像切分成的三维影像缓存文件.").decode('gb2312')
-        info.Description = wordwrap('\t'+info.Name+strdes, 
+	strdes=("生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n").decode('gb2312')
+	strdes+=("可直接将影像切分成的三维影像缓存文件.").decode('gb2312')
+        info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
         info.Developers = [ "wenyulin.lin@gmail.com" ]
@@ -271,7 +271,8 @@ class MyFrame(wx.Frame):
 	
 	
     def EvtRadioBox(self, event):
-        self.log.AppendText('EvtRadioBox: %d\n' % event.GetInt())
+	pass
+        #self.log.AppendText('EvtRadioBox: %d\n' % event.GetInt())
 
     def OnSpinBeg(self, event):
         self.txtLvlBeg.SetValue(str(event.GetPosition()))
@@ -348,6 +349,6 @@ if __name__ == '__main__':
     import sys,os
     import common as cm
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrame(None, wx.ID_ANY, "TileServer-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
+    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
