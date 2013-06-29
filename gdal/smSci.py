@@ -81,7 +81,20 @@ class smSci(object):
 	return True
     
     def loadTemplate(self):
-	srcSciPath = os.path.join(os.path.dirname(__file__), '..\smSci', self.sciTmpFile)
+	try:
+	    dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	srcSciPath=os.path.join(dirName, 'smSci', self.sciTmpFile)
+	# 打包后目录发生变化,需要去掉library.zip目录
+	srcSciPath=srcSciPath.replace('library.zip','')
+	srcSciPath=os.path.abspath(srcSciPath)
+	if not os.path.isfile(srcSciPath):return 
+	'''
+	f=open('d:\\txt.txt','w')
+	f.write(srcSciPath)
+	f.close()
+	'''
 	f=open(srcSciPath)
 	lines=f.readlines()
 	f.close()
