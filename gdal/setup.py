@@ -19,7 +19,7 @@ buildOptions = dict(
         compressed=True,
 	includes=['numpy'],
 	#zip_includes=['smSci/sci3d.sci3d','smSci/sci3d.sci3d'],
-	include_files=['smSci/sci3d.sci3d','smSci/sci3d.sci3d'],
+	include_files=['smSci/sci3d.sci3d','logo.png'],
 	)
 
 setup(
@@ -31,5 +31,7 @@ setup(
         maintainer = 'linwenyu',
         url = 'www.atolin.net',
 	options = dict(build_exe = buildOptions),
-        executables = [Executable("ts4Sci3d.py", targetName='TileServer4Sci3d.exe',icon='icon.ico'), ])
+        executables = [Executable("ts4Sci3d.py", \
+			targetName='TileServer-4Sci3d.exe',\
+			icon='icon.ico',base=base), ])
 
