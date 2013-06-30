@@ -38,7 +38,7 @@ def movefiles():
     if os.path.exists(pt):shutil.rmtree(pt)
     shutil.move(pf, pt)
     pt=os.path.join(os.getcwd(), 'dist',tozipfile)
-    if os.path.isfile(pt):shuti.remove(pt)
+    if os.path.isfile(pt):os.remove(pt)
     shutil.move(tozipfile,pt)
 
 if __name__=='__main__':
