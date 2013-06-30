@@ -29,7 +29,7 @@ msiOpts=dict(
 
 
 setup(
-        name = "ts4Sci3d",
+        name = "TileServer",
 	version = cm.VERSION[:cm.VERSION.rfind('.')],
         description = "Build Sci3d tile files.",
 	author = 'linwenyu',
@@ -37,7 +37,7 @@ setup(
         maintainer = 'linwenyu',
         url = 'www.atolin.net',
 	options = dict(build_exe=buildOpts, bdist_msi=msiOpts),
-        executables = [Executable("ts4Sci3d.py", \
+        executables = [Executable("TileServer4Sci3d.py", \
 			targetName=cm.APPNAME+'-4Sci3d.exe',\
 			icon='icon.ico',base=base), ])
 
