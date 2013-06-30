@@ -32,7 +32,7 @@ setup(
         name = "TileServer",
 	version = cm.VERSION[:cm.VERSION.rfind('.')],
         description = "Build Sci3d tile files.",
-	author = 'linwenyu',
+	author = 'wenyulin.lin@gmail.com',
         author_email = 'wenyulin.lin@gmail.com',
         maintainer = 'linwenyu',
         url = 'www.atolin.net',
