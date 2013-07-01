@@ -34,7 +34,7 @@ class MyFrame(wx.Frame):
 	inBox = wx.StaticBox(panel, -1, "")
 	sizerIn = wx.StaticBoxSizer(inBox, wx.VERTICAL)
 
-	self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(520,-1))
+	self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(520,-1),style=wx.TE_READONLY)
         btnFile = wx.Button(panel, wx.ID_ANY, "文件")
         btnDir = wx.Button(panel, wx.ID_ANY, "目录")
 	label=wx.StaticText(panel, -1, "输入:")
@@ -184,8 +184,8 @@ class MyFrame(wx.Frame):
         info.Name = cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net"
-	strdes=("生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n").decode('gb2312')
-	strdes+=("可直接将影像切分成的三维影像缓存文件.").decode('gb2312')
+	strdes="生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
+	strdes+="可直接将影像切分成的三维影像缓存文件."#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
@@ -256,7 +256,19 @@ class MyFrame(wx.Frame):
 	    imgList=txtfiles.split(',')
 	    self.fileList.extend(imgList)
 	#self.logPrint('selected files:'+str(len(self.fileList)))
+	self.checkPrj()
 	self.defaultLevels()
+
+    def checkPrj(self):
+	''' 确保输入数据为经纬度坐标 '''
+	wgsList=[]
+	for f in self.fileList:
+	    ifile=imf.ImageFile(f)
+	    if ifile.isGeographic():
+		wgsList.append(f)
+	    else:
+		self.logPrint(('非WGS84坐标: %s' % f))
+	self.fileList=wgsList
 
     def defaultLevels(self):
 	l,t,r,b, xres, yres = imf.calcBoundary(self.fileList)

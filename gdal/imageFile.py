@@ -23,7 +23,7 @@ class ImageFile(object):
 
     def __init__(self, fileName):
 	self.fileName=fileName
-	self.pszProjection=None
+	self.srsWkt=None
 	self.xSize=None
 	self.ySize=None
 	self.dMinX=None
@@ -46,7 +46,14 @@ class ImageFile(object):
 	return (self.dMinX, self.dMaxY, self.dMaxX, self.dMinY)
     
     def getProjection(self):
-	return self.pszProjection
+	return self.srsWkt
+
+    def isGeographic(self):
+	if self.srsWkt=='': return False
+	srs=osr.SpatialReference()
+        srs.ImportFromWkt(self.srsWkt)
+	return srs.IsGeographic()
+	
 
     def process(self):
 	if not os.path.isfile(self.fileName):
@@ -61,7 +68,7 @@ class ImageFile(object):
 	#/* -------------------------------------------------------------------- */
 	#/*      Report projection.                                              */
 	#/* -------------------------------------------------------------------- */
-	self.pszProjection = self.ds.GetProjectionRef()
+	self.srsWkt = self.ds.GetProjectionRef()
 
 	self.xSize, self.ySize = self.ds.RasterXSize, self.ds.RasterYSize
 
@@ -205,6 +212,13 @@ def calcBoundary(imgList):
 # =============================================================================
 # =============================================================================
 
+def unitTestProj():
+    fileName=r'E:\新建文件夹\全市域裁切影像\新建文件夹\1-1.tif'
+    imgf=ImageFile(fileName)
+    print imgf.getProjection()
+    print imgf.isGeographic()
+    del imgf
+
 def unitTest():
     import smSci
     fileName=r'E:\2013\2013-06\2013-06-17\srtm_47_01.tif'
@@ -225,8 +239,6 @@ def unitTest():
 	    imgf.cut(l,t,r,b,ts,fp)
 
 if __name__=='__main__':
-    argv = gdal.GeneralCmdLineProcessor( sys.argv )
-    print argv
-    #if len(argv)==1: sys.exit(1) 
-    unitTest()
+    #unitTest()
+    unitTestProj()
 

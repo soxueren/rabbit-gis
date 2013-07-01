@@ -127,7 +127,7 @@ class Image2Tiles(object):
 # =============================================================================
 
 def unitTest():
-    filePath=r'E:\2013\2013-06\2013-06-17'
+    filePath=r'E:\新建文件夹\全市域裁切影像\新建文件夹'
     outPath=r'E:\2013\2013-06\2013-06-17\out'
     mapname, ext='out', 'jpg'
     imgtile = Image2Tiles(filePath) 
@@ -135,6 +135,7 @@ def unitTest():
     #imgList = imgList[:1]
     l,t,r,b, xres, yres = img.calcBoundary(imgList)
     mapbnd=l,t,r,b
+    print mapbnd, xres,yres
 
     endl=smSci.smSci3d.calcEndLevel(xres)
     startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
@@ -146,6 +147,9 @@ def unitTest():
     sci.setExtName(ext)
     sci.setWidthHeight(w,h)
     sci.saveSciFile(outPath)
+    print startl, endl, w,h
+
+    return
     
     for i in xrange(endl, startl, -1):
 	imgtile.toTiles(imgList, i, outPath)
