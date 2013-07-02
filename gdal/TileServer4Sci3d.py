@@ -27,7 +27,7 @@ class MyFrame(wx.Frame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         wx.Frame.__init__(self, parent, ID, title, pos, size, style)
-	self._splash()
+	self.uiSplash()
 	self.fileList=[]
         self.panel=panel= wx.Panel(self, -1)
 
@@ -47,8 +47,8 @@ class MyFrame(wx.Frame):
 
 	box=wx.StaticBox(panel,-1,"")
 	boxSiezer=wx.StaticBoxSizer(box, wx.HORIZONTAL)
-	self.txtLvlBeg=txtbeg=wx.TextCtrl(panel, -1, "1", size=(20,-1),style=wx.TE_READONLY)
-	self.txtLvlEnd=txtend=wx.TextCtrl(panel, -1, "20", size=(20,-1),style=wx.TE_READONLY)
+	self.txtLvlBeg=txtbeg=wx.TextCtrl(panel, -1, "1", size=(25,-1),style=wx.TE_READONLY)
+	self.txtLvlEnd=txtend=wx.TextCtrl(panel, -1, "20", size=(25,-1),style=wx.TE_READONLY)
         self.spinLvlBeg = wx.SpinButton(panel, -1, (-1,-1), (-1,-1), wx.SP_VERTICAL)
         self.spinLvlEnd = wx.SpinButton(panel, -1, (-1,-1), (-1,-1), wx.SP_VERTICAL)
         self.spinLvlBeg.SetRange(1, 20)
@@ -116,7 +116,7 @@ class MyFrame(wx.Frame):
         line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
 	sizer.Add(line, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
 
-	self._addBtnOK()
+	self.uiButtonOK()
 
 	self.Bind(wx.EVT_BUTTON, self.OnButtonFile, btnFile)
 	self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btnDir)
@@ -132,18 +132,19 @@ class MyFrame(wx.Frame):
 	sizer.Fit(self)
 	self.Show()
     
-    def _addBtnOK(self):
+    def uiButtonOK(self):
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != "__WXMSW__":
             btn = wx.ContextHelpButton(self)
             btnsizer.AddButton(btn)
         
-        btn = wx.Button(self.panel, wx.ID_OK)
+        btn = wx.Button(self.panel, wx.ID_OK, "清除")
         btn.SetHelpText("The OK button completes the dialog")
         btn.SetDefault()
+	self.Bind(wx.EVT_BUTTON, self.OnButtonClear, btn)
         btnsizer.AddButton(btn)
 
-        btn = wx.Button(self.panel, wx.ID_CANCEL)
+        btn = wx.Button(self.panel, wx.ID_CANCEL, "关闭")
         btn.SetHelpText("The Cancel button cancels the dialog.")
         btnsizer.AddButton(btn)
 	self.Bind(wx.EVT_BUTTON, self.OnCloseMe, btn)
@@ -156,7 +157,7 @@ class MyFrame(wx.Frame):
 
         self.psizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
 
-    def _splash(self):
+    def uiSplash(self):
 	try:
 	    dirName = os.path.dirname(os.path.abspath(__file__))
 	except:
@@ -271,6 +272,8 @@ class MyFrame(wx.Frame):
 	self.fileList=wgsList
 
     def defaultLevels(self):
+	''' 计算输入数据的默认起始终止层级  '''
+	if len(self.fileList)==0: return
 	l,t,r,b, xres, yres = imf.calcBoundary(self.fileList)
 	mapbnd=l,t,r,b
 	endl=smSci.smSci3d.calcEndLevel(xres)
@@ -280,7 +283,10 @@ class MyFrame(wx.Frame):
         self.txtLvlBeg.SetValue(str(startl))
         self.txtLvlEnd.SetValue(str(endl))
 	#self.logPrint('start:'+str(startl)+',end:'+str(endl))
-	
+
+    def OnButtonClear(self, event):
+	''' 清理日志信息 '''
+	self.log.Clear()
 	
     def EvtRadioBox(self, event):
 	pass
