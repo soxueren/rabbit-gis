@@ -161,7 +161,7 @@ class smSci(object):
 	self.write(sciPath)
 	return True
 
-'''=============================================================='''
+# =============================================================================
 
 class smSci3d(smSci):
     ''' 三维影像缓存配置文件 '''
@@ -308,7 +308,48 @@ class smSci3d(smSci):
 	return fPath
 	
 	
+# =============================================================================
 	
+class smSct(smSci3d):
+    ''' 三维地形缓存配置文件 '''
+    def __init__(self):
+	super(smSct, self).__init__()
+	self.extName='bil'
+
+    def replaceType(self):
+	for i in xrange(len(self.lines)):
+	    line=self.lines[i]
+	    if 'Image' in line:
+		newline = line.replace('Image', 'DEM')
+		self.lines[i]=newline
+	    if 'sci3d' in line:
+		newline = line.replace('sci3d', 'sct')
+		self.lines[i]=newline
+	    
+    def replaceExtName(self):
+	for i in xrange(len(self.lines)):
+	    line=self.lines[i]
+	    if '[FileExtentName]' in line:
+		newline = line.replace('[FileExtentName]', self.extName)
+		self.lines[i]=newline
+		self.lines.insert(i, "<sml:CompressType>NONE</sml:CompressType>")
+
+    def replace(self):
+	self.replaceCacheName()
+	self.replaceWidthHeight()
+	self.replaceBnd()
+	self.replaceLevels()
+	self.replaceExtName()
+	self.replaceType()
+
+    def write(self, sciPath):
+	fileName=self.mapName+'.sct'
+	desSciPath=os.path.join(sciPath, fileName)
+	f=open(desSciPath, 'w+')
+	for line in self.lines:
+	    f.write(line+'\n')
+	f.close()
+
 
 # =============================================================================
 # =============================================================================
@@ -342,7 +383,24 @@ def unitTest():
     sci.saveSciFile(sciPath)
     pass
 
+def unitTestSct():
+    sciPath=r'E:\2013\2013-06\2013-06-17'
+    mapName='srtm_47_02@img_3'
+    l,t,r,b =50.0004166667, 54.9995833333, 55.0004164667,49.9995835333 
+    mapBnd=l,t,r,b
+
+    res=0.000833333300000001
+    endl=smSci3d.calcEndLevel(res)
+    startl=smSci3d.calcStartLevel(l,t,r,b,res,endl)
+    w,h=smSci3d.calcWidthHeight(l,t,r,b,endl)
+
+    sci = smSct()
+    sci.setParams(mapName, mapBnd, mapBnd, '')
+    sci.setLevels(startl, endl)
+    sci.setWidthHeight(w,h)
+    sci.saveSciFile(sciPath)
+
 if __name__=='__main__':
     #unitTest()
-    unitTestLevel()
-
+    #unitTestLevel()
+    unitTestSct()

@@ -191,7 +191,7 @@ class MyFrame(wx.Frame):
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
-        info.Developers = [ "wenyulin.lin@gmail.com" ]
+	info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
 
         #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
