@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # --*-- coding:utf-8 --*--
 
+import sys,os
 import wx
 import time
 import image2tile as i2t
@@ -184,9 +185,9 @@ class MyFrame(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = cm.APPNAME 
         info.Version = cm.VERSION 
-        info.Copyright = "(C) 2006-2013 www.atolin.net"
+        info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
 	strdes="生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
-	strdes+="可直接将影像切分成的三维影像缓存文件."#.decode('gb2312')
+	strdes+="可直接将影像切分成的三维影像缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
@@ -256,7 +257,7 @@ class MyFrame(wx.Frame):
 	elif txtfiles.find(',')!=-1:
 	    imgList=txtfiles.split(',')
 	    self.fileList.extend(imgList)
-	#self.logPrint('selected files:'+str(len(self.fileList)))
+	#self.printLog('selected files:'+str(len(self.fileList)))
 	self.checkPrj()
 	self.defaultLevels()
 
@@ -268,7 +269,7 @@ class MyFrame(wx.Frame):
 	    if ifile.isGeographic():
 		wgsList.append(f)
 	    else:
-		self.logPrint(('非WGS84坐标: %s' % f))
+		self.printLog(('非WGS84坐标: %s' % f))
 	self.fileList=wgsList
 
     def defaultLevels(self):
@@ -282,7 +283,7 @@ class MyFrame(wx.Frame):
         self.spinLvlEnd.SetRange(startl+1, endl)
         self.txtLvlBeg.SetValue(str(startl))
         self.txtLvlEnd.SetValue(str(endl))
-	#self.logPrint('start:'+str(startl)+',end:'+str(endl))
+	#self.printLog('start:'+str(startl)+',end:'+str(endl))
 
     def OnButtonClear(self, event):
 	''' 清理日志信息 '''
@@ -299,7 +300,7 @@ class MyFrame(wx.Frame):
         self.txtLvlEnd.SetValue(str(event.GetPosition()))
 	
 	
-    def logPrint(self, msg, newline=True):
+    def printLog(self, msg, newline=True):
 	strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
 	strlog=strtime+msg
 	if newline: 
@@ -309,13 +310,13 @@ class MyFrame(wx.Frame):
 
     def check(self):
 	if self.txtIn.GetValue()=="":
-	    self.logPrint("输入路径为空.")
+	    self.printLog("输入路径为空.")
 	    return False
 	if self.txtOut.GetValue()=="":
-	    self.logPrint("输出路径为空.")
+	    self.printLog("输出路径为空.")
 	    return False
 	if self.txtName.GetValue()=="":
-	    self.logPrint("缓存名称为空.")
+	    self.printLog("缓存名称为空.")
 	    return False
 	return True
 
@@ -335,9 +336,9 @@ class MyFrame(wx.Frame):
 	startl=int(self.txtLvlBeg.GetValue())
 	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
 	
-	self.logPrint(('文件数目:%d' % len(self.fileList)))
-	self.logPrint(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
-	self.logPrint(('起始终止层级:(%d,%d)' % (startl, endl)))
+	self.printLog(('文件数目:%d' % len(self.fileList)))
+	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
+	self.printLog(('起始终止层级:(%d,%d)' % (startl, endl)))
 
 	sci = smSci.smSci3d()
 	sci.setParams(mapname, mapbnd, mapbnd, '')
@@ -349,24 +350,24 @@ class MyFrame(wx.Frame):
 	if ext=='png': ext='.png'
 	if ext=='jpg': ext='.jpg'
 	imgtile = i2t.Image2Tiles(outPath) 
-	imgtile.hook(self.logPrint)
+	imgtile.hook(self.printLog)
 	imgtile.setExt(ext)
 	for i in xrange(endl, startl-1, -1):
-	    self.logPrint(('开始处理第%d层数据...' % i))
+	    self.printLog(('开始处理第%d层数据...' % i))
 	    imgtile.toTiles(self.fileList, i, outPath)
-	self.logPrint('All done.')
+	self.printLog('All done.')
 	del imgtile,sci 
 
 #---------------------------------------------------------------------------
 
 
 #---------------------------------------------------------------------------
+def main():
+    app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
+    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
+    frame.Show(True)     # Show the frame.
+    app.MainLoop()
 
 
 if __name__ == '__main__':
-    import sys,os
-    import common as cm
-    app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
-    frame.Show(True)     # Show the frame.
-    app.MainLoop()
+    main()
