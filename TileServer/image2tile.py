@@ -40,7 +40,7 @@ class Image2Tiles(object):
     def setExt(self, ext):
 	self.ext=ext
     
-    def toTiles(self, imgList, level, outPath):
+    def toTiles(self, imgList, level, outPath, isBil=False):
 	imgbound={}
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
@@ -54,9 +54,9 @@ class Image2Tiles(object):
 		    fp = smSci.smSci3d.calcTileName(level,row,col,outPath)+self.ext
 		    if not os.path.exists(os.path.dirname(fp)):
 			os.makedirs(os.path.dirname(fp))
-		    oneImg.cut(l,t,r,b,TILESIZE256, fp)
-		    #if ((row-rs)*(ce-cs)+col-cs)%100==0:
-		    #self.printLog(("To tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))))
+		    oneImg.cut(l,t,r,b,TILESIZE256, fp, isBil)
+		    if ((row-rs)*(ce-cs)+col-cs)%100==0:
+			self.printLog(("To tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))))
 	    del oneImg
 	return True
 

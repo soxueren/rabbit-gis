@@ -94,7 +94,7 @@ class ImageFile(object):
 
 	return True
 
-    def cut(self, l, t, r, b, ts, fp):
+    def cut(self, l, t, r, b, ts, fp, isBil=False):
 	''' 按照指定范围切割影像
 	l, t, r, b 要切割的地理范围
 	ts 切割后的影像宽度高度(像素单位)
@@ -102,11 +102,18 @@ class ImageFile(object):
 	'''
 	if l>self.dMaxX or t<self.dMinY or r<self.dMinX or b>self.dMaxY:
 	    return None
+	
+	if isBil:
+	    self.cut4Bil(l, t, r, b, ts, fp)
+	else:
+	    self.cut4Image(l, t, r, b, ts, fp)
+	
+    def cut4Image(self,l, t, r, b, ts, fp):
 
 	((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
 	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd)) \
 	    = self.posOneTile(l, t, r, b, ts)
-	
+
 	tilebands = 3#self.iBandNums
 	mem_drv = gdal.GetDriverByName('MEM')
 	mem_ds=mem_drv.Create('', ts, ts, tilebands)
@@ -145,6 +152,23 @@ class ImageFile(object):
 	del out_drv
 	del mem_drv
 
+    def cut4Bil(self,l, t, r, b, ts, fp):
+
+	((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
+	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd)) \
+	    = self.posOneTile(l, t, r, b, ts)
+
+	tilebands = self.iBandNums if self.iBandNums<=3 else 3
+
+	rowFileSize=rowInFileEnd-rowInFileStart
+	colFileSize=colInFileEnd-colInFileStart
+	rowTileSize=rowInTileEnd-rowInTileStart
+	colTileSize=colInTileEnd-colInTileStart
+
+        data = self.ds.ReadRaster(colInFileStart, rowInFileStart, 
+		colFileSize, rowFileSize, colTileSize, rowTileSize, band_list=list(range(1,tilebands+1)))
+	
+	print len(data)
 
     def posOneTile(self, l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围
