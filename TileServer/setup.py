@@ -19,7 +19,7 @@ buildOpts = dict(
         compressed=True,
 	includes=['numpy'],
 	#zip_includes=['smSci/sci3d.sci3d'],
-	include_files=['smSci\\sci3d.sci3d','logo.png'],
+	include_files=['smSci\\sci3d.sci3d','logo.png','icon.ico'],
 	)
 
 msiOpts=dict(
@@ -27,7 +27,12 @@ msiOpts=dict(
 	target_name=cm.APPNAME+'-'+cm.VERSION
 	)
 
-
+exeTables = [Executable("TileServer4Sci3d.py", \
+			targetName=cm.APPNAME+'-4Sci3d.exe',\
+			icon='icon.ico',base=base), \
+	    Executable("TileServer4Sct.py", \
+			targetName=cm.APPNAME+'-4Sct.exe',\
+			icon='icon.ico',base=base),]
 setup(
         name = "TileServer",
 	version = cm.VERSION[:cm.VERSION.rfind('.')],
@@ -37,7 +42,5 @@ setup(
         maintainer = 'linwenyu',
         url = 'www.atolin.net',
 	options = dict(build_exe=buildOpts, bdist_msi=msiOpts),
-        executables = [Executable("TileServer4Sci3d.py", \
-			targetName=cm.APPNAME+'-4Sci3d.exe',\
-			icon='icon.ico',base=base), ])
+        executables = exeTables)
 
