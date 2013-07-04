@@ -29,6 +29,7 @@ class MyFrame(wx.Frame):
 
         wx.Frame.__init__(self, parent, ID, title, pos, size, style)
 	self.uiSplash()
+	self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
 	self.fileList=[]
         self.panel=panel= wx.Panel(self, -1)
 
