@@ -280,8 +280,8 @@ class MyFrame(wx.Frame):
 	mapbnd=l,t,r,b
 	endl=smSci.smSci3d.calcEndLevel(xres)
 	startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
-        self.spinLvlBeg.SetRange(startl, endl-1)
-        self.spinLvlEnd.SetRange(startl+1, endl)
+        self.spinLvlBeg.SetRange(startl, endl)
+        self.spinLvlEnd.SetRange(startl, endl)
         self.txtLvlBeg.SetValue(str(startl))
         self.txtLvlEnd.SetValue(str(endl))
 	#self.printLog('start:'+str(startl)+',end:'+str(endl))

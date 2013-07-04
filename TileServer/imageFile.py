@@ -33,7 +33,7 @@ class ImageFile(object):
 	self.dMaxY=None
 	self.xRes=None
 	self.yRes=None
-	self.iBandNums=None
+	self.ibandCount=None
 	self.ds=None
 	self.process()
 
@@ -84,7 +84,7 @@ class ImageFile(object):
 
 	self.xRes = (self.dMaxX-self.dMinX)/self.xSize
 	self.yRes = (self.dMaxY-self.dMinY)/self.ySize
-	self.iBandNums = self.ds.RasterCount
+	self.ibandCount = self.ds.RasterCount
 	
 	'''
 	print ds.RasterXSize, ds.RasterYSize, ds.RasterCount
@@ -95,56 +95,58 @@ class ImageFile(object):
 
 	return True
 
-    def cut(self, l, t, r, b, ts, fp, isBil=False):
+    def cut(self, l, t, r, b, ts, fp, isBil=False, logs=None):
 	''' 按照指定范围切割影像
 	l, t, r, b 要切割的地理范围
 	ts 切割后的影像宽度高度(像素单位)
 	fp 切割后影像文件全路径
+	isBil 是否输出为bil地形
+	logs 日志信息数组
 	'''
 	if l>self.dMaxX or t<self.dMinY or r<self.dMinX or b>self.dMaxY:
 	    return None
 	
 	if isBil:
-	    self.cut4Bil(l, t, r, b, ts, fp)
+	    self.cut4Bil(l, t, r, b, ts, fp, logs)
 	else:
-	    self.cut4Image(l, t, r, b, ts, fp)
+	    self.cut4Image(l, t, r, b, ts, fp, logs)
 	
-    def cut4Image(self,l, t, r, b, ts, fp):
+    def cut4Image(self,l, t, r, b, ts, fp, logs=None):
 
-	((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
-	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd)) \
+	((ry, rowInFileEnd, rx,colInFileEnd), \
+	    (wy, rowInTileEnd, wx, colInTileEnd)) \
 	    = self.posOneTile(l, t, r, b, ts)
 
-	tilebands = 3#self.iBandNums
+	tilebands = 3#self.ibandCount
 	mem_drv = gdal.GetDriverByName('MEM')
 	mem_ds=mem_drv.Create('', ts, ts, tilebands)
 	if mem_ds is None: return 
 	#print fp
 
-	rowFileSize=rowInFileEnd-rowInFileStart
-	colFileSize=colInFileEnd-colInFileStart
-	rowTileSize=rowInTileEnd-rowInTileStart
-	colTileSize=colInTileEnd-colInTileStart
+	rysize=rowInFileEnd-ry
+	rxsize=colInFileEnd-rx
+	wysize=rowInTileEnd-wy
+	wxsize=colInTileEnd-wx
 
-	if self.iBandNums==1:
+	if self.ibandCount==1:
 	    tile_data = numpy.zeros((ts, ts), numpy.uint8)
 	    band = self.ds.GetRasterBand(1)
-	    data = band.ReadAsArray(colInFileStart, rowInFileStart,
-			    colFileSize, rowFileSize, colTileSize, rowTileSize)
-	    tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
+	    data = band.ReadAsArray(rx, ry,
+			    rxsize, rysize, wxsize, wysize)
+	    tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
 	    mem_ds.GetRasterBand(1).WriteArray(tile_data)
 	    mem_ds.GetRasterBand(2).WriteArray(tile_data)
 	    mem_ds.GetRasterBand(3).WriteArray(tile_data)
 	    del tile_data
 	else:
-	    for iband in range(1, self.iBandNums+1):
+	    for iband in range(1, self.ibandCount+1):
 		tile_data = numpy.zeros((ts, ts), numpy.uint8)
 		band = self.ds.GetRasterBand(iband)
-		data = band.ReadAsArray(colInFileStart, rowInFileStart,
-				colFileSize, rowFileSize, colTileSize, rowTileSize)
+		data = band.ReadAsArray(rx, ry,
+				rxsize, rysize, wxsize, wysize)
 		#print data.shape, data.dtype
 		#print tile_data.shape, tile_data.dtype
-		tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
+		tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
 		mem_ds.GetRasterBand(iband).WriteArray(tile_data)
 		del tile_data
 	
@@ -153,34 +155,49 @@ class ImageFile(object):
 	del out_drv
 	del mem_drv
 
-    def cut4Bil(self,l, t, r, b, ts, fp):
+    def cut4Bil(self,l, t, r, b, ts, fp, logs=None):
 
-	((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
-	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd)) \
+	((ry, rowInFileEnd, rx,colInFileEnd), \
+	    (wy, rowInTileEnd, wx, colInTileEnd)) \
 	    = self.posOneTile(l, t, r, b, ts)
 
-	tilebands = self.iBandNums if self.iBandNums<=3 else 3
+	tilebands = self.ibandCount if self.ibandCount<=3 else 3
 
-	rowFileSize=rowInFileEnd-rowInFileStart
-	colFileSize=colInFileEnd-colInFileStart
-	rowTileSize=rowInTileEnd-rowInTileStart
-	colTileSize=colInTileEnd-colInTileStart
+	rysize=rowInFileEnd-ry
+	rxsize=colInFileEnd-rx
+	wysize=rowInTileEnd-wy
+	wxsize=colInTileEnd-wx
 
+	tile_data = numpy.zeros((ts, ts), numpy.int16)
+	if self.ibandCount==1:
+	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
+	elif self.ibandCount==3:
+	    tile1 = numpy.zeros((ts, ts), numpy.int32)
+	    tile2 = numpy.zeros((ts, ts), numpy.int16)
+	    tile3 = numpy.zeros((ts, ts), numpy.int8)
+	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile1[wy:rowInTileEnd,wx:colInTileEnd]=data
 
-	if self.iBandNums==1:
-	    tile_data = numpy.zeros((ts, ts), numpy.int16)
-	    band = self.ds.GetRasterBand(1)
-	    data = band.ReadAsArray(colInFileStart, rowInFileStart,
-			    colFileSize, rowFileSize, colTileSize, rowTileSize)
-	    tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
-	    f=open(fp, 'wb')
-	    for i in xrange(ts):
-		line=array('l', tile_data[i])
-		line.write(f)
-	    f.close()
-	    del tile_data
+	    data = self.ds.GetRasterBand(2).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile2[wy:rowInTileEnd,wx:colInTileEnd]=data
+
+	    data = self.ds.GetRasterBand(3).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile3[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    tile_data = (tile1<<16) + tile2 + tile1
+	    del tile1, tile2, tile3
 	else:
-	    pass
+	    if not logs:
+		logs.append('Unsupport band count %d' % self.ibandCount)
+		del tile_data
+		return
+
+	f=open(fp, 'wb')
+	for i in xrange(ts):
+	    line=array('l', tile_data[i])
+	    line.write(f)
+	f.close()
+	del tile_data
 
     def posOneTile(self, l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围
@@ -190,11 +207,11 @@ class ImageFile(object):
 	tres = (r-l)/ts # 切片分辨率
 	rres = min(self.xRes, self.yRes)
 	rl,rt,rr,rb=self.dMinX, self.dMaxY, self.dMaxX, self.dMinY
-	rowInFileStart, rowInTileStart=0,0
+	ry, wy=0,0
 	if t<self.dMaxY:
-	    rowInFileStart=int((rt-t)/rres)
+	    ry=int((rt-t)/rres)
 	else:
-	    rowInTileStart=int((t-rt)/tres)
+	    wy=int((t-rt)/tres)
 	
 	rowInFileEnd, rowInTileEnd=self.ySize, ts 
 	if b>self.dMinY:
@@ -202,11 +219,11 @@ class ImageFile(object):
 	else:
 	    rowInTileEnd=int((t-rb)/tres)
 
-	colInFileStart, colInTileStart=0,0
+	rx, wx=0,0
 	if l>self.dMinX:
-	    colInFileStart=int((l-rl)/rres)
+	    rx=int((l-rl)/rres)
 	else:
-	    colInTileStart=int((rl-l)/tres)
+	    wx=int((rl-l)/tres)
 
 	colInFileEnd, colInTileEnd=self.xSize,ts
 	if r<self.dMaxX:
@@ -214,8 +231,8 @@ class ImageFile(object):
 	else:
 	    colInTileEnd=int((rr-l)/tres)
 
-	return ((rowInFileStart, rowInFileEnd, colInFileStart,colInFileEnd), \
-	    (rowInTileStart, rowInTileEnd, colInTileStart, colInTileEnd))
+	return ((ry, rowInFileEnd, rx,colInFileEnd), \
+	    (wy, rowInTileEnd, wx, colInTileEnd))
 
     def getDriverName(self, fPath):
 	ext = fPath[-3:]
