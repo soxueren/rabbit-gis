@@ -15,6 +15,7 @@ except:
 
 import numpy
 import os
+from array import array
 #import math
 #import re 
 
@@ -165,10 +166,21 @@ class ImageFile(object):
 	rowTileSize=rowInTileEnd-rowInTileStart
 	colTileSize=colInTileEnd-colInTileStart
 
-        data = self.ds.ReadRaster(colInFileStart, rowInFileStart, 
-		colFileSize, rowFileSize, colTileSize, rowTileSize, band_list=list(range(1,tilebands+1)))
-	
-	print len(data)
+
+	if self.iBandNums==1:
+	    tile_data = numpy.zeros((ts, ts), numpy.int16)
+	    band = self.ds.GetRasterBand(1)
+	    data = band.ReadAsArray(colInFileStart, rowInFileStart,
+			    colFileSize, rowFileSize, colTileSize, rowTileSize)
+	    tile_data[rowInTileStart:rowInTileEnd,colInTileStart:colInTileEnd]=data
+	    f=open(fp, 'wb')
+	    for i in xrange(ts):
+		line=array('l', tile_data[i])
+		line.write(f)
+	    f.close()
+	    del tile_data
+	else:
+	    pass
 
     def posOneTile(self, l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围
