@@ -22,7 +22,7 @@ g_wildcard = "GeoTiff (*.tif)|*.tif|"     \
            "GeoTiff (*.tiff)|*.tiff|" \
            "Erdas Image File (*.img)|*.img" \
 
-class MyFrame(wx.Frame):
+class TileServerFrame(wx.Frame):
     def __init__(
             self, parent, ID, title, pos=wx.DefaultPosition,
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
@@ -89,22 +89,16 @@ class MyFrame(wx.Frame):
 	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 	labelName = wx.StaticText(panel, -1, "缓存名称:")
-	self.txtName=textName=wx.TextCtrl(panel, -1, "", size=(200,-1))
+	self.txtName=textName=wx.TextCtrl(panel, -1, "", size=(205,-1))
 	button=wx.Button(panel, -1, "运行")
 	self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
-
-	self.uiTileType()
 
 	box=wx.BoxSizer(wx.HORIZONTAL)
 	box.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	box.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(self.rb,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	box.Add(boxSiezer,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	box.Add(button,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-
-
-        self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, rb)
 
 	
 	self.log=logText = wx.TextCtrl(panel,-1,"",size=(750,220),style=wx.TE_READONLY|wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
@@ -133,10 +127,6 @@ class MyFrame(wx.Frame):
 	#self.SetAutoLayout(1)
 	sizer.Fit(self)
 	self.Show()
-
-    def uiTileType(self):
-	self.rb=rb= wx.RadioBox(panel, -1, "瓦片类型", wx.DefaultPosition, wx.DefaultSize,
-                ['png','jpg'], 2, wx.RA_SPECIFY_COLS)
     
     def uiButtonOK(self):
         btnsizer = wx.StdDialogButtonSizer()
@@ -191,8 +181,8 @@ class MyFrame(wx.Frame):
         info.Name = cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
-	strdes="生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
-	strdes+="可直接将影像切分成的三维影像缓存文件.\n\n"#.decode('gb2312')
+	strdes="生成三维地形缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
+	strdes+="可直接将影像切分成的三维地形缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
@@ -328,40 +318,20 @@ class MyFrame(wx.Frame):
 
     def OnButtonRun(self, event):
 	if not self.check():return False
-	mapname=self.txtName.GetValue()
-	ext='png' if self.rb.GetSelection()==0 else 'jpg'
-	outPath=self.txtOut.GetValue()
-	outPath=os.path.join(outPath, mapname)
-	if not os.path.exists(outPath): os.makedirs(outPath)
 
-	l,t,r,b, xres, yres=imf.calcBoundary(self.fileList)
-	mapbnd=l,t,r,b
-
-	endl=int(self.txtLvlEnd.GetValue())
-	startl=int(self.txtLvlBeg.GetValue())
-	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
+    def createProcessDlg(self, title, msg, maxstep):
+	dlg = wx.ProgressDialog(title,
+                               msg,
+                               maximum = maxstep,
+                               parent=self,
+                               style = wx.PD_APP_MODAL
+                                #| wx.PD_CAN_ABORT
+                                | wx.PD_ELAPSED_TIME
+                                #| wx.PD_ESTIMATED_TIME
+                                | wx.PD_REMAINING_TIME)
+	return dlg
 	
-	self.printLog(('文件数目:%d' % len(self.fileList)))
-	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
-	self.printLog(('起始终止层级:(%d,%d)' % (startl, endl)))
 
-	sci = smSci.smSci3d()
-	sci.setParams(mapname, mapbnd, mapbnd, '')
-	sci.setLevels(startl, endl)
-	sci.setExtName(ext)
-	sci.setWidthHeight(w,h)
-	sci.saveSciFile(outPath)
-    
-	if ext=='png': ext='.png'
-	if ext=='jpg': ext='.jpg'
-	imgtile = i2t.Image2Tiles(outPath) 
-	imgtile.hook(self.printLog)
-	imgtile.setExt(ext)
-	for i in xrange(endl, startl-1, -1):
-	    self.printLog(('开始处理第%d层数据...' % i))
-	    imgtile.toTiles(self.fileList, i, outPath)
-	self.printLog('All done.')
-	del imgtile,sci 
 
 #---------------------------------------------------------------------------
 
@@ -369,7 +339,7 @@ class MyFrame(wx.Frame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
+    frame = TileServerFrame(None, wx.ID_ANY, cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 

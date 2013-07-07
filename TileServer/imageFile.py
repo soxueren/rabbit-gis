@@ -192,9 +192,11 @@ class ImageFile(object):
 		del tile_data
 		return
 
-	f=open(fp, 'wb')
+	#print tile_data.shape#, tile_data
+	#return
+	f=open(fp, 'w')
 	for i in xrange(ts):
-	    line=array('l', tile_data[i])
+	    line=array('h', tile_data[i])
 	    line.write(f)
 	f.close()
 	del tile_data
@@ -286,12 +288,12 @@ def unitTest():
 	    l,t,r,b=smSci.smSci3d.calcBndByRowCol(row,col,level)
 	    #print l,t,r,b
 	    fp=os.path.dirname(fileName)
-	    fp = os.path.join(fp, 'out', ('%d_%d.png' % (row, col)))
+	    fp = os.path.join(fp, 'out', ('%d_%d.bil' % (row, col)))
 	    if not os.path.exists(os.path.dirname(fp)):
 		os.makedirs(os.path.dirname(fp))
-	    imgf.cut(l,t,r,b,ts,fp)
+	    imgf.cut(l,t,r,b,ts,fp, True)
 
 if __name__=='__main__':
-    #unitTest()
-    unitTestProj()
+    unitTest()
+    #unitTestProj()
 
