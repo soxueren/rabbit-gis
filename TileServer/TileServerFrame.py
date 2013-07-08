@@ -36,7 +36,7 @@ class TileServerFrame(wx.Frame):
 	inBox = wx.StaticBox(panel, -1, "")
 	sizerIn = wx.StaticBoxSizer(inBox, wx.VERTICAL)
 
-	self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(520,-1),style=wx.TE_READONLY)
+	self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(540,-1),style=wx.TE_READONLY)
         btnFile = wx.Button(panel, wx.ID_ANY, "文件")
         btnDir = wx.Button(panel, wx.ID_ANY, "目录")
 	label=wx.StaticText(panel, -1, "输入:")
@@ -77,7 +77,7 @@ class TileServerFrame(wx.Frame):
 
 
 	label=wx.StaticText(panel, -1, "输出:")
-	self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(520,-1))
+	self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(540,-1))
         btnOutPath = wx.Button(panel, wx.ID_ANY, "目录")
 	box=wx.BoxSizer(wx.HORIZONTAL)
 	box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -89,13 +89,13 @@ class TileServerFrame(wx.Frame):
 	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 	labelName = wx.StaticText(panel, -1, "缓存名称:")
-	self.txtName=textName=wx.TextCtrl(panel, -1, "", size=(205,-1))
 	button=wx.Button(panel, -1, "运行")
 	self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
 
 	box=wx.BoxSizer(wx.HORIZONTAL)
 	box.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	self.uiCacheName(box)
+	self.uiTileType(box)
 	box.Add(boxSiezer,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	box.Add(button,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -112,7 +112,7 @@ class TileServerFrame(wx.Frame):
         line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
 	sizer.Add(line, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
 
-	self.uiButtonOK()
+	self.uiButtonOK(sizer)
 
 	self.Bind(wx.EVT_BUTTON, self.OnButtonFile, btnFile)
 	self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btnDir)
@@ -127,8 +127,14 @@ class TileServerFrame(wx.Frame):
 	#self.SetAutoLayout(1)
 	sizer.Fit(self)
 	self.Show()
+
+    def uiTileType(self, sizer):
+	pass
+
+    def uiCacheName(self, sizer):
+	pass
     
-    def uiButtonOK(self):
+    def uiButtonOK(self, sizer):
         btnsizer = wx.StdDialogButtonSizer()
         if wx.Platform != "__WXMSW__":
             btn = wx.ContextHelpButton(self)
@@ -151,7 +157,7 @@ class TileServerFrame(wx.Frame):
         btnsizer.Realize()
 	self.Bind(wx.EVT_BUTTON, self.OnButtonHelp, btn)
 
-        self.psizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
+        sizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
 
     def uiSplash(self):
 	try:

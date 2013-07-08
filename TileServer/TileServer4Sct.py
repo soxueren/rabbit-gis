@@ -30,6 +30,10 @@ class SctFrame(ts.TileServerFrame):
 
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
 
+    def uiCacheName(self, sizer):
+	self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(225,-1))
+	sizer.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+
     def OnButtonRun(self, event):
 	if not self.check():return False
 	mapname=self.txtName.GetValue()
