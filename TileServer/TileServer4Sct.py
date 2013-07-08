@@ -64,16 +64,19 @@ class SctFrame(ts.TileServerFrame):
 	dlg = self.createProgressDialog("生成地形缓存", "生成地形缓存", maxstep)
         keepGoing = True
 
+	self.printLine("Start")
 	for i in xrange(endl, startl-1, -1):
-	    self.printLog(('开始处理第%d层数据...' % i))
-	    (keepGoing, skip) = dlg.Update(maxstep-(i-startl), ('正在处理第%d层数据' % i))
-	    #imgtile.toTiles(self.fileList, i, outPath, True)
-	    #if i==startl: dlg.Destroy()
-	self.printLog('All done.')
+	    self.printLog(("开始处理第%d层数据..." % i))
+	    (keepGoing, skip) = dlg.Update(maxstep-(i-startl)-1,
+			    ("正在处理第%d层数据..." % i))
+	    imgtile.toTiles(self.fileList, i, outPath, True)
+	    if i==startl: 
+		dlg.Destroy()
+		#dlg.Update(maxstep, "处理完成!")
+
+	self.printLine("End, All done.")
 	del imgtile,sci 
-	dlg.Close()
 	dlg.Destroy()
-	del dlg
 
 
 #---------------------------------------------------------------------------
