@@ -104,7 +104,7 @@ class MyFrame(wx.Frame):
 	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 
-        self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, rb)
+        self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, self.rb)
 
 	
 	self.log=logText = wx.TextCtrl(panel,-1,"",size=(750,220),style=wx.TE_READONLY|wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
@@ -135,7 +135,7 @@ class MyFrame(wx.Frame):
 	self.Show()
 
     def uiTileType(self):
-	self.rb=rb= wx.RadioBox(panel, -1, "瓦片类型", wx.DefaultPosition, wx.DefaultSize,
+	self.rb=rb= wx.RadioBox(self.panel, -1, "瓦片类型", wx.DefaultPosition, wx.DefaultSize,
                 ['png','jpg'], 2, wx.RA_SPECIFY_COLS)
     
     def uiButtonOK(self):
