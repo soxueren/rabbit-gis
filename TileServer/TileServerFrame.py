@@ -325,14 +325,22 @@ class TileServerFrame(wx.Frame):
                                maximum = maxstep,
                                #parent=self,
                                style = wx.PD_ELAPSED_TIME
-			       #wx.PD_APP_MODAL
-                                #| wx.PD_CAN_ABORT
+			       | wx.PD_APP_MODAL
+                                | wx.PD_CAN_ABORT
                                 #| wx.PD_ELAPSED_TIME
                                 | wx.PD_ESTIMATED_TIME
                                 | wx.PD_REMAINING_TIME)
-	dlg.SetSize((300, 200))
+	dlg.SetSize((400, 220))
 	return dlg
-	
+
+    def printLine(self, msg):
+	lineLen=48
+	if len(msg)>lineLen:
+	    self.printLog(msg)
+	else:
+	    line=(lineLen-len(msg))/2-1
+	    msg="="*line+" "+msg+" "+"="*line
+	    self.printLog(msg)
 
 
 #---------------------------------------------------------------------------
