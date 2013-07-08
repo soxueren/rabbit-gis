@@ -319,16 +319,18 @@ class TileServerFrame(wx.Frame):
     def OnButtonRun(self, event):
 	if not self.check():return False
 
-    def createProcessDlg(self, title, msg, maxstep):
+    def createProgressDialog(self, title, msg, maxstep):
 	dlg = wx.ProgressDialog(title,
                                msg,
                                maximum = maxstep,
-                               parent=self,
-                               style = wx.PD_APP_MODAL
+                               #parent=self,
+                               style = wx.PD_ELAPSED_TIME
+			       #wx.PD_APP_MODAL
                                 #| wx.PD_CAN_ABORT
-                                | wx.PD_ELAPSED_TIME
-                                #| wx.PD_ESTIMATED_TIME
+                                #| wx.PD_ELAPSED_TIME
+                                | wx.PD_ESTIMATED_TIME
                                 | wx.PD_REMAINING_TIME)
+	dlg.SetSize((300, 200))
 	return dlg
 	
 
