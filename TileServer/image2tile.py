@@ -26,16 +26,22 @@ class Image2Tiles(object):
 
     def __init__(self, filePath):
 	self.filePath=filePath
-	self.callbackfun=None
+	self.callbackfunLog=None
+	self.callbackfunProgress=None
 	self.ext='.jpg'
 	pass
     
     def hook(self, callback):
-	self.callbackfun=callback
+	self.callbackfunLog=callback
 
     def printLog(self, msg):
-	if self.callbackfun is None: return
-	self.callbackfun(msg)
+	''' 记录日志 '''
+	if self.callbackfunLog is None: return
+	self.callbackfunLog(msg)
+
+    def updateProgress(self, inew):
+	''' 更新进度 '''
+	if self.callbackfunProgress is None: return
 
     def setExt(self, ext):
 	self.ext=ext

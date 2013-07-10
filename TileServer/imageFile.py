@@ -138,7 +138,7 @@ class ImageFile(object):
 	    mem_ds.GetRasterBand(2).WriteArray(tile_data)
 	    mem_ds.GetRasterBand(3).WriteArray(tile_data)
 	    del tile_data
-	else:
+	elif self.ibandCount==3:
 	    for iband in range(1, self.ibandCount+1):
 		tile_data = numpy.zeros((ts, ts), numpy.uint8)
 		band = self.ds.GetRasterBand(iband)
@@ -149,7 +149,11 @@ class ImageFile(object):
 		tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
 		mem_ds.GetRasterBand(iband).WriteArray(tile_data)
 		del tile_data
-	
+	else:
+	    if logs is not None:
+		logs.append('Unsupport band count %d' % self.ibandCount)
+		return
+
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
 	del out_drv
@@ -187,13 +191,12 @@ class ImageFile(object):
 	    tile_data = (tile1<<16) + tile2 + tile1
 	    del tile1, tile2, tile3
 	else:
-	    if not logs:
+	    if logs is not None:
 		logs.append('Unsupport band count %d' % self.ibandCount)
 		del tile_data
 		return
 
 	#print tile_data.shape#, tile_data
-	#return
 	f=open(fp, 'w')
 	for i in xrange(ts):
 	    line=array('h', tile_data[i])

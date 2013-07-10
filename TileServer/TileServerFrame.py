@@ -89,7 +89,7 @@ class TileServerFrame(wx.Frame):
 	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 	labelName = wx.StaticText(panel, -1, "缓存名称:")
-	button=wx.Button(panel, -1, "运行")
+	button=wx.Button(panel, -1, "运行", size=(-1,60))
 	self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
 
 	box=wx.BoxSizer(wx.HORIZONTAL)
@@ -164,7 +164,10 @@ class TileServerFrame(wx.Frame):
 	    dirName = os.path.dirname(os.path.abspath(__file__))
 	except:
 	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	pn =os.path.join(dirName, 'logo.png')
+	pn = os.path.join(dirName, 'logo.png')
+	# 打包后目录发生变化,需要去掉library.zip目录
+	pn = pn.replace('library.zip','')
+	pn=os.path.abspath(pn)
 	if not os.path.exists(pn):return 
         bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
         shadow = wx.WHITE
@@ -188,7 +191,7 @@ class TileServerFrame(wx.Frame):
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
 	strdes="生成三维地形缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
-	strdes+="可直接将影像切分成的三维地形缓存文件.\n\n"#.decode('gb2312')
+	strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
