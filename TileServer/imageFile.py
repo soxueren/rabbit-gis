@@ -148,8 +148,13 @@ class ImageFile(object):
 	    if logs is not None:
 		logs.append('Unsupport band count %d' % self.ibandCount)
 		return
+	
 
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
+	# for test
+	if os.path.exists(fp):
+	    fp = fp[:-4]+'_2'+fp[-4:]
+	    logs.append('file is exists. new file %s' % fp)
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
 	del out_drv
 	del mem_drv
