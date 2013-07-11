@@ -118,10 +118,12 @@ def main():
 
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
-    data = r'E:\2013\2013-06\2013-06-14'
+    title = cm.APPTITLE + "-" +cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION
+    frame = MyFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
+    data = r'E:\2013\2013-06\2013-06-17'
+    fName = ""
     frame.txtOut.AppendText(data)
-    frame.txtIn.AppendText(data)
+    frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('abc')
     frame.fillFileList()
     frame.Show(True)     # Show the frame.
@@ -131,5 +133,5 @@ def unitTest():
 #---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    main()
-    #unitTest()
+    #main()
+    unitTest()

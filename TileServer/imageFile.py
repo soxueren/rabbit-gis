@@ -112,10 +112,9 @@ class ImageFile(object):
 	    self.cut4Image(l, t, r, b, ts, fp, logs)
 	
     def cut4Image(self,l, t, r, b, ts, fp, logs=None):
+	''' 切分为影像文件 '''
 
-	((ry, rowInFileEnd, rx,colInFileEnd), \
-	    (wy, rowInTileEnd, wx, colInTileEnd)) \
-	    = self.posOneTile(l, t, r, b, ts)
+	(bOutOfFile, (ry, ry2, rx,rx2),(wy,wy2,wx,wx2))=self.fixTilePos(l, t, r, b, ts)
 
 	tilebands = 3#self.ibandCount
 	mem_drv = gdal.GetDriverByName('MEM')
@@ -123,17 +122,16 @@ class ImageFile(object):
 	if mem_ds is None: return 
 	#print fp
 
-	rysize=rowInFileEnd-ry
-	rxsize=colInFileEnd-rx
-	wysize=rowInTileEnd-wy
-	wxsize=colInTileEnd-wx
+	rysize=ry2-ry
+	rxsize=rx2-rx
+	wysize=wy2-wy
+	wxsize=wx2-wx
 
 	if self.ibandCount==1:
 	    tile_data = numpy.zeros((ts, ts), numpy.uint8)
 	    band = self.ds.GetRasterBand(1)
-	    data = band.ReadAsArray(rx, ry,
-			    rxsize, rysize, wxsize, wysize)
-	    tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile_data[wy:wy2,wx:wx2]=data
 	    mem_ds.GetRasterBand(1).WriteArray(tile_data)
 	    mem_ds.GetRasterBand(2).WriteArray(tile_data)
 	    mem_ds.GetRasterBand(3).WriteArray(tile_data)
@@ -142,11 +140,8 @@ class ImageFile(object):
 	    for iband in range(1, self.ibandCount+1):
 		tile_data = numpy.zeros((ts, ts), numpy.uint8)
 		band = self.ds.GetRasterBand(iband)
-		data = band.ReadAsArray(rx, ry,
-				rxsize, rysize, wxsize, wysize)
-		#print data.shape, data.dtype
-		#print tile_data.shape, tile_data.dtype
-		tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
+		data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+		tile_data[wy:wy2,wx:wx2]=data
 		mem_ds.GetRasterBand(iband).WriteArray(tile_data)
 		del tile_data
 	else:
@@ -160,34 +155,33 @@ class ImageFile(object):
 	del mem_drv
 
     def cut4Bil(self,l, t, r, b, ts, fp, logs=None):
+	''' 切分为地形文件 '''
 
-	((ry, rowInFileEnd, rx,colInFileEnd), \
-	    (wy, rowInTileEnd, wx, colInTileEnd)) \
-	    = self.posOneTile(l, t, r, b, ts)
+	(bOutOfFile,(ry,ry2,rx,rx2),(wy,wy2,wx,wx2)) = self.fixTilePos(l, t, r, b, ts)
 
 	tilebands = self.ibandCount if self.ibandCount<=3 else 3
 
-	rysize=rowInFileEnd-ry
-	rxsize=colInFileEnd-rx
-	wysize=rowInTileEnd-wy
-	wxsize=colInTileEnd-wx
+	rysize=ry2-ry
+	rxsize=rx2-rx
+	wysize=wy2-wy
+	wxsize=wx2-wx
 
 	tile_data = numpy.zeros((ts, ts), numpy.int16)
 	if self.ibandCount==1:
 	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile_data[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    tile_data[wy:wy2,wx:wx2]=data
 	elif self.ibandCount==3:
 	    tile1 = numpy.zeros((ts, ts), numpy.int32)
 	    tile2 = numpy.zeros((ts, ts), numpy.int16)
 	    tile3 = numpy.zeros((ts, ts), numpy.int8)
 	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile1[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    tile1[wy:wy2,wx:wx2]=data
 
 	    data = self.ds.GetRasterBand(2).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile2[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    tile2[wy:wy2,wx:wx2]=data
 
 	    data = self.ds.GetRasterBand(3).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile3[wy:rowInTileEnd,wx:colInTileEnd]=data
+	    tile3[wy:wy2,wx:wx2]=data
 	    tile_data = (tile1<<16) + tile2 + tile1
 	    del tile1, tile2, tile3
 	else:
@@ -204,40 +198,50 @@ class ImageFile(object):
 	f.close()
 	del tile_data
 
-    def posOneTile(self, l, t, r, b, ts):
+    def fixTilePos(self, l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围
 	l, t, r, b 要切割的地理范围
 	ts 切割后的影像宽度高度(像素单位)
 	'''
 	tres = (r-l)/ts # 切片分辨率
 	rres = min(self.xRes, self.yRes)
+
+	bOutOfFile = False # 是否超出文件范围
+
+	# 影像的地理范围
 	rl,rt,rr,rb=self.dMinX, self.dMaxY, self.dMaxX, self.dMinY
-	ry, wy=0,0
-	if t<self.dMaxY:
-	    ry=int((rt-t)/rres)
-	else:
+	ry, wy=0,0 # 影像文件行号(起始),切分结果文件行号(起始)
+
+	if t>rt:
+	    bOutOfFile=True
 	    wy=int((t-rt)/tres)
-	
-	rowInFileEnd, rowInTileEnd=self.ySize, ts 
-	if b>self.dMinY:
-	    rowInFileEnd=int((rt-b)/rres)
 	else:
-	    rowInTileEnd=int((t-rb)/tres)
+	    ry=int((rt-t)/rres)
 
-	rx, wx=0,0
-	if l>self.dMinX:
-	    rx=int((l-rl)/rres)
+	# 影像文件行号(终止),切分结果文件行号(终止)
+	ry2, wy2=self.ySize, ts 
+	if b<rb:
+	    bOutOfFile=True
+	    wy2=int((t-rb)/tres)
 	else:
+	    ry2=int((rt-b)/rres)
+
+	rx, wx=0,0 # 影像列号(起始),切分结果文件列号(起始)
+	if l<rl:
+	    bOutOfFile=True
 	    wx=int((rl-l)/tres)
-
-	colInFileEnd, colInTileEnd=self.xSize,ts
-	if r<self.dMaxX:
-	    colInFileEnd=int((r-rl)/rres)
 	else:
-	    colInTileEnd=int((rr-l)/tres)
+	    rx=int((l-rl)/rres)
 
-	return ((ry, rowInFileEnd, rx,colInFileEnd), \
-	    (wy, rowInTileEnd, wx, colInTileEnd))
+	# 影像列号(终止),切分结果文件列号(终止)
+	rx2, wx2=self.xSize,ts
+	if r>rr:
+	    bOutOfFile=True
+	    wx2=int((rr-l)/tres)
+	else:
+	    rx2=int((r-rl)/rres)
+
+	return (bOutOfFile, (ry,ry2,rx,rx2), (wy,wy2,wx,wx2))
 
     def getDriverName(self, fPath):
 	ext = fPath[-3:]
