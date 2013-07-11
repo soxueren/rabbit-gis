@@ -54,6 +54,7 @@ class Image2Tiles(object):
 	    self.printLog(("Reading file: %s" % fPath))
 	    dl, dt, dr, db = oneImg.getBound()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
+	    totalNums = (re-rs+1)*(ce-cs+1)
 	    for row in xrange(rs, re+1):
 		for col in xrange(cs, ce+1):
 		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(row,col,level)
@@ -63,7 +64,8 @@ class Image2Tiles(object):
 		    logs=[]
 		    oneImg.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
 		    #if ((row-rs)*(ce-cs)+col-cs)%100==0:
-		    self.printLog(("To tiles:(%d/%d)" % ((row-rs)*(ce-cs)+col-cs,(re-rs+1)*(ce-cs+1))))
+		    curNums = (row-rs)*(ce-cs+1)+col-cs+1
+		    self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
 		    for log in logs:
 			self.printLog(log)
 	    del oneImg

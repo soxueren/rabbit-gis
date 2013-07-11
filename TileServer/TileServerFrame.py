@@ -171,7 +171,7 @@ class TileServerFrame(wx.Frame):
 	if not os.path.exists(pn):return 
         bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
         shadow = wx.WHITE
-        frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=3000,
+        frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=1000,
                                   agwStyle=AS.AS_TIMEOUT |
                                   AS.AS_CENTER_ON_PARENT |
                                   AS.AS_SHADOW_BITMAP,
@@ -187,10 +187,10 @@ class TileServerFrame(wx.Frame):
     def OnButtonHelp(self, event):
 	# First we create and fill the info object
         info = wx.AboutDialogInfo()
-        info.Name = cm.APPNAME 
+        info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
-	strdes="生成三维地形缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
+	strdes="生成三维地形缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
