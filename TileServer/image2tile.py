@@ -55,6 +55,7 @@ class Image2Tiles(object):
 	    dl, dt, dr, db = oneImg.getBound()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
 	    totalNums = (re-rs+1)*(ce-cs+1)
+	    bStep = False if totalNums<200 else True
 	    for row in xrange(rs, re+1):
 		for col in xrange(cs, ce+1):
 		    l,t,r,b=smSci.smSci3d.calcBndByRowCol(row,col,level)
@@ -63,13 +64,19 @@ class Image2Tiles(object):
 			os.makedirs(os.path.dirname(fp))
 		    logs=[]
 		    oneImg.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
-		    #if ((row-rs)*(ce-cs)+col-cs)%100==0:
 		    curNums = (row-rs)*(ce-cs+1)+col-cs+1
-		    self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
+		    self.updateProgress(curNums, totalNums, bStep)
 		    for log in logs:
 			self.printLog(log)
 	    del oneImg
 	return True
+
+    def updateProgress(self, curNums, totalNums, bStep=False):
+	if bStep:
+	    if curNums%50==0 or (totalNums-curNums)==0:
+		self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
+	else:
+	    self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
 
     def createBound(self, dMinX, dMinY, dMaxX, dMaxY):
 	''' 创建影像的外包矩形 '''

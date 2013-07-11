@@ -273,7 +273,10 @@ class TileServerFrame(wx.Frame):
 	    if ifile.isGeographic():
 		wgsList.append(f)
 	    else:
+		wkt_srs=ifile.getProjection()
 		self.printLog(('非WGS84坐标: %s' % f))
+		if wkt_srs!="":
+		    self.printLog(wkt_srs)
 	self.fileList=wgsList
 
     def defaultLevels(self):
@@ -322,6 +325,7 @@ class TileServerFrame(wx.Frame):
 	if self.txtName.GetValue()=="":
 	    self.printLog("缓存名称为空.")
 	    return False
+	if len(self.fileList)==0:return False
 	return True
 
 
@@ -335,11 +339,11 @@ class TileServerFrame(wx.Frame):
                                #parent=self,
                                style = wx.PD_ELAPSED_TIME
 			       | wx.PD_APP_MODAL
-                                | wx.PD_CAN_ABORT
+                                #| wx.PD_CAN_ABORT
                                 #| wx.PD_ELAPSED_TIME
                                 | wx.PD_ESTIMATED_TIME
                                 | wx.PD_REMAINING_TIME)
-	dlg.SetSize((400, 220))
+	dlg.SetSize((400, 200))
 	return dlg
 
     def printLine(self, msg):
