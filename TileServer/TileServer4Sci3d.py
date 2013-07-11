@@ -43,10 +43,10 @@ class MyFrame(ts.TileServerFrame):
     def OnButtonHelp(self, event):
 	# First we create and fill the info object
         info = wx.AboutDialogInfo()
-        info.Name = cm.APPNAME 
+        info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
-	strdes="生成三维影像缓存.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
+	strdes="生成三维影像缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维影像缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
@@ -109,7 +109,8 @@ class MyFrame(ts.TileServerFrame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
+    title = cm.APPTITLE + "-" +cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION
+    frame = MyFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 
@@ -118,8 +119,9 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sci3d-生成三维影像缓存-"+cm.VERSION) # A Frame is a top-level window.
-    frame.txtOut.AppendText(r'E:\新建文件夹\全市域裁切影像\新建文件夹')
-    frame.txtIn.AppendText(r'E:\新建文件夹\全市域裁切影像\新建文件夹\1-1.tif,E:\新建文件夹\全市域裁切影像\新建文件夹\1-2.tif')
+    data = r'E:\2013\2013-06\2013-06-14'
+    frame.txtOut.AppendText(data)
+    frame.txtIn.AppendText(data)
     frame.txtName.AppendText('abc')
     frame.fillFileList()
     frame.Show(True)     # Show the frame.
@@ -129,5 +131,5 @@ def unitTest():
 #---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    #main()
-    unitTest()
+    main()
+    #unitTest()

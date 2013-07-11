@@ -89,7 +89,8 @@ class SctFrame(ts.TileServerFrame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = SctFrame(None, wx.ID_ANY, cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION) # A Frame is a top-level window.
+    title = cm.APPTITLE+"-"+cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION
+    frame = SctFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 
