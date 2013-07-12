@@ -152,7 +152,7 @@ class ImageFile(object):
 		# 跨边界的瓦片需要进行瓦片合并
 		if bOutOfFile and os.path.exists(fp) and tmp_ds is not None:
 		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
-		band = self.ds.GetRasterBand(iband)
+		band = self.ds.GetRasterBand(i)
 		data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
 		tile_data[wy:wy2,wx:wx2]=data
 		mem_ds.GetRasterBand(i).WriteArray(tile_data)
@@ -170,8 +170,9 @@ class ImageFile(object):
 	    fp = fp[:-4]+'_2'+fp[-4:]
 	    logs.append('file is exists. new file %s' % fp)
 	'''
+	del tmp_ds
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
-	del out_drv, mem_drv, tmp_ds
+	del out_drv, mem_drv
 
     def cut4Bil(self,l, t, r, b, ts, fp, logs=None):
 	''' 切分为地形文件 '''
@@ -188,24 +189,24 @@ class ImageFile(object):
 	tile_data = numpy.zeros((ts, ts), numpy.int16)
 	if bOutOfFile and os.path.exists(fp):
 	    self.loadFromBil(tile_data, fp)
+	    #pass
 
 	if self.ibandCount==1:
 	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
 	    tile_data[wy:wy2,wx:wx2]=data
 	elif self.ibandCount==3:
-	    tile1 = numpy.zeros((ts, ts), numpy.int32)
-	    tile2 = numpy.zeros((ts, ts), numpy.int16)
-	    tile3 = numpy.zeros((ts, ts), numpy.int8)
-	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile1[wy:wy2,wx:wx2]=data
+	    tile1 = numpy.zeros((wysize,wxsize), numpy.int32)
+	    tile2 = numpy.zeros((wysize,wxsize), numpy.int16)
+	    tile3 = numpy.zeros((wysize,wxsize), numpy.int8)
 
-	    data = self.ds.GetRasterBand(2).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile2[wy:wy2,wx:wx2]=data
+	    data1 = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    data2 = self.ds.GetRasterBand(2).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    data3 = self.ds.GetRasterBand(3).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    tile1[:], tile2[:], tile3[:] = data1[:], data2[:], data3[:]
+	    #print tile1.dtype
 
-	    data = self.ds.GetRasterBand(3).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile3[wy:wy2,wx:wx2]=data
-	    tile_data = (tile1<<16) + tile2 + tile1
-	    del tile1, tile2, tile3
+	    tile_data[wy:wy2,wx:wx2] = (tile1<<16) + tile2 + tile1
+	    del tile1, tile2, tile3, data1,data2,data3
 	else:
 	    if logs is not None:
 		logs.append('Unsupport band count %d' % self.ibandCount)
@@ -220,7 +221,7 @@ class ImageFile(object):
 	'''
 
 	#print tile_data.shape#, tile_data
-	f=open(fp, 'w')
+	f=open(fp, 'wb')
 	for i in xrange(ts):
 	    line=array('h', tile_data[i])
 	    line.write(f)

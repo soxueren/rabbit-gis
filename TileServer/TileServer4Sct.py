@@ -84,25 +84,23 @@ class SctFrame(ts.TileServerFrame):
 
 
 #---------------------------------------------------------------------------
-
+__title__ = cm.TITLESCT
 
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    title = cm.APPTITLE+"-"+cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION
-    frame = SctFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
+    frame = SctFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 
 #---------------------------------------------------------------------------
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    title = cm.APPTITLE+"-"+cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION
-    frame = SctFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
-    data = r'E:\2013\2013-06\2013-06-14'
+    frame = SctFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
+    data = r'E:\新建文件夹\全市域裁切影像\新建文件夹'
     fName = ""
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
-    frame.txtName.AppendText('abc')
+    frame.txtName.AppendText('sct')
     frame.fillFileList()
     frame.Show(True)     # Show the frame.
     app.MainLoop()
