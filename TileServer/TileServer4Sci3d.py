@@ -120,8 +120,8 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = MyFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
-    data = r'E:\新建文件夹\全市域裁切影像\新建文件夹'
-    fName = ""
+    data = r'E:\Demo材料\Data'
+    fName = "\\1525262009rapideyelim-1.img"
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('sci3d')

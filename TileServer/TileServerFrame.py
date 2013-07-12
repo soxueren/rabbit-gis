@@ -265,12 +265,19 @@ class TileServerFrame(wx.Frame):
 	self.checkPrj()
 	self.defaultLevels()
 
+    def isInGeographic(self, ifile):
+	''' 文件坐标是否在(-180,90,180,-90)范围内 '''
+	l,t,r,b = ifile.getBBox()
+	if l>180.0 or t<-90.0 or r<-180.0 or b>90:
+	    return False
+	return True
+
     def checkPrj(self):
 	''' 确保输入数据为经纬度坐标 '''
 	wgsList=[]
 	for f in self.fileList:
 	    ifile=imf.ImageFile(f)
-	    if ifile.isGeographic():
+	    if ifile.isGeographic() or self.isInGeographic():
 		wgsList.append(f)
 	    else:
 		wkt_srs=ifile.getProjection()
