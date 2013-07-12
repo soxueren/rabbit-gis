@@ -116,11 +116,14 @@ class ImageFile(object):
 
 	(bOutOfFile, (ry, ry2, rx,rx2),(wy,wy2,wx,wx2))=self.fixTilePos(l, t, r, b, ts)
 
-	tilebands = 3#self.ibandCount
 	mem_drv = gdal.GetDriverByName('MEM')
-	mem_ds=mem_drv.Create('', ts, ts, tilebands)
+	mem_ds=mem_drv.Create('', ts, ts, 3)# 输出固定为24位png或jpg
 	if mem_ds is None: return 
 	#print fp
+
+	tmp_ds = None
+	if bOutOfFile and os.path.exists(fp):
+	    tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly) # 假定输入数据为24位png或jpg
 
 	rysize=ry2-ry
 	rxsize=rx2-rx
@@ -128,21 +131,31 @@ class ImageFile(object):
 	wxsize=wx2-wx
 
 	if self.ibandCount==1:
-	    tile_data = numpy.zeros((ts, ts), numpy.uint8)
-	    band = self.ds.GetRasterBand(1)
-	    data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-	    tile_data[wy:wy2,wx:wx2]=data
-	    mem_ds.GetRasterBand(1).WriteArray(tile_data)
-	    mem_ds.GetRasterBand(2).WriteArray(tile_data)
-	    mem_ds.GetRasterBand(3).WriteArray(tile_data)
-	    del tile_data
-	elif self.ibandCount==3:
-	    for iband in range(1, self.ibandCount+1):
+	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
+	    # 跨边界的瓦片需要进行瓦片合并
+	    if bOutOfFile and os.path.exists(fp) and tmp_ds is not None:
+		for i in range(1, 4):
+		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
+		    tile_data[wy:wy2,wx:wx2] = data
+		    mem_ds.GetRasterBand(i).WriteArray(tile_data)
+		    del tile_data
+	    else:
 		tile_data = numpy.zeros((ts, ts), numpy.uint8)
+		tile_data[wy:wy2,wx:wx2]=data
+		for i in range(1, 4):
+		    mem_ds.GetRasterBand(i).WriteArray(tile_data)
+		del tile_data
+
+	elif self.ibandCount==3:
+	    for i in range(1, 4):
+		tile_data = numpy.zeros((ts, ts), numpy.uint8)
+		# 跨边界的瓦片需要进行瓦片合并
+		if bOutOfFile and os.path.exists(fp) and tmp_ds is not None:
+		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
 		band = self.ds.GetRasterBand(iband)
 		data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
 		tile_data[wy:wy2,wx:wx2]=data
-		mem_ds.GetRasterBand(iband).WriteArray(tile_data)
+		mem_ds.GetRasterBand(i).WriteArray(tile_data)
 		del tile_data
 	else:
 	    if logs is not None:
@@ -151,13 +164,14 @@ class ImageFile(object):
 	
 
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
+	'''
 	# for test
-	if os.path.exists(fp):
+	if bOutOfFile and os.path.exists(fp):
 	    fp = fp[:-4]+'_2'+fp[-4:]
 	    logs.append('file is exists. new file %s' % fp)
+	'''
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
-	del out_drv
-	del mem_drv
+	del out_drv, mem_drv, tmp_ds
 
     def cut4Bil(self,l, t, r, b, ts, fp, logs=None):
 	''' 切分为地形文件 '''
@@ -172,6 +186,9 @@ class ImageFile(object):
 	wxsize=wx2-wx
 
 	tile_data = numpy.zeros((ts, ts), numpy.int16)
+	if bOutOfFile and os.path.exists(fp):
+	    self.loadFromBil(tile_data, fp)
+
 	if self.ibandCount==1:
 	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
 	    tile_data[wy:wy2,wx:wx2]=data
@@ -195,6 +212,13 @@ class ImageFile(object):
 		del tile_data
 		return
 
+	'''
+	# for test
+	if bOutOfFile and os.path.exists(fp):
+	    fp = fp[:-4]+'_2'+fp[-4:]
+	    logs.append('file is exists. new file %s' % fp)
+	'''
+
 	#print tile_data.shape#, tile_data
 	f=open(fp, 'w')
 	for i in xrange(ts):
@@ -202,6 +226,12 @@ class ImageFile(object):
 	    line.write(f)
 	f.close()
 	del tile_data
+
+    def loadFromBil(self, tile_data, fp):
+	''' bil文件内容加载到内存,bil文件固定为256x256大小 '''
+	data = numpy.fromfile(fp, dtype=numpy.int16)
+	for i in xrange(256):
+	    tile_data[i] = data[i*256:i*256+256]
 
     def fixTilePos(self, l, t, r, b, ts):
 	''' 定位瓦片在影像中的像素范围
