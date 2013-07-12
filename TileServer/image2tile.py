@@ -52,7 +52,7 @@ class Image2Tiles(object):
 	    fPath = os.path.join(self.filePath, fName)
 	    oneImg = img.ImageFile(fPath)
 	    self.printLog(("Reading file: %s" % fPath))
-	    dl, dt, dr, db = oneImg.getBound()
+	    dl, dt, dr, db = oneImg.getBBox()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
 	    totalNums = (re-rs+1)*(ce-cs+1)
 	    bStep = False if totalNums<200 else True

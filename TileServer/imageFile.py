@@ -43,7 +43,7 @@ class ImageFile(object):
     def getResolution(self):
 	return (self.xRes, self.xRes)
 
-    def getBound(self):
+    def getBBox(self):
 	return (self.dMinX, self.dMaxY, self.dMaxX, self.dMinY)
     
     def getProjection(self):
@@ -154,7 +154,10 @@ class ImageFile(object):
 		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
 		band = self.ds.GetRasterBand(i)
 		data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-		tile_data[wy:wy2,wx:wx2]=data
+		if data is not None:
+		    tile_data[wy:wy2,wx:wx2] = data
+		else:
+		    logs.append('read tile fialed. rx:%d,ry:%d,rxsize:%d, rysize:%d' % (rx, ry, rxsize, rysize))
 		mem_ds.GetRasterBand(i).WriteArray(tile_data)
 		del tile_data
 	else:
@@ -291,7 +294,7 @@ def calcBoundary(imgList):
     dls, dts, drs, dbs, dxs, dys=[],[],[],[],[],[]
     for fName in imgList:
 	oneimg = ImageFile(fName)
-	dl, dt, dr, db = oneimg.getBound()
+	dl, dt, dr, db = oneimg.getBBox()
 	dx, dy = oneimg.getResolution()
 	dls.append(dl)
 	dts.append(dt)
@@ -321,7 +324,7 @@ def unitTest():
     import smSci
     fileName=r'E:\2013\2013-06\2013-06-17\srtm_47_01.tif'
     imgf = ImageFile(fileName) 
-    dl, dt, dr, db = imgf.getBound()
+    dl, dt, dr, db = imgf.getBBox()
     print dl, dt, dr, db
     level, ts=10, 256
     rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
