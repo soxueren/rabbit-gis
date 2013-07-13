@@ -51,7 +51,7 @@ class MyFrame(ts.TileServerFrame):
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
-	info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
+	info.Developers = ["qq:42848918"]
 
         #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
@@ -65,7 +65,7 @@ class MyFrame(ts.TileServerFrame):
 	outPath=os.path.join(outPath, mapname)
 	if not os.path.exists(outPath): os.makedirs(outPath)
 
-	l,t,r,b, xres, yres=imf.calcBoundary(self.fileList)
+	l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
 	mapbnd=l,t,r,b
 
 	endl=int(self.txtLvlEnd.GetValue())
@@ -73,7 +73,7 @@ class MyFrame(ts.TileServerFrame):
 	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
 	
 	self.printLog(('文件数目:%d' % len(self.fileList)))
-	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
+	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f,%f)' % (l,t,r,b,xres,yres)))
 	self.printLog(('起始终止层级:(%d,%d)' % (startl, endl)))
 
 	sci = smSci.smSci3d()
@@ -89,17 +89,16 @@ class MyFrame(ts.TileServerFrame):
 	imgtile.hook(self.printLog)
 	imgtile.setExt(ext)
 
-	maxstep=endl-startl+1
+	maxstep=endl-startl+2
 	dlg = self.createProgressDialog("生成影像缓存", "生成影像缓存", maxstep)
         keepGoing = True
 	
 	self.printLine("Start")
-	for i in xrange(endl, startl-1, -1):
+	for i in xrange(startl, endl+1):
 	    self.printLog(('开始处理第%d层数据...' % i))
-	    (keepGoing, skip) = dlg.Update(maxstep-(i-startl)-1,
-			    ("正在处理第%d层数据..." % i))
+	    (keepGoing, skip) = dlg.Update(i-startl+1, ("正在处理第%d层数据..." % i))
 	    imgtile.toTiles(self.fileList, i, outPath)
-	    if i==startl: 
+	    if i==endl: 
 		dlg.Destroy()
 	    
 	self.printLine("End, All done.")
@@ -120,8 +119,8 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = MyFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
-    data = r'E:\Demo材料\Data'
-    fName = "\\1525262009rapideyelim-1.img"
+    data = r'E:\新建文件夹'
+    fName = "\\before_900913.tif"
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('sci3d')

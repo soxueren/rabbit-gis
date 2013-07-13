@@ -46,13 +46,22 @@ class Image2Tiles(object):
     def setExt(self, ext):
 	self.ext=ext
     
-    def toTiles(self, imgList, level, outPath, isBil=False):
+    def toTiles(self, imgList, level, outPath, isBil=False, forlatlong=True):
+	''' 生成瓦片 
+	forlatlong 是否转为经纬度坐标   
+	'''
 	imgbound={}
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
-	    oneImg = img.ImageFile(fPath)
+	    imgfile = img.ImageFile(fPath)
+	    if forlatlong and not imgfile.isGeographic():
+		if imgfile.canbeGeographic():
+		    imgfile.resetBBox()
+		else:
+		    continue
+
 	    self.printLog(("Reading file: %s" % fPath))
-	    dl, dt, dr, db = oneImg.getBBox()
+	    dl, dt, dr, db = imgfile.getBBox()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
 	    totalNums = (re-rs+1)*(ce-cs+1)
 	    bStep = False if totalNums<200 else True
@@ -63,12 +72,12 @@ class Image2Tiles(object):
 		    if not os.path.exists(os.path.dirname(fp)):
 			os.makedirs(os.path.dirname(fp))
 		    logs=[]
-		    oneImg.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
+		    imgfile.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
 		    curNums = (row-rs)*(ce-cs+1)+col-cs+1
 		    self.updateProgress(curNums, totalNums, bStep)
 		    for log in logs:
 			self.printLog(log)
-	    del oneImg
+	    del imgfile
 	return True
 
     def updateProgress(self, curNums, totalNums, bStep=False):

@@ -265,19 +265,12 @@ class TileServerFrame(wx.Frame):
 	self.checkPrj()
 	self.defaultLevels()
 
-    def isInGeographic(self, ifile):
-	''' 文件坐标是否在(-180,90,180,-90)范围内 '''
-	l,t,r,b = ifile.getBBox()
-	if l>180.0 or t<-90.0 or r<-180.0 or b>90:
-	    return False
-	return True
-
     def checkPrj(self):
 	''' 确保输入数据为经纬度坐标 '''
 	wgsList=[]
 	for f in self.fileList:
 	    ifile=imf.ImageFile(f)
-	    if ifile.isGeographic() or self.isInGeographic():
+	    if ifile.isGeographic() or ifile.isInGeographic() or ifile.canbeGeographic():
 		wgsList.append(f)
 	    else:
 		wkt_srs=ifile.getProjection()
@@ -289,7 +282,8 @@ class TileServerFrame(wx.Frame):
     def defaultLevels(self):
 	''' 计算输入数据的默认起始终止层级  '''
 	if len(self.fileList)==0: return
-	l,t,r,b, xres, yres = imf.calcBoundary(self.fileList)
+
+	l,t,r,b, xres, yres = imf.calcGeographicBoundary(self.fileList)
 	mapbnd=l,t,r,b
 	endl=smSci.smSci3d.calcEndLevel(xres)
 	startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
