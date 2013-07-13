@@ -252,7 +252,7 @@ class smSci3d(smSci):
 	    elif dis<tmp:
 		tmp=dis
 		endLevel=i
-	return endLevel
+	return endLevel if endLevel<21 else 20
 
     @staticmethod
     def calcStartLevel(l, t, r, b, res, endl):
@@ -263,7 +263,7 @@ class smSci3d(smSci):
 	while(coverPix>256):
 	    coverPix *= 0.5
 	    startl=startl-1
-	return startl
+	return startl if startl>-1 else 0
     
     @staticmethod
     def calcWidthHeight(l,t,r,b,level):

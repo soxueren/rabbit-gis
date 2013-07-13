@@ -35,6 +35,8 @@ class ImageFile(object):
 	self.yRes=None
 	self.ibandCount=None
 	self.ds=None
+	self.ct = None # CoordinateTransformation坐标转换器
+	self.srs = None # 影像坐标系
 	self.process()
 
     def getWidthHeight(self):
@@ -45,16 +47,40 @@ class ImageFile(object):
 
     def getBBox(self):
 	return (self.dMinX, self.dMaxY, self.dMaxX, self.dMinY)
+
+    def resetBBox(self):
+	''' 投影坐标范围转成经纬度坐标范围 '''
+	if self.ct is None: return None
+	l,t,r,b = self.dMinX, self.dMaxY, self.dMaxX, self.dMinY 
+
+	try:
+	    (self.dMinX, self.dMaxY, height) = self.ct.TransformPoint(l, t)
+	    (self.dMaxX, self.dMinY, height) = self.ct.TransformPoint(r, b)
+	    self.xRes = (self.dMaxX-self.dMinX)/self.xSize
+	    self.yRes = (self.dMaxY-self.dMinY)/self.ySize
+	except:
+	    print 'resetBBox::无法进行坐标转换'
+	
     
     def getProjection(self):
 	return self.srsWkt
+
+    def isInGeographic(self):
+	''' 文件坐标是否在(-180,90,180,-90)范围内 '''
+	l,t,r,b = self.getBBox()
+	if l>180.0 or t<-90.0 or r<-180.0 or b>90:
+	    return False
+	return True
 
     def isGeographic(self):
 	if self.srsWkt=='': return False
 	srs=osr.SpatialReference()
         srs.ImportFromWkt(self.srsWkt)
 	return srs.IsGeographic()
-	
+
+    def canbeGeographic(self):
+	''' 投影坐标是否可以转为经纬度坐标 '''
+	return True if self.ct is not None else False
 
     def process(self):
 	if not os.path.isfile(self.fileName):
@@ -70,6 +96,15 @@ class ImageFile(object):
 	#/*      Report projection.                                              */
 	#/* -------------------------------------------------------------------- */
 	self.srsWkt = self.ds.GetProjectionRef()
+	self.srs = srs = osr.SpatialReference()
+	srs.ImportFromWkt(self.srsWkt)
+	srsLatLong = srs.CloneGeogCS()
+	try:
+	    self.ct = osr.CoordinateTransformation(srs, srsLatLong)
+	    #print 'hassattr,TransformPoint->', hasattr(self.ct, 'TransformPoint') 
+	    #print callable(getattr(self.ct,'TransformPoint', None))
+	except:
+	    print self.ct==None
 
 	self.xSize, self.ySize = self.ds.RasterXSize, self.ds.RasterYSize
 
@@ -125,10 +160,10 @@ class ImageFile(object):
 	if bOutOfFile and os.path.exists(fp):
 	    tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly) # 假定输入数据为24位png或jpg
 
-	rysize=ry2-ry
-	rxsize=rx2-rx
-	wysize=wy2-wy
-	wxsize=wx2-wx
+	rysize = ry2-ry
+	rxsize = rx2-rx
+	wysize = wy2-wy
+	wxsize = wx2-wx
 
 	if self.ibandCount==1:
 	    data = self.ds.GetRasterBand(1).ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
@@ -279,6 +314,10 @@ class ImageFile(object):
 	    wx2=int((rr-l)/tres)
 	else:
 	    rx2=int((r-rl)/rres)
+	
+	# 确保影像行列号不超范围
+	if rx2>self.xSize: rx2=self.xSize
+	if ry2>self.ySize: ry2-self.ySize
 
 	return (bOutOfFile, (ry,ry2,rx,rx2), (wy,wy2,wx,wx2))
 
@@ -293,9 +332,32 @@ def calcBoundary(imgList):
     ''' 计算一组影像地理范围及分辨率 '''
     dls, dts, drs, dbs, dxs, dys=[],[],[],[],[],[]
     for fName in imgList:
-	oneimg = ImageFile(fName)
-	dl, dt, dr, db = oneimg.getBBox()
-	dx, dy = oneimg.getResolution()
+	imgfile = ImageFile(fName)
+	dl, dt, dr, db = imgfile.getBBox()
+	dx, dy = imgfile.getResolution()
+	dls.append(dl)
+	dts.append(dt)
+	drs.append(dr)
+	dbs.append(db)
+	dxs.append(dx)
+	dys.append(dy)
+
+    l,t,r,b = min(dls), max(dts), max(drs), min(dbs)
+    xres, yres = min(dxs), min(dys)
+    return l,t,r,b,xres,yres
+
+def calcGeographicBoundary(imgList):
+    ''' 计算一组影像地理范围及分辨率(经纬度下) '''
+    dls, dts, drs, dbs, dxs, dys=[],[],[],[],[],[]
+    for fName in imgList:
+	imgfile = ImageFile(fName)
+	if not imgfile.isGeographic():
+	    if imgfile.canbeGeographic():
+		imgfile.resetBBox()
+	    else:
+		continue
+	dl, dt, dr, db = imgfile.getBBox()
+	dx, dy = imgfile.getResolution()
 	dls.append(dl)
 	dts.append(dt)
 	drs.append(dr)
@@ -308,16 +370,21 @@ def calcBoundary(imgList):
     return l,t,r,b,xres,yres
 
 
-
 # =============================================================================
 # =============================================================================
 # =============================================================================
 
 def unitTestProj():
-    fileName=r'E:\新建文件夹\全市域裁切影像\新建文件夹\1-1.tif'
+    fileName=r'E:\新建文件夹\全市域裁切影像\全市域裁切影像\gttb_2011_09--2011_12_beijing.img'
     imgf=ImageFile(fileName)
-    print imgf.getProjection()
-    print imgf.isGeographic()
+    #print imgf.getProjection()
+    print 'imgf.isGeographic', imgf.isGeographic()
+    print 'imgf.ct', imgf.ct
+    print 'imgf.canbeGeographic', imgf.canbeGeographic()
+    print 'imgf.getBBox', imgf.getBBox()
+    imgf.resetBBox()
+    print 'imgf.getBBox', imgf.getBBox()
+    #print calcGeographicBoundary([fileName])
     del imgf
 
 def unitTest():
@@ -340,6 +407,6 @@ def unitTest():
 	    imgf.cut(l,t,r,b,ts,fp, True)
 
 if __name__=='__main__':
-    unitTest()
-    #unitTestProj()
+    #unitTest()
+    unitTestProj()
 

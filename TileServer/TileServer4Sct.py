@@ -42,7 +42,7 @@ class SctFrame(ts.TileServerFrame):
 	outPath=os.path.join(outPath, mapname)
 	if not os.path.exists(outPath): os.makedirs(outPath)
 
-	l,t,r,b, xres, yres=imf.calcBoundary(self.fileList)
+	l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
 	mapbnd=l,t,r,b
 
 	endl=int(self.txtLvlEnd.GetValue())
@@ -64,17 +64,16 @@ class SctFrame(ts.TileServerFrame):
 	imgtile.hook(self.printLog)
 	imgtile.setExt(ext)
     
-	maxstep=endl-startl+1
+	maxstep=endl-startl+2
 	dlg = self.createProgressDialog("生成地形缓存", "生成地形缓存", maxstep)
         keepGoing = True
 
 	self.printLine("Start")
-	for i in xrange(endl, startl-1, -1):
+	for i in xrange(startl, endl+1):
 	    self.printLog(("开始处理第%d层数据..." % i))
-	    (keepGoing, skip) = dlg.Update(maxstep-(i-startl)-1,
-			    ("正在处理第%d层数据..." % i))
+	    (keepGoing, skip) = dlg.Update(i-startl+1, ("正在处理第%d层数据..." % i))
 	    imgtile.toTiles(self.fileList, i, outPath, True)
-	    if i==startl: 
+	    if i==endl: 
 		dlg.Destroy()
 		#dlg.Update(maxstep, "处理完成!")
 
@@ -96,8 +95,8 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = SctFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
-    data = r'E:\新建文件夹\全市域裁切影像\新建文件夹'
-    fName = ""
+    data = r'E:\新建文件夹'
+    fName = "\\before_900913.tif"
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('sct')
