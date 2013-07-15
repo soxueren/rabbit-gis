@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # --*-- coding:utf-8 --*--
 
-VERSION = "0.3.0.78"
+VERSION = "0.3.1.79"
 APPNAME = "TileServer"
 APPTITLE = "Íßµ¶"
 
