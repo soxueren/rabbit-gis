@@ -71,7 +71,8 @@ class SctFrame(ts.TileServerFrame):
 	self.printLine("Start")
 	for i in xrange(startl, endl+1):
 	    self.printLog(("开始处理第%d层数据..." % i))
-	    (keepGoing, skip) = dlg.Update(i-startl+1, ("正在处理第%d层数据..." % i))
+	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
+	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
 	    imgtile.toTiles(self.fileList, i, outPath, True)
 	    if i==endl: 
 		dlg.Destroy()
