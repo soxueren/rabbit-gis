@@ -69,7 +69,7 @@ g_wildcard = "GeoTiff (*.tif)|*.tif|"     \
            "GeoTiff (*.tiff)|*.tiff|" \
            "Erdas Image File (*.img)|*.img" \
 
-class MyFrameFrame(wx.Frame):
+class MyFrame(wx.Frame):
     def __init__(
             self, parent, ID, title, pos=wx.DefaultPosition,
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
@@ -158,7 +158,6 @@ class MyFrameFrame(wx.Frame):
 	self.rb=rb= wx.RadioBox(self.panel, -1, "瓦片类型", wx.DefaultPosition, (-1,-1),
                 ['png','jpg','gif'], 2, wx.RA_SPECIFY_COLS)
 	sizer.Add(self.rb,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-        self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, self.rb)
 	pass
 
     def uiCacheName(self, sizer):
@@ -175,13 +174,15 @@ class MyFrameFrame(wx.Frame):
 
 	labelName = wx.StaticText(self.panel, -1, "缓存版本:")
 	sizer.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	sampleList = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight']
+	sampleList = ['4.0 (适用于iServer 6R)', '3.1 (适用于iServer 20)', 
+		'3.0 (适用于iServer 20)', '2.1 (适用于IS.NET)', ' 2.1(适用于IS.NET)']
 	
 	# This combobox is created with a preset list of values.
-        self.cb = cb = wx.ComboBox(self.panel, 500, "default value", (90, 50), 
+        self.cb = cb = wx.ComboBox(self.panel, 500, sampleList[0], (90, 50), 
                          (160, -1), sampleList,
                          wx.CB_DROPDOWN
                          | wx.TE_PROCESS_ENTER
+			 | wx.CB_READONLY
                          #| wx.CB_SORT
                          )
 	sizer.Add(cb,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -347,44 +348,23 @@ class MyFrameFrame(wx.Frame):
 	    imgList=txtfiles.split(',')
 	    self.fileList.extend(imgList)
 	#self.printLog('selected files:'+str(len(self.fileList)))
-	self.checkPrj()
 	self.defaultLevels()
-
-    def checkPrj(self):
-	''' 确保输入数据为经纬度坐标 '''
-	wgsList=[]
-	for f in self.fileList:
-	    ifile=imf.ImageFile(f)
-	    if ifile.isGeographic() or ifile.isInGeographic() or ifile.canbeGeographic():
-		wgsList.append(f)
-	    else:
-		wkt_srs=ifile.getProjection()
-		self.printLog(('非WGS84坐标: %s' % f))
-		if wkt_srs!="":
-		    self.printLog(wkt_srs)
-	self.fileList=wgsList
 
     def defaultLevels(self):
 	''' 计算输入数据的默认起始终止层级  '''
 	if len(self.fileList)==0: return
 
-	l,t,r,b, xres, yres = imf.calcGeographicBoundary(self.fileList)
+	l,t,r,b, xres, yres = imf.calcBoundary(self.fileList)
 	mapbnd=l,t,r,b
+	print mapbnd
 	endl=smSci.smSci3d.calcEndLevel(xres)
 	startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
-        self.spinLvlBeg.SetRange(startl, endl)
-        self.spinLvlEnd.SetRange(startl, endl)
-        self.txtLvlBeg.SetValue(str(startl))
-        self.txtLvlEnd.SetValue(str(endl))
 	#self.printLog('start:'+str(startl)+',end:'+str(endl))
 
     def OnButtonClear(self, event):
 	''' 清理日志信息 '''
 	self.log.Clear()
 	
-    def EvtRadioBox(self, event):
-	pass
-        #self.log.AppendText('EvtRadioBox: %d\n' % event.GetInt())
 
     def printLog(self, msg, newline=True):
 	strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
@@ -436,15 +416,30 @@ class MyFrameFrame(wx.Frame):
 
 
 #---------------------------------------------------------------------------
+__title__ = cm.TITLESCT
 
 
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = MyFrameFrame(None, wx.ID_ANY, cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION) # A Frame is a top-level window.
+    frame = MyFrame(None, wx.ID_ANY, cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION) # A Frame is a top-level window.
+    frame.Show(True)     # Show the frame.
+    app.MainLoop()
+
+#---------------------------------------------------------------------------
+def unitTest():
+    app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
+    frame = MyFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
+    data = r'E:\新建文件夹'
+    fName = "\\before_900913.tif"
+    frame.txtOut.AppendText(data)
+    frame.txtIn.AppendText(data+fName)
+    frame.txtName.AppendText('sct')
+    frame.fillFileList()
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 
 
 if __name__ == '__main__':
-    main()
+    unitTest()
+    #main()
