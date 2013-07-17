@@ -31,11 +31,15 @@ class MyFrame(ts.TileServerFrame):
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
 
     def uiCacheName(self, sizer):
-	self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(205,-1))
-	sizer.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	box = wx.BoxSizer(wx.VERTICAL)
+	labelName = wx.StaticText(self.panel, -1, "缓存名称:")
+	box.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(180,-1))
+	box.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	sizer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 0) 
 
     def uiTileType(self, sizer):
-	self.rb=rb= wx.RadioBox(self.panel, -1, "瓦片类型", wx.DefaultPosition, wx.DefaultSize,
+	self.rb=rb= wx.RadioBox(self.panel, -1, "瓦片类型", wx.DefaultPosition, (-1,65),
                 ['png','jpg'], 2, wx.RA_SPECIFY_COLS)
 	sizer.Add(self.rb,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         self.Bind(wx.EVT_RADIOBOX, self.EvtRadioBox, self.rb)
@@ -45,13 +49,14 @@ class MyFrame(ts.TileServerFrame):
         info = wx.AboutDialogInfo()
         info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
-        info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
+        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n"
 	strdes="生成三维影像缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维影像缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
             350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
-	info.Developers = ["qq:42848918"]
+	info.Developers = ["wenyulin.lin@gmail.com", "qq:42848918"]
+	#info.Artists = ["wenyu.lin"]
 
         #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object

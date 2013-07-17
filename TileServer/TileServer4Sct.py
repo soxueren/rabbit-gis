@@ -31,6 +31,8 @@ class SctFrame(ts.TileServerFrame):
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
 
     def uiCacheName(self, sizer):
+	labelName = wx.StaticText(self.panel, -1, "»º´æÃû³Æ:")
+	sizer.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(225,-1))
 	sizer.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 

@@ -88,12 +88,10 @@ class TileServerFrame(wx.Frame):
         line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
 	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	labelName = wx.StaticText(panel, -1, "缓存名称:")
 	button=wx.Button(panel, -1, "运行", size=(-1,60))
 	self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
 
 	box=wx.BoxSizer(wx.HORIZONTAL)
-	box.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 	self.uiCacheName(box)
 	self.uiTileType(box)
 	box.Add(boxSiezer,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -151,7 +149,7 @@ class TileServerFrame(wx.Frame):
         btnsizer.AddButton(btn)
 	self.Bind(wx.EVT_BUTTON, self.OnCloseMe, btn)
 
-        btn = wx.Button(self.panel, wx.ID_HELP)
+        btn = wx.Button(self.panel, wx.ID_HELP, "关于")
         btn.SetHelpText("The Cancel button cancels the dialog.")
         btnsizer.AddButton(btn)
         btnsizer.Realize()
@@ -189,7 +187,7 @@ class TileServerFrame(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
-        info.Copyright = "(C) 2006-2013 www.atolin.net 保留所有权利.\n\n"
+        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n"
 	strdes="生成三维地形缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 
