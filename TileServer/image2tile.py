@@ -27,7 +27,6 @@ class Image2Tiles(object):
     def __init__(self, filePath):
 	self.filePath=filePath
 	self.callbackfunLog=None
-	self.callbackfunProgress=None
 	self.ext='.jpg'
 	pass
     
@@ -39,9 +38,6 @@ class Image2Tiles(object):
 	if self.callbackfunLog is None: return
 	self.callbackfunLog(msg)
 
-    def updateProgress(self, inew):
-	''' 更新进度 '''
-	if self.callbackfunProgress is None: return
 
     def setExt(self, ext):
 	self.ext=ext
@@ -50,7 +46,10 @@ class Image2Tiles(object):
 	''' 生成瓦片 
 	forlatlong 是否转为经纬度坐标   
 	'''
-	imgbound={}
+	l,t,r,b, xres, yres=img.calcGeographicBoundary(imgList)
+	totalNums = smSci.smSci3d.calcTileCount(l,t,r,b,level)
+	curNums = 0
+	
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
 	    imgfile = img.ImageFile(fPath)
@@ -63,7 +62,7 @@ class Image2Tiles(object):
 	    self.printLog(("Reading file: %s" % fPath))
 	    dl, dt, dr, db = imgfile.getBBox()
 	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
-	    totalNums = (re-rs+1)*(ce-cs+1)
+	    #totalNums = (re-rs+1)*(ce-cs+1)
 	    bStep = False if totalNums<200 else True
 	    for row in xrange(rs, re+1):
 		for col in xrange(cs, ce+1):
@@ -73,8 +72,9 @@ class Image2Tiles(object):
 			os.makedirs(os.path.dirname(fp))
 		    logs=[]
 		    imgfile.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
-		    curNums = (row-rs)*(ce-cs+1)+col-cs+1
-		    self.updateProgress(curNums, totalNums, bStep)
+		    curNums += 1 #(row-rs)*(ce-cs+1)+col-cs+1
+		    if curNums<= totalNums:
+			self.updateProgress(curNums, totalNums, bStep)
 		    for log in logs:
 			self.printLog(log)
 	    del imgfile

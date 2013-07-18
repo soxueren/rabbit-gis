@@ -306,6 +306,13 @@ class smSci3d(smSci):
 	strl, strr, strc = ('%d' % level), ('%04d' % rg), ('%04d' % cg)
 	fPath = os.path.join(path, strl, strr, strc, fName)
 	return fPath
+
+    @staticmethod
+    def calcTileCount(l,t,r,b,level):
+	''' 计算指定层级,指定范围内的瓦片数目 '''
+	rs,re,cs,ce=smSci3d.calcRowCol(l,t,r,b,level) 
+	totalNums = (re-rs+1)*(ce-cs+1)
+	return totalNums 
 	
 	
 # =============================================================================

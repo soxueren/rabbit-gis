@@ -9,6 +9,7 @@ import imageFile as imf
 import smSci
 import common as cm
 from wx.lib.wordwrap import wordwrap
+import multiprocessing as mp
 
 try:
     from agw import advancedsplash as AS
@@ -31,6 +32,7 @@ class TileServerFrame(wx.Frame):
 	self.uiSplash()
 	self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
 	self.fileList=[]
+	self.lock = mp.RLock()
         self.panel=panel= wx.Panel(self, -1)
 
 	inBox = wx.StaticBox(panel, -1, "")
@@ -307,12 +309,14 @@ class TileServerFrame(wx.Frame):
 	
 	
     def printLog(self, msg, newline=True):
+	self.lock.acquire()
 	strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
 	strlog=strtime+msg
 	if newline: 
 	    self.log.AppendText(strlog+"\n")
 	else:
 	    self.log.AppendText(strlog+"\r")
+	self.lock.release()
 
     def check(self):
 	if self.txtIn.GetValue()=="":
