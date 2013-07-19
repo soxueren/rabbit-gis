@@ -10,6 +10,7 @@ import smSci
 import common as cm
 from wx.lib.wordwrap import wordwrap
 import TileServerFrame as ts
+import multiprocessing as mp
 
 try:
     from agw import advancedsplash as AS
@@ -62,27 +63,10 @@ class SctFrame(ts.TileServerFrame):
 	sci.saveSciFile(outPath)
     
 	ext='.bil'
-	imgtile = i2t.Image2Tiles(outPath) 
-	imgtile.hook(self.printLog)
-	imgtile.setExt(ext)
-    
-	maxstep=endl-startl+2
-	dlg = self.createProgressDialog("生成地形缓存", "生成地形缓存", maxstep)
-        keepGoing = True
 
-	self.printLine("Start")
-	for i in xrange(startl, endl+1):
-	    self.printLog(("开始处理第%d层数据..." % i))
-	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
-	    imgtile.toTiles(self.fileList, i, outPath, True)
-	    if i==endl: 
-		dlg.Destroy()
-		#dlg.Update(maxstep, "处理完成!")
-
-	self.printLine("End, All done.")
-	del imgtile,sci 
-	dlg.Destroy()
+	#self.runSingleProcess(startl, endl, outPath, ext, True)
+	self.runMultiProcess(startl, endl, outPath, ext, True)
+	del sci
 
 
 #---------------------------------------------------------------------------
@@ -109,5 +93,6 @@ def unitTest():
 
 
 if __name__ == '__main__':
+    mp.freeze_support()
     main()
     #unitTest()
