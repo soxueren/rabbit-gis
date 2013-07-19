@@ -18,22 +18,6 @@ except ImportError: # if it's not there locally, try the wxPython lib.
     import wx.lib.agw.advancedsplash as AS
 
 #---------------------------------------------------------------------------
-def runMP(imgList, startl, endl, outPath, ext, printLog):
-    ''' 多进程处理切图  '''
-    print startl, endl, outPath, ext
-    imgtile = i2t.Image2Tiles(outPath) 
-    imgtile.hook(printLog)
-    imgtile.setExt(ext)
-
-    for i in xrange(startl, endl+1):
-	#printLog(('开始处理第%d层数据...' % i))
-	#msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	imgtile.toTiles(imgList, i, outPath)
-	if i==endl: 
-	    pass
-	
-    del imgtile 
-#---------------------------------------------------------------------------
 
 g_wildcard = "GeoTiff (*.tif)|*.tif|"     \
            "GeoTiff (*.tiff)|*.tiff|" \
@@ -77,53 +61,6 @@ class MyFrame(ts.TileServerFrame):
         #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
-
-    def runSingleProcess(self, startl, endl, outPath, ext):
-	''' 单进程模式切图 '''
-	imgtile = i2t.Image2Tiles(outPath) 
-	imgtile.hook(self.printLog)
-	imgtile.setExt(ext)
-
-	maxstep=endl-startl+2
-	dlg = self.createProgressDialog("生成影像缓存", "生成影像缓存", maxstep)
-        keepGoing = True
-	
-	self.printLine("Start")
-	for i in xrange(startl, endl+1):
-	    self.printLog(('开始处理第%d层数据...' % i))
-	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
-	    imgtile.toTiles(self.fileList, i, outPath)
-	    if i==endl: 
-		dlg.Destroy()
-	    
-	self.printLine("End, All done.")
-	del imgtile 
-	dlg.Destroy()
-        
-    def runMultiProcess(self, startl, endl, outPath, ext):
-	''' 多进程模式切图 '''
-	
-	self.printLine("Start")
-	totalLevel = endl-startl+1
-	plist = []
-	if totalLevel<=4:
-	    for i in range(startl, endl+1):
-		p = mp.Process(target=runMP, args=(self.fileList, i, i, outPath, ext,None))
-		plist.append(p)
-	else:
-	    p = mp.Process(target=runMP, args=(self.fileList, startl, endl-3, outPath, ext,None))
-	    plist.append(p)
-	    for i in range(endl-2, endl+1):
-		p = mp.Process(target=runMP, args=(self.fileList, i, i, outPath, ext,None))
-		plist.append(p)
-
-	for p in plist:
-	    p.start()
-	for p in plist:
-	    p.join()
-	    
-	self.printLine("End, All done.")
         
     def OnButtonRun(self, event):
 	if not self.check():return False
@@ -173,8 +110,8 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = MyFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
-    data = r'E:\新建文件夹'
-    fName = "\\before_900913.tif"
+    data = r'E:\2013\2013-06\2013-06-14'
+    fName = "\\srtm_47_01.tif"
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('sci3d')
@@ -186,5 +123,6 @@ def unitTest():
 #---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    #main()
-    unitTest()
+    mp.freeze_support()
+    main()
+    #unitTest()

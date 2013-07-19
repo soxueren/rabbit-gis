@@ -28,6 +28,7 @@ class Image2Tiles(object):
 	self.filePath=filePath
 	self.callbackfunLog=None
 	self.ext='.jpg'
+	self.logs=[]
 	pass
     
     def hook(self, callback):
@@ -35,9 +36,10 @@ class Image2Tiles(object):
 
     def printLog(self, msg):
 	''' 记录日志 '''
-	if self.callbackfunLog is None: return
-	self.callbackfunLog(msg)
-
+	if self.callbackfunLog is None:
+	    self.logs.append(msg)
+	else:
+	    self.callbackfunLog(msg)
 
     def setExt(self, ext):
 	self.ext=ext
@@ -74,18 +76,18 @@ class Image2Tiles(object):
 		    imgfile.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
 		    curNums += 1 #(row-rs)*(ce-cs+1)+col-cs+1
 		    if curNums<= totalNums:
-			self.updateProgress(curNums, totalNums, bStep)
+			self.updateProgress(level, curNums, totalNums, bStep)
 		    for log in logs:
 			self.printLog(log)
 	    del imgfile
 	return True
 
-    def updateProgress(self, curNums, totalNums, bStep=False):
+    def updateProgress(self, level, curNums, totalNums, bStep=False):
 	if bStep:
 	    if curNums%50==0 or (totalNums-curNums)==0:
-		self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
+		self.printLog(("正处理级别%d, 已处理%d张,共%d张" % (level, curNums, totalNums)))
 	else:
-	    self.printLog(("已处理%d张,共%d张" % (curNums, totalNums)))
+	    self.printLog(("正处理级别%d, 已处理%d张,共%d张" % (level, curNums, totalNums)))
 
     def createBound(self, dMinX, dMinY, dMaxX, dMaxY):
 	''' 创建影像的外包矩形 '''
