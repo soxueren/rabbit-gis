@@ -66,9 +66,9 @@ class SctFrame(ts.TileServerFrame):
 	ext='.bil'
 	ini = cm.iniFile()
 	if ini.mpcnt>1:
-	    self.runMultiProcess(startl, endl, outPath, ext, True)
+	    self.runMultiProcess(startl, endl, outPath, ext, True, ini.mpcnt)
 	else:
-	    self.runSingleProcess(startl, endl, outPath, ext, True, ini.mpcnt)
+	    self.runSingleProcess(startl, endl, outPath, ext)
 
 	del sci, ini
 
