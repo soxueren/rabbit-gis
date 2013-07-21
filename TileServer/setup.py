@@ -19,7 +19,8 @@ buildOpts = dict(
         compressed=True,
 	includes=['numpy'],
 	#zip_includes=['smSci/sci3d.sci3d'],
-	include_files=['smSci\\sci3d.sci3d','logo.png','icon.ico','config.ini'],
+	include_files=['smSci\\sci3d.sci3d','logo.png','icon.ico',
+	    'config.ini','ReadMe.txt'],
 	)
 
 msiOpts=dict(
