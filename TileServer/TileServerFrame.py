@@ -17,17 +17,16 @@ except ImportError: # if it's not there locally, try the wxPython lib.
     import wx.lib.agw.advancedsplash as AS
 
 #---------------------------------------------------------------------------
-def runMP(imgList, startl, endl, outPath, ext, bil, q, pindex):
+def runMP(imgList, outPath, ext, bil, bboxs, q, pindex):
     ''' 多进程处理切图  '''
     #print startl, endl, outPath, ext
     ppid = os.getpid()
     imgtile = i2t.Image2Tiles(outPath) 
     imgtile.setExt(ext)
 
-    for i in xrange(startl, endl+1):
-	#printLog(('开始处理第%d层数据...' % i))
-	#msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	imgtile.toTiles(imgList, i, outPath, bil)
+    #printLog(('开始处理第%d层数据...' % i))
+    #msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
+    imgtile.toTilesByBoxs(imgList, bboxs, outPath, bil, True)
 	
     msg = "子进程%d, id:%d, " % (pindex, ppid)
     logs=[]
@@ -154,59 +153,6 @@ class TileServerFrame(wx.Frame):
     def uiCacheName(self, sizer):
 	pass
 
-    def runSingleProcess(self, startl, endl, outPath, ext, bil=False):
-	''' 单进程模式切图 '''
-	imgtile = i2t.Image2Tiles(outPath) 
-	imgtile.hook(self.printLog)
-	imgtile.setExt(ext)
-
-	maxstep=endl-startl+2
-	dlg = self.createProgressDialog("生成缓存", "生成缓存", maxstep)
-        keepGoing = True
-	
-	self.printLine("Start")
-	for i in xrange(startl, endl+1):
-	    self.printLog(('开始处理第%d层数据...' % i))
-	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
-	    imgtile.toTiles(self.fileList, i, outPath, bil)
-	    if i==endl: 
-		dlg.Destroy()
-	    
-	self.printLine("End, All done.")
-	del imgtile 
-	dlg.Destroy()
-
-    def runMultiProcess(self, startl, endl, outPath, ext, bil=False):
-	''' 多进程模式切图 '''
-	
-	self.printLine("Start")
-	totalLevel = endl-startl+1
-	plist = []
-	q = mp.Queue()
-	if totalLevel<=4:
-	    for i in range(startl, endl+1):
-		p = mp.Process(target=runMP, args=(self.fileList, i, i,
-			outPath, ext, bil, q, i-startl+1))
-		plist.append(p)
-	else:
-	    p = mp.Process(target=runMP, args=(self.fileList, startl, endl-3,
-		    outPath, ext, bil, q, 1))
-	    plist.append(p)
-	    for i in range(endl-2, endl+1):
-		p = mp.Process(target=runMP, args=(self.fileList, i, i,
-			outPath, ext, bil, q, i-endl+4))
-		plist.append(p)
-
-	for p in plist:
-	    p.start()
-
-	for p in plist:
-	    p.join()
-	    for log in q.get():
-		self.printLog(log)
-
-	self.printLine("End, All done.")
     
     def uiButtonOK(self, sizer):
         btnsizer = wx.StdDialogButtonSizer()
@@ -390,6 +336,7 @@ class TileServerFrame(wx.Frame):
 	    self.log.AppendText(strlog+"\n")
 	else:
 	    self.log.AppendText(strlog+"\r")
+	self.log.Refresh()
 	self.lock.release()
 
     def check(self):
@@ -432,10 +379,95 @@ class TileServerFrame(wx.Frame):
 	    msg="="*line+" "+msg+" "+"="*line
 	    self.printLog(msg)
 
+    def runSingleProcess(self, startl, endl, outPath, ext, bil=False):
+	''' 单进程模式切图 '''
+	imgtile = i2t.Image2Tiles(outPath) 
+	imgtile.hook(self.printLog)
+	imgtile.setExt(ext)
+
+	maxstep=endl-startl+2
+	dlg = self.createProgressDialog("生成缓存", "生成缓存", maxstep)
+        keepGoing = True
+	
+	self.printLine("Start")
+	for i in xrange(startl, endl+1):
+	    self.printLog(('开始处理第%d层数据...' % i))
+	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
+	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
+	    imgtile.toTiles(self.fileList, i, outPath, bil)
+	    if i==endl: 
+		dlg.Destroy()
+	    
+	self.printLine("End, All done.")
+	del imgtile 
+	dlg.Destroy()
+
+    def splitBox(self, l,t,r,b, startl, endl, mpcnt):
+	''' 根据进程数目,瓦片张数划分合理的任务 '''
+	tasks = []
+	for i in range(startl, endl+1):
+	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(l,t,r,b, i) 
+	    for row in range(rs, re+1):
+		for col in range(cs, ce+1):
+		    tasks.append((i, row, col))
+
+	totalNums = len(tasks)
+	splitNums = totalNums / mpcnt
+	mplist = []
+	add = 0
+	for i in range(mpcnt):
+	    mplist.append( tasks[i*splitNums:(i+1)*splitNums] )
+	    add += splitNums
+
+	if add<totalNums:
+	    mplist[-1].extend( tasks[add-totalNums:] )
+	return mplist
+	
+    def runMultiProcess(self, startl, endl, outPath, ext, bil=False, mpcnt=4):
+	''' 多进程模式切图 '''
+	l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
+	boxList = self.splitBox(l,t,r,b,startl,endl,mpcnt)
+	assert(len(boxList)==mpcnt)
+
+	self.printLine("Start")
+	totalLevel = endl-startl+1
+	plist = []
+	m = mp.Manager()
+	q = m.Queue()
+	for i in xrange(mpcnt):
+	    bboxs = boxList[i]
+	    p = mp.Process(target=runMP, args=(self.fileList, outPath, ext, bil, bboxs, q, i+1))
+	    plist.append(p)
+
+	for p in plist:
+	    p.start()
+
+	for p in plist:
+	    p.join()
+	    logs = list() if q.empty() else q.get()
+	    for log in logs:
+		self.printLog(log)
+	
+	'''
+	for p in plist:
+	    print p.is_alive(), p.exitcode
+	'''
+
+	self.printLine("End, All done.")
 
 #---------------------------------------------------------------------------
-
-
+def unitTest():
+    app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
+    frame = TileServerFrame(None, wx.ID_ANY, cm.APPNAME+"-Sct-生成三维地形缓存-"+cm.VERSION) # A Frame is a top-level window.
+    data = r'E:\新建文件夹\全市域裁切影像\新建文件夹'
+    fName = "\\1-1.tif"
+    frame.txtOut.AppendText(data)
+    frame.txtIn.AppendText(data+fName)
+    frame.fillFileList()
+    l,t,r,b, xres, yres = imf.calcGeographicBoundary(frame.fileList)
+    endl=smSci.smSci3d.calcEndLevel(xres)
+    boxlist = frame.splitBox(l,t,r,b, 8,14, 4)
+    frame.runMultiProcess(8, 14, "", "", bil=False, mpcnt=4)
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
@@ -445,4 +477,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    #main()
+    unitTest()
