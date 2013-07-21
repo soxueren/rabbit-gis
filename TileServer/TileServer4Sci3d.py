@@ -76,10 +76,12 @@ class MyFrame(ts.TileServerFrame):
 	endl=int(self.txtLvlEnd.GetValue())
 	startl=int(self.txtLvlBeg.GetValue())
 	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
+
+	picNums = smSci.smSci3d.calcTotalTileCount(l,t,r,b,startl, endl)
 	
 	self.printLog(('文件数目:%d' % len(self.fileList)))
 	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f,%f)' % (l,t,r,b,xres,yres)))
-	self.printLog(('起始终止层级:(%d,%d)' % (startl, endl)))
+	self.printLog(('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums)))
 
 	sci = smSci.smSci3d()
 	sci.setParams(mapname, mapbnd, mapbnd, '')
@@ -90,10 +92,13 @@ class MyFrame(ts.TileServerFrame):
     
 	if ext=='png': ext='.png'
 	if ext=='jpg': ext='.jpg'
-
-	#self.runSingleProcess(startl, endl, outPath, ext)
-	self.runMultiProcess(startl, endl, outPath, ext)
-	del sci
+	
+	ini = cm.iniFile()
+	if ini.mpcnt>1:
+	    self.runMultiProcess(startl, endl, outPath, ext, False, ini.mpcnt)
+	else:
+	    self.runSingleProcess(startl, endl, outPath, ext)
+	del sci, ini
 	    
 
 #---------------------------------------------------------------------------
@@ -110,8 +115,8 @@ def main():
 def unitTest():
     app = wx.App(False)  # Create a new app, don't redirect stdout/stderr to a window.
     frame = MyFrame(None, wx.ID_ANY, __title__) # A Frame is a top-level window.
-    data = r'E:\2013\2013-06\2013-06-14'
-    fName = "\\srtm_47_01.tif"
+    data = r'E:\新建文件夹\全市域裁切影像\新建文件夹'
+    fName = "\\1-1.tif"
     frame.txtOut.AppendText(data)
     frame.txtIn.AppendText(data+fName)
     frame.txtName.AppendText('sci3d')

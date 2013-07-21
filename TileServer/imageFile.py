@@ -171,9 +171,10 @@ class ImageFile(object):
 	    if bOutOfFile and os.path.exists(fp) and tmp_ds is not None:
 		for i in range(1, 4):
 		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
-		    tile_data[wy:wy2,wx:wx2] = data
-		    mem_ds.GetRasterBand(i).WriteArray(tile_data)
-		    del tile_data
+		    if tile_data is not None:
+			tile_data[wy:wy2,wx:wx2] = data
+			mem_ds.GetRasterBand(i).WriteArray(tile_data)
+			del tile_data
 	    else:
 		tile_data = numpy.zeros((ts, ts), numpy.uint8)
 		tile_data[wy:wy2,wx:wx2]=data
@@ -189,11 +190,11 @@ class ImageFile(object):
 		    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
 		band = self.ds.GetRasterBand(i)
 		data = band.ReadAsArray(rx, ry, rxsize, rysize, wxsize, wysize)
-		if data is not None:
+		if data is not None and tile_data is not None:
 		    tile_data[wy:wy2,wx:wx2] = data
+		    mem_ds.GetRasterBand(i).WriteArray(tile_data)
 		else:
 		    logs.append('read tile fialed. rx:%d,ry:%d,rxsize:%d, rysize:%d' % (rx, ry, rxsize, rysize))
-		mem_ds.GetRasterBand(i).WriteArray(tile_data)
 		del tile_data
 	else:
 	    if logs is not None:

@@ -278,10 +278,16 @@ class smSci3d(smSci):
 	''' 计算全球剖分行列号 '''
 	level0Res = 180.0/256 # 0层分辨率 
 	levelRes = level0Res/(1<<level) # i层分辨率
+	'''
 	startCol = math.floor((l-(-180.0)) / levelRes / 256)
 	endCol = math.ceil((r-(-180.0)) / levelRes / 256)
 	startRow = math.floor((90.0-t) / levelRes / 256)
 	endRow = math.ceil((90.0-b) / levelRes / 256)
+	'''
+	startCol = math.floor((l-(-180.0)) / levelRes / 256)
+	endCol = math.floor((r-(-180.0)) / levelRes / 256)
+	startRow = math.floor((90.0-t) / levelRes / 256)
+	endRow = math.floor((90.0-b) / levelRes / 256)
 	return int(startRow), int(endRow), int(startCol), int(endCol)
     
     @staticmethod
@@ -314,6 +320,13 @@ class smSci3d(smSci):
 	totalNums = (re-rs+1)*(ce-cs+1)
 	return totalNums 
 	
+    @staticmethod
+    def calcTotalTileCount(l,t,r,b, startl, endl):
+	''' 计算指定层级,指定范围内的瓦片数目 '''
+	totalNums = 0
+	for i in range(startl, endl+1):
+	    totalNums += smSci3d.calcTileCount(l,t,r,b,i) 
+	return totalNums 
 	
 # =============================================================================
 	
@@ -407,7 +420,16 @@ def unitTestSct():
     sci.setWidthHeight(w,h)
     sci.saveSciFile(sciPath)
 
+def unitTestRowCol():
+    l,t,r,b = 117.718910,34.239982,118.365360,33.554232
+    level = 9 
+    rs,re, cs, ce = smSci3d.calcRowCol(l,t,r,b,level)
+    for row in range(rs, re+1):
+	for col in range(cs, ce+1):
+	    print row, col, smSci3d.calcBndByRowCol(row,col,level)
+
 if __name__=='__main__':
     #unitTest()
     #unitTestLevel()
-    unitTestSct()
+    #unitTestSct()
+    unitTestRowCol()

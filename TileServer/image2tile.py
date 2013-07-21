@@ -82,6 +82,43 @@ class Image2Tiles(object):
 	    del imgfile
 	return True
 
+    def toTilesByBoxs(self, imgList, bboxs, outPath, isBil=False, forlatlong=True):
+	''' 生成瓦片 
+	forlatlong 是否转为经纬度坐标   
+	'''
+	totalNums = len(bboxs) 
+	curNums = 0
+	bStep = False if totalNums<200 else True
+	
+	for fName in imgList:
+	    fPath = os.path.join(self.filePath, fName)
+	    imgfile = img.ImageFile(fPath)
+	    if forlatlong and not imgfile.isGeographic():
+		if imgfile.canbeGeographic():
+		    imgfile.resetBBox()
+		else:
+		    continue
+
+	    self.printLog(("Reading file: %s" % fPath))
+	    dl, dt, dr, db = imgfile.getBBox()
+	    for level, row, col in bboxs:
+		rs,re,cs,ce=smSci.smSci3d.calcRowCol(dl,dt,dr,db,level) 
+		if rs>row or re<row or cs>col or ce<col: continue
+		l,t,r,b = smSci.smSci3d.calcBndByRowCol(row,col,level)
+		fp = smSci.smSci3d.calcTileName(level,row,col,outPath)+self.ext
+		if not os.path.exists(os.path.dirname(fp)):
+		    os.makedirs(os.path.dirname(fp))
+
+		logs=[]
+		imgfile.cut(l,t,r,b,TILESIZE256, fp, isBil, logs)
+		curNums += 1 #(row-rs)*(ce-cs+1)+col-cs+1
+		if curNums<= totalNums:
+		    self.updateProgress(level, curNums, totalNums, bStep)
+		for log in logs:
+		    self.printLog(log)
+	    del imgfile
+	return True
+
     def updateProgress(self, level, curNums, totalNums, bStep=False):
 	if bStep:
 	    if curNums%50==0 or (totalNums-curNums)==0:

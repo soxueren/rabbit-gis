@@ -51,10 +51,11 @@ class SctFrame(ts.TileServerFrame):
 	endl=int(self.txtLvlEnd.GetValue())
 	startl=int(self.txtLvlBeg.GetValue())
 	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
+	picNums = smSci.smSci3d.calcTotalTileCount(l,t,r,b,startl, endl)
 	
 	self.printLog(('文件数目:%d' % len(self.fileList)))
 	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
-	self.printLog(('起始终止层级:(%d,%d)' % (startl, endl)))
+	self.printLog(('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums)))
 
 	sci = smSci.smSct()
 	sci.setParams(mapname, mapbnd, mapbnd, '')
@@ -63,10 +64,13 @@ class SctFrame(ts.TileServerFrame):
 	sci.saveSciFile(outPath)
     
 	ext='.bil'
+	ini = cm.iniFile()
+	if ini.mpcnt>1:
+	    self.runMultiProcess(startl, endl, outPath, ext, True)
+	else:
+	    self.runSingleProcess(startl, endl, outPath, ext, True, ini.mpcnt)
 
-	#self.runSingleProcess(startl, endl, outPath, ext, True)
-	self.runMultiProcess(startl, endl, outPath, ext, True)
-	del sci
+	del sci, ini
 
 
 #---------------------------------------------------------------------------
