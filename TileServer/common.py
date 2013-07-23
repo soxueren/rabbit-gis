@@ -3,7 +3,7 @@
 
 import os, sys
 
-VERSION = "0.3.6.91"
+VERSION = "0.3.6.92"
 APPNAME = "TileServer"
 APPTITLE = "瓦刀"
 
@@ -12,6 +12,12 @@ TITLESCI3D = APPTITLE + "-Sci3d-生成三维影像缓存-" + VERSION
 
 # 地形缓存工具
 TITLESCT = APPTITLE + "-Sct-生成三维地形缓存-" + VERSION
+
+#---------------------------------------------------------------#
+APPID_SCI3D = 0x01
+APPID_SCT = 0x02
+
+#---------------------------------------------------------------#
 
 class iniFile(object):
     ''' ini文件解析 '''
