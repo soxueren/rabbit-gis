@@ -27,8 +27,11 @@ def verify(lic, hostName, appId):
     with open(lic, "rb") as licfile:
 	msg = licfile.read()
 	licfile.close()
-	decrypted = rsa.decrypt(msg, priv_key)
-	print len(decrypted), decrypted 
+	try:
+	    decrypted = rsa.decrypt(msg, priv_key)
+	except rsa.DecryptionError as e:
+	    print e.read()
+	    print len(decrypted), decrypted 
 	return True
     return False
     
