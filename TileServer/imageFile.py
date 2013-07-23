@@ -18,6 +18,7 @@ import os
 from array import array
 #import math
 #import re 
+import watermark as wmk
 
 class ImageFile(object):
     ''' 图像信息 '''
@@ -201,6 +202,7 @@ class ImageFile(object):
 		logs.append('Unsupport band count %d' % self.ibandCount)
 		return
 	
+	self.watermark(mem_ds)
 
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
 	'''
@@ -212,6 +214,12 @@ class ImageFile(object):
 	del tmp_ds
 	out_drv.CreateCopy(fp, mem_ds, strict=0)
 	del out_drv, mem_drv
+
+    def watermark(self, mem_ds):
+	tx, ty = mem_ds.RasterXSize, mem_ds.RasterYSize
+	tile_data = mem_ds.GetRasterBand(1).ReadAsArray(0,0,tx,ty,tx,ty) 
+	wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
+	mem_ds.GetRasterBand(1).WriteArray(tile_data)
 
     def cut4Bil(self,l, t, r, b, ts, fp, logs=None):
 	''' 切分为地形文件 '''
