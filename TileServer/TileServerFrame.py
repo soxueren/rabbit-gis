@@ -2,6 +2,7 @@
 # --*-- coding:utf-8 --*--
 
 import sys,os
+import multiprocessing as mp
 import wx
 import time
 import image2tile as i2t
@@ -9,7 +10,7 @@ import imageFile as imf
 import smSci
 import common as cm
 from wx.lib.wordwrap import wordwrap
-import multiprocessing as mp
+import license as lic
 
 try:
     from agw import advancedsplash as AS
@@ -17,11 +18,11 @@ except ImportError: # if it's not there locally, try the wxPython lib.
     import wx.lib.agw.advancedsplash as AS
 
 #---------------------------------------------------------------------------
-def runMP(imgList, outPath, ext, bil, bboxs, q, pindex):
+def runMP(imgList, outPath, ext, bil, bboxs, q, pindex, license):
     ''' 多进程处理切图  '''
     #print startl, endl, outPath, ext
     ppid = os.getpid()
-    imgtile = i2t.Image2Tiles(outPath) 
+    imgtile = i2t.Image2Tiles(outPath, license) 
     imgtile.setExt(ext)
 
     #printLog(('开始处理第%d层数据...' % i))
@@ -51,6 +52,8 @@ class TileServerFrame(wx.Frame):
 	self.uiSplash()
 	self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
 	self.fileList=[]
+	self.license = False # 是否通过许可验证
+	self.appid = 1 
 	self.lock = mp.RLock()
         self.panel=panel= wx.Panel(self, -1)
 
@@ -147,6 +150,20 @@ class TileServerFrame(wx.Frame):
 	sizer.Fit(self)
 	self.Show()
 
+    def verifyLicense(self):
+	try:
+	    dirName = os.path.dirname(os.path.abspath(__file__))
+	except:
+	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	pn = os.path.join(dirName, 'license.lic')
+	# 打包后目录发生变化,需要去掉library.zip目录
+	pn = pn.replace('library.zip','')
+	pn=os.path.abspath(pn)
+	if os.path.isfile(pn):
+	    lics = lic.License(pn)
+	    host = lics.hostName()
+	    self.license = lics.verify(host, self.appid)
+
     def uiTileType(self, sizer):
 	pass
 
@@ -204,20 +221,25 @@ class TileServerFrame(wx.Frame):
     def OnCloseWindow(self, event):
         self.Destroy()
 
+    def GetLicense(self):
+	strlic = "免费试用版本."
+	if self.license:
+	    strlic = "使用权已授权 %s." % lic.License.hostName()
+	return strlic
+
     def OnButtonHelp(self, event):
 	# First we create and fill the info object
         info = wx.AboutDialogInfo()
         info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
-        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n"
+        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n%s\n" % self.GetLicense()
 	strdes="生成三维地形缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
-        info.Description = wordwrap(info.Name+strdes, 
-            350, wx.ClientDC(self))
+        info.Description = wordwrap(info.Name+strdes, 350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
 	info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
 
-        #info.License = wordwrap(licenseText, 500, wx.ClientDC(self))
+        #info.License = wordwrap(self.GetLicense(), 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
         
@@ -381,7 +403,7 @@ class TileServerFrame(wx.Frame):
 
     def runSingleProcess(self, startl, endl, outPath, ext, bil=False):
 	''' 单进程模式切图 '''
-	imgtile = i2t.Image2Tiles(outPath) 
+	imgtile = i2t.Image2Tiles(outPath, self.license) 
 	imgtile.hook(self.printLog)
 	imgtile.setExt(ext)
 
@@ -436,7 +458,7 @@ class TileServerFrame(wx.Frame):
 	q = m.Queue()
 	for i in xrange(mpcnt):
 	    bboxs = boxList[i]
-	    p = mp.Process(target=runMP, args=(self.fileList, outPath, ext, bil, bboxs, q, i+1))
+	    p = mp.Process(target=runMP, args=(self.fileList, outPath, ext, bil, bboxs, q, i+1, self.license))
 	    plist.append(p)
 
 	for p in plist:

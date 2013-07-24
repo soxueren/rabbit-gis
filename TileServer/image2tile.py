@@ -24,11 +24,12 @@ TILESIZE256 = 256
 class Image2Tiles(object):
     ''' 将image文件切割为瓦片 '''
 
-    def __init__(self, filePath):
+    def __init__(self, filePath, license=False):
 	self.filePath=filePath
 	self.callbackfunLog=None
 	self.ext='.jpg'
 	self.logs=[]
+	self.license = license # 是否有许可
 	pass
     
     def hook(self, callback):
@@ -54,7 +55,7 @@ class Image2Tiles(object):
 	
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
-	    imgfile = img.ImageFile(fPath)
+	    imgfile = img.ImageFile(fPath, self.license)
 	    if forlatlong and not imgfile.isGeographic():
 		if imgfile.canbeGeographic():
 		    imgfile.resetBBox()
@@ -92,7 +93,7 @@ class Image2Tiles(object):
 	
 	for fName in imgList:
 	    fPath = os.path.join(self.filePath, fName)
-	    imgfile = img.ImageFile(fPath)
+	    imgfile = img.ImageFile(fPath, self.license)
 	    if forlatlong and not imgfile.isGeographic():
 		if imgfile.canbeGeographic():
 		    imgfile.resetBBox()
