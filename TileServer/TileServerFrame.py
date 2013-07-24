@@ -224,7 +224,7 @@ class TileServerFrame(wx.Frame):
     def GetLicense(self):
 	strlic = "免费试用版本."
 	if self.license:
-	    strlic = "使用权已授权 %s." % lic.License.hostName()
+	    strlic = "授权版本 %s." % lic.License.hostName()
 	return strlic
 
     def OnButtonHelp(self, event):

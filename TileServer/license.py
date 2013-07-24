@@ -17,6 +17,7 @@ class License(object):
 	self.lic = lic
 	self.host = ""
 	self.licNums = 0
+	self.decrypted = ""
 
     def setHost(self, hostName):
 	self.host = hostName
@@ -49,6 +50,7 @@ class License(object):
 	    licfile.close()
 	    try:
 		decrypted = rsa.decrypt(msg, priv_key)
+		self.decrypted = decrypted 
 		#print decrypted
 	    except rsa.DecryptionError as e:
 		print e.read()
@@ -82,6 +84,7 @@ def unitVerify():
     host = License.hostName()
     appid = 4
     print lics.verify(host, appid)
+    print lics.decrypted
     
 if __name__=="__main__":
     unitLicense()
