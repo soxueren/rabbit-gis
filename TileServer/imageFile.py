@@ -23,7 +23,7 @@ import watermark as wmk
 class ImageFile(object):
     ''' 图像信息 '''
 
-    def __init__(self, fileName):
+    def __init__(self, fileName, lic=False):
 	self.fileName=fileName
 	self.srsWkt=None
 	self.xSize=None
@@ -38,6 +38,7 @@ class ImageFile(object):
 	self.ds=None
 	self.ct = None # CoordinateTransformation坐标转换器
 	self.srs = None # 影像坐标系
+	self.license = lic
 	self.process()
 
     def getWidthHeight(self):
@@ -202,7 +203,8 @@ class ImageFile(object):
 		logs.append('Unsupport band count %d' % self.ibandCount)
 		return
 	
-	self.watermark(mem_ds)
+	if not self.license:
+	    self.watermark(mem_ds)
 
 	out_drv=gdal.GetDriverByName(self.getDriverName(fp))
 	'''
@@ -266,6 +268,8 @@ class ImageFile(object):
 	    fp = fp[:-4]+'_2'+fp[-4:]
 	    logs.append('file is exists. new file %s' % fp)
 	'''
+	if not self.license:
+	    wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
 
 	#print tile_data.shape#, tile_data
 	f=open(fp, 'wb')

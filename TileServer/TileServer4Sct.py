@@ -30,6 +30,8 @@ class SctFrame(ts.TileServerFrame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
+	self.appid = cm.APPID_SCT
+	self.verifyLicense()
 
     def uiCacheName(self, sizer):
 	labelName = wx.StaticText(self.panel, -1, "»º´æÃû³Æ:")

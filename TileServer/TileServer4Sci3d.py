@@ -29,6 +29,8 @@ class MyFrame(ts.TileServerFrame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
+	self.appid = cm.APPID_SCI3D
+	self.verifyLicense()
 
     def uiCacheName(self, sizer):
 	box = wx.BoxSizer(wx.VERTICAL)
@@ -49,11 +51,10 @@ class MyFrame(ts.TileServerFrame):
         info = wx.AboutDialogInfo()
         info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
-        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n"
+        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n%s\n" % self.GetLicense()
 	strdes="生成三维影像缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
 	strdes+="可直接将影像切分成三维影像缓存文件.\n\n"#.decode('gb2312')
-        info.Description = wordwrap(info.Name+strdes, 
-            350, wx.ClientDC(self))
+        info.Description = wordwrap(info.Name+strdes, 350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
 	info.Developers = ["wenyulin.lin@gmail.com", "qq:42848918"]
 	#info.Artists = ["wenyu.lin"]
