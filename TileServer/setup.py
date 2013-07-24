@@ -20,7 +20,8 @@ buildOpts = dict(
 	includes=['numpy'],
 	#zip_includes=['smSci/sci3d.sci3d'],
 	include_files=['smSci\\sci3d.sci3d','logo.png','icon.ico',
-	    'config.ini','ReadMe.txt'],
+	    'config.ini','ReadMe.txt','docs\\TileServer-Sci3d 使用说明.pdf',
+	    'docs\\TileServer-Sct 使用说明.pdf'],
 	)
 
 msiOpts=dict(
