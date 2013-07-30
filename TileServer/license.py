@@ -69,23 +69,24 @@ class License(object):
 	    return self.host==hostName.lower() and self.licNums&appid 
 	return False
 
-def unitLicense():
-    host = License.hostName()
-    licFile = "d:/license.lic"
+def unitLicense(host):
+    #host = License.hostName()
+    licFile = "d:/license_%s.lic" % host
     lics = License(licFile)
     lics.setHost(host)
-    lics.addApp(1)
-    lics.addApp(0)
+    lics.addApp(cm.APPID_SCI3D)
+    lics.addApp(cm.APPID_SCT)
     lics.create()
 
-def unitVerify():
-    licFile = "d:/license.lic"
+def unitVerify(host):
+    licFile = "d:/license_%s.lic" % host
     lics = License(licFile)
     host = License.hostName()
-    appid = 4
+    appid = cm.APPID_SCI3D
     print lics.verify(host, appid)
     print lics.decrypted
     
 if __name__=="__main__":
-    unitLicense()
-    unitVerify()
+    host = License.hostName()
+    unitLicense(host)
+    unitVerify(host)

@@ -155,14 +155,21 @@ class TileServerFrame(wx.Frame):
 	    dirName = os.path.dirname(os.path.abspath(__file__))
 	except:
 	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	pn = os.path.join(dirName, 'license.lic')
 	# 打包后目录发生变化,需要去掉library.zip目录
-	pn = pn.replace('library.zip','')
-	pn=os.path.abspath(pn)
+	dirName = dirName.replace('library.zip','')
+	pn =  self.findLicenseFile(dirName)
+	pn = os.path.abspath(pn)
 	if os.path.isfile(pn):
 	    lics = lic.License(pn)
 	    host = lics.hostName()
 	    self.license = lics.verify(host, self.appid)
+
+    def findLicenseFile(self, dirName):
+	fileList = os.listdir(dirName)
+	for fp in fileList:
+	    if fp.endswith(".lic"):
+		return os.path.join(dirName, fp)
+	return ""
 
     def uiTileType(self, sizer):
 	pass
