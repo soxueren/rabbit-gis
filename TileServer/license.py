@@ -71,7 +71,7 @@ class License(object):
 
 def unitLicense(host):
     #host = License.hostName()
-    licFile = "d:/license_%s.lic" % host
+    licFile = "%s.lic" % host
     lics = License(licFile)
     lics.setHost(host)
     lics.addApp(cm.APPID_SCI3D)
@@ -79,14 +79,17 @@ def unitLicense(host):
     lics.create()
 
 def unitVerify(host):
-    licFile = "d:/license_%s.lic" % host
+    licFile = "%s.lic" % host
     lics = License(licFile)
     host = License.hostName()
     appid = cm.APPID_SCI3D
-    print lics.verify(host, appid)
-    print lics.decrypted
+    lics.verify(host, appid)
+    print 'encrypted is:',lics.decrypted
     
 if __name__=="__main__":
     host = License.hostName()
+    if len(sys.argv)==2:
+	host = sys.argv[1]
+    print 'host name is:', host
     unitLicense(host)
     unitVerify(host)

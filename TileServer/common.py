@@ -3,7 +3,7 @@
 
 import os, sys
 
-VERSION = "0.3.9.97"
+VERSION = "0.3.9.98"
 APPNAME = "TileServer"
 APPTITLE = "Íßµ¶"
 
