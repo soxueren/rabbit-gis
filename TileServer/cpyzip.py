@@ -6,8 +6,8 @@ import shutil
 import common as cm
 import zipfile
 
-dirname=cm.APPNAME+'-'+cm.VERSION+'-win32'
-tozipfile=cm.APPNAME+'-'+cm.VERSION+'-win32.zip'
+dirname = cm.APPNAME+'-'+cm.VERSION+'-win32'
+tozipfile = cm.APPNAME+'-'+cm.VERSION+'-win32.zip'
 
 def copyfiles():
     pf=os.path.join(os.getcwd(), 'build', 'exe.win32-2.7')
