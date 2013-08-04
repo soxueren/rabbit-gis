@@ -76,6 +76,7 @@ def unitLicense(host):
     lics.setHost(host)
     lics.addApp(cm.APPID_SCI3D)
     lics.addApp(cm.APPID_SCT)
+    lics.addApp(cm.APPID_GOOGLE_SIC3D)
     lics.create()
 
 def unitVerify(host):

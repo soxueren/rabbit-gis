@@ -4,6 +4,7 @@
 import sys
 import os
 import math
+import scitemplate
 
 #import math
 #import re 
@@ -60,7 +61,7 @@ class smSci(object):
 	self.mapBnd=list()
 	self.scaleVal=0.0
 	self.scaleCap=''
-	self.lines=[] # sic文件内容
+	self.lines=scitemplate.sci3d # sic文件内容
 
     def setParams(self, mapName, mapBnd, idxBnd, sciVer):
 	''' 设置生成SCI文件的参数
@@ -81,6 +82,7 @@ class smSci(object):
 	return True
     
     def loadTemplate(self):
+
 	try:
 	    dirName = os.path.dirname(os.path.abspath(__file__))
 	except:
@@ -156,7 +158,7 @@ class smSci(object):
 	''' 生成SM格式切片SCI文件 '''
 	if not self.isValid():return False
 
-	self.loadTemplate()
+	#self.loadTemplate()
 	self.replace()
 	self.write(sciPath)
 	return True
@@ -431,5 +433,5 @@ def unitTestRowCol():
 if __name__=='__main__':
     #unitTest()
     #unitTestLevel()
-    #unitTestSct()
-    unitTestRowCol()
+    unitTestSct()
+    #unitTestRowCol()

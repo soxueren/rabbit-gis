@@ -81,7 +81,7 @@ class MyFrame(ts.TileServerFrame):
 	picNums = smSci.smSci3d.calcTotalTileCount(l,t,r,b,startl, endl)
 	
 	self.printLog(('文件数目:%d' % len(self.fileList)))
-	self.printLog(('地理范围:上下左右(%f,%f,%f,%f),分辨率(%f,%f)' % (l,t,r,b,xres,yres)))
+	self.printLog(('地理范围:左上右下(%f,%f,%f,%f),分辨率(%f,%f)' % (l,t,r,b,xres,yres)))
 	self.printLog(('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums)))
 
 	sci = smSci.smSci3d()
