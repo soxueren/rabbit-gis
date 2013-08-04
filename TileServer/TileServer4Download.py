@@ -126,7 +126,7 @@ def downlaodTile(rs,re,cs,ce, level, outPath, strurl):
 		myfile.close()
 
 #---------------------------------------------------------------------------
-def productSmTile(row, col, level, outPath, tiles):
+def productSmTile(row, col, level, outPath, tiles, haswatermark):
     ''' 生成SuperMap瓦片 '''
 
     mem_drv = gdal.GetDriverByName('MEM')
@@ -168,7 +168,8 @@ def productSmTile(row, col, level, outPath, tiles):
 
     tx, ty = mem_ds.RasterXSize, mem_ds.RasterYSize
     tile_data = mem_ds.GetRasterBand(1).ReadAsArray(0,0,tx,ty,tx,ty) 
-    wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
+    if haswatermark:
+	wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
     mem_ds.GetRasterBand(1).WriteArray(tile_data)
 
     out_drv = gdal.GetDriverByName("PNG")
@@ -176,7 +177,7 @@ def productSmTile(row, col, level, outPath, tiles):
     del mem_ds, rdata, gdata, bdata 
 
 #---------------------------------------------------------------------------
-def runMP(bboxs, outPath, tmpPath, q, pindex, license):
+def runMP(bboxs, outPath, tmpPath, q, pindex, haswatermark):
     ''' 多进程处理切图  '''
     logger = logging.getLogger('')
 
@@ -197,7 +198,7 @@ def runMP(bboxs, outPath, tmpPath, q, pindex, license):
 	tmp = tmpPath 
 	downlaodTile(gy0, gy1, gx0, gx1, level+1, tmp, url)
 	tiles = loadTiles(gy0, gy1, gx0, gx1, level+1, tmp)
-	productSmTile(row, col, level, outPath, tiles)
+	productSmTile(row, col, level, outPath, tiles, haswatermark)
 	logger.info("%d,%d" % (row, col))
 	del tiles
 
@@ -232,7 +233,7 @@ class Download(object):
 	self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
 	self.levels = []
 	self.logger = logging.getLogger('Download')
-	self.license = verifyLicense()
+	self.haswatermark = False if verifyLicense() else True
 
     def parser(self):
 	if self.task is None: return
@@ -336,7 +337,7 @@ class Download(object):
 	for i in xrange(len(mplist)):
 	    picNums += len(mplist[i])
 
-	self.logger.info('地理范围:上下左右(%f,%f,%f,%f)' % (l,t,r,b))
+	self.logger.info('地理范围:左上右下(%f,%f,%f,%f)' % (l,t,r,b))
 	self.logger.info('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums))
 
 	outPath = os.path.join(self.out, self.name)
@@ -350,8 +351,8 @@ class Download(object):
 	q = m.Queue()
 	for i in xrange(len(mplist)):
 	    bboxs = mplist[i]
-	    #def runMP(bboxs, outPath, tmpPath, q, pindex, license):
-	    p = mp.Process(target=runMP, args=(bboxs, outPath, tmpPath, q, i+1, None))
+	    #def runMP(bboxs, outPath, tmpPath, q, pindex, haswatermark):
+	    p = mp.Process(target=runMP, args=(bboxs, outPath, tmpPath, q, i+1, self.haswatermark))
 	    plist.append( (p, len(bboxs)) )
 
 	for p, cnt in plist:
