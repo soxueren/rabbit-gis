@@ -17,7 +17,7 @@ try:
 except:
     import gdal
     #import ogr
-    print('You are using "old gen" bindings. gdal2tiles needs "new gen" bindings.')
+    print("""You are using "old gen" bindings. gdal2tiles needs "new gen" bindings.""")
     sys.exit(1)
 
 import numpy
@@ -36,12 +36,12 @@ def appPath():
 	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
 
     # 打包后目录发生变化,需要去掉library.zip目录
-    dirName = dirName.replace('library.zip','')
+    dirName = dirName.replace("library.zip","")
     return dirName
 
 #---------------------------------------------------------------------------
 def tileInGoogle(row, col, level):
-    ''' 指定瓦片真的是谷歌的吗 '''
+    """ 指定瓦片真的是谷歌的吗 """
     size = 2**level
     if row<size and col<size:
 	return True
@@ -49,7 +49,7 @@ def tileInGoogle(row, col, level):
 
 #---------------------------------------------------------------------------
 def loadTiles(rs,re,cs,ce, level, outPath):
-    ''' 将本地瓦片加载到内存 '''
+    """ 将本地瓦片加载到内存 """
 
     tiles = {}
     gm = wmt.GlobalMercator(256)
@@ -76,7 +76,7 @@ def loadTiles(rs,re,cs,ce, level, outPath):
 
 #---------------------------------------------------------------------------
 def downOneTile(url, fp):
-    ''' 一次下载 '''
+    """ 一次下载 """
     try:
 	f = urllib2.urlopen(url)
     except urllib2.URLError, e:
@@ -88,7 +88,7 @@ def downOneTile(url, fp):
 
 #---------------------------------------------------------------------------
 def downlaodTile(rs,re,cs,ce, level, outPath, strurl):
-    ''' 下载瓦片到本地 '''
+    """ 下载瓦片到本地 """
 
     tmp = strurl 
     for row in range(rs, re+1):
@@ -127,10 +127,10 @@ def downlaodTile(rs,re,cs,ce, level, outPath, strurl):
 
 #---------------------------------------------------------------------------
 def productSmTile(row, col, level, outPath, tiles, haswatermark):
-    ''' 生成SuperMap瓦片 '''
+    """ 生成SuperMap瓦片 """
 
-    mem_drv = gdal.GetDriverByName('MEM')
-    mem_ds = mem_drv.Create('', 256, 256, 3)# 输出固定为24位png或jpg
+    mem_drv = gdal.GetDriverByName("MEM")
+    mem_ds = mem_drv.Create("", 256, 256, 3)# 输出固定为24位png或jpg
     
     rdata = numpy.zeros((256, 256), numpy.uint8)
     gdata = numpy.zeros((256, 256), numpy.uint8)
@@ -177,9 +177,9 @@ def productSmTile(row, col, level, outPath, tiles, haswatermark):
     del mem_ds, rdata, gdata, bdata 
 
 #---------------------------------------------------------------------------
-def runMP(bboxs, outPath, tmpPath, q, pindex, haswatermark):
-    ''' 多进程处理切图  '''
-    logger = logging.getLogger('')
+def runProcess(bboxs, outPath, tmpPath, q, pindex, haswatermark):
+    """ 多进程处理切图  """
+    logger = logging.getLogger("")
 
     gm = wmt.GlobalMercator(256)
     url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
@@ -221,18 +221,18 @@ def verifyLicense():
 
 # =============================================================================
 class Download(object):
-    ''' 图像信息 '''
+    """ 图像信息 """
 
     def __init__(self, taskFile=None):
 	self.task = taskFile
-	self.l, self.t, self.r, self.b = -181.0, 91.0, -180.1, 90.1
+	self.l, self.t, self.r, self.b = -180.0, 90.0, -180.0, 90.0
 	self.level = 0
 	self.out = ""
 	self.tmp = ""
 	self.name = ""
 	self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
 	self.levels = []
-	self.logger = logging.getLogger('Download')
+	#logging = logging.getLogger("Download")
 	self.haswatermark = False if verifyLicense() else True
 
     def parser(self):
@@ -276,7 +276,7 @@ class Download(object):
 	f.close()
 
     def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
-	''' 根据进程数目,瓦片张数划分合理的任务 '''
+	""" 根据进程数目,瓦片张数划分合理的任务 """
 	tasks = []
 	for i in range(startl, endl+1):
 	    rs,re,cs,ce = sci3d.smSci3d.calcRowCol(l,t,r,b, i) 
@@ -297,7 +297,7 @@ class Download(object):
 	return mplist
 
     def saveSciFile(self,l,t,r,b, startl, endl):
-	''' 生成SuperMap缓存配置文件 '''
+	""" 生成SuperMap缓存配置文件 """
 
 	rs,re,cs,ce = sci3d.smSci3d.calcRowCol(l,t,r,b,endl) 
 	outPath = os.path.join(self.out, self.name)
@@ -319,7 +319,7 @@ class Download(object):
 	w,h = sci3d.smSci3d.calcWidthHeight(l,t,r,b, endl)
 
 	sci3df = sci3d.smSci3d()
-	sci3df.setParams(self.name, mapbnd, mapbnd, '')
+	sci3df.setParams(self.name, mapbnd, mapbnd, "")
 	sci3df.setLevels(startl, endl)
 	sci3df.setExtName("png")
 	sci3df.setWidthHeight(w,h)
@@ -329,7 +329,6 @@ class Download(object):
 	l,t,r,b = self.l, self.t, self.r, self.b
 	self.saveSciFile(l, t, r, b, startl, endl)
 
-
 	ini = cm.iniFile()
 	mpcnt = max(1, ini.mpcnt)
 	mplist = self.splitByProcess(l,t,r,b, startl, endl, mpcnt)
@@ -337,22 +336,22 @@ class Download(object):
 	for i in xrange(len(mplist)):
 	    picNums += len(mplist[i])
 
-	self.logger.info('地理范围:左上右下(%f,%f,%f,%f)' % (l,t,r,b))
-	self.logger.info('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums))
+	logging.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
+	logging.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
 
 	outPath = os.path.join(self.out, self.name)
 	if not os.path.exists(outPath): os.makedirs(outPath)
 	tmpPath = os.path.join(outPath, "xxx") 
 	
-	self.logger.info("Start.")
+	logging.info("Start.")
 	
 	plist = []
 	m = mp.Manager()
 	q = m.Queue()
 	for i in xrange(len(mplist)):
 	    bboxs = mplist[i]
-	    #def runMP(bboxs, outPath, tmpPath, q, pindex, haswatermark):
-	    p = mp.Process(target=runMP, args=(bboxs, outPath, tmpPath, q, i+1, self.haswatermark))
+	    #def runProcess(bboxs, outPath, tmpPath, q, pindex, haswatermark):
+	    p = mp.Process(target=runProcess, args=(bboxs, outPath, tmpPath, q, i+1, self.haswatermark))
 	    plist.append( (p, len(bboxs)) )
 
 	for p, cnt in plist:
@@ -360,9 +359,10 @@ class Download(object):
 
 	for p, cnt in plist:
 	    p.join()
-	    self.logger.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
+	    logging.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
 
-	self.logger.info("End, All done.")
+	logging.info("End, All done.")
+	logging.info(38 * "=")
 # =============================================================================
 def run(taskfile):
     down = Download(taskfile)
@@ -373,44 +373,42 @@ def run(taskfile):
 # =============================================================================
 
 def main(taskfile):
-    try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-    except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-    # 打包后目录发生变化,需要去掉library.zip目录
-    dirName = dirName.replace('library.zip','')
-    name =  time.strftime("%Y-%m-%d %H-%M-%S.log")
+    dirName = appPath()
+    #name =  time.strftime("%Y-%m-%d %H-%M-%S.log")
+    name = time.strftime("%Y-%m-%d.log")
     logfile = os.path.join(dirName, "log", name)
     logfile = os.path.abspath(logfile)
     if not os.path.exists(os.path.dirname(logfile)):
 	os.makedirs(os.path.dirname(logfile))
 
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(message)s', 
-	    datefmt='%Y-%d-%m %I:%M:%S %p >',
-	    filename = logfile)
+    # create logger with "spam_application"
+    logger = logging.getLogger("")
+    logger.setLevel(logging.DEBUG)
 
-    # create logger with 'spam_application'
-    logger = logging.getLogger('')
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
 
     # create console handler with a higher log level
     ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
 
     # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt='%(asctime)s %(message)s',
-	    datefmt='%Y-%d-%m %I:%M:%S %p >')
+    formatter = logging.Formatter(fmt="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S >")
+    fh.setFormatter(formatter)
     ch.setFormatter(formatter)
 
     # add the handlers to the logger
+    logger.addHandler(fh)
     logger.addHandler(ch)
 
     logger.info(cm.APPNAME_GOOGLE_SCI3D) 
     if os.path.isfile(taskfile):
 	run(taskfile)
     else:
-	logger.error("file not found. %s" % taskfile)
+	logger.error("file not found, %s" % taskfile)
 
-if __name__=='__main__':
+if __name__=="__main__":
     mp.freeze_support()
 
     if verifyLicense():
@@ -418,7 +416,7 @@ if __name__=='__main__':
     else:
 	msg  = "\n免费试用版本."
 
-    parser = argparse.ArgumentParser(description='Download GoogleMaps to SuperMap tile files',
+    parser = argparse.ArgumentParser(description="Download GoogleMaps to SuperMap tile files",
 	    epilog="Author: 42848918@qq.com"+msg)
     parser.add_argument("-f", "--file", default="g.tsk", help="task file.")
 
