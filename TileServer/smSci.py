@@ -184,7 +184,7 @@ class smSci(object):
 
 	self.scales.sort()
 	self.scales.reverse()
-	self.replaceDouble(self.lines, 'BaseScale', max(self.scales))
+	self.replaceDouble(self.lines, 'BaseScale', max(self.scales), 20)
 
 	pos = 0
 	for i in range(len(self.lines)):

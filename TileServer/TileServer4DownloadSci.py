@@ -9,6 +9,7 @@ import multiprocessing as mp
 import logging
 import time
 import argparse
+import math
 
 try:
     from osgeo import gdal
@@ -290,6 +291,7 @@ class Download(object):
 	mapBnd = l,t,r,b
 	res = mkt.Resolution(endl)
 	w,h = (r-l)/res, (t-b)/res 
+	w,h = math.ceil(w), math.ceil(h)
 
 	l,t = mkt.LatLonToMeters(90.0, -180.0)
 	r,b = mkt.LatLonToMeters(-90, 180.0)
@@ -302,7 +304,7 @@ class Download(object):
 	    
 
 	sci = smsci.smSci()
-	sci.setParams(self.name, mapBnd, idxBnd, smsci.VER31)
+	sci.setParams(self.name, mapBnd, mapBnd, smsci.VER31)
 	sci.setWidthHeight(w,h)
 	sci.setScales(scales)
 	sci.setProj(scitemplate.webmkt_prj)
