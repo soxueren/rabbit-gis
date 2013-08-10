@@ -251,6 +251,10 @@ class GlobalMercator(object):
         # return (2 * math.pi * 6378137) / (self.tileSize * 2**zoom)
         return self.initialResolution / (2**zoom)
 
+    def Scale(self, zoom):
+	res = self.Resolution(zoom)
+	return float( (0.0254/96) / res )
+
     def ZoomForPixelSize(self, pixelSize ):
         "Maximal scaledown zoom of the pyramid closest to the pixelSize."
 
@@ -288,6 +292,18 @@ class GlobalMercator(object):
             quadKey += str(digit)
 
         return quadKey
+
+    def calcRowColByLatLon(self, l,t,r,b, zoom):
+	l, t = self.LatLonToMeters(t, l)
+	r, b = self.LatLonToMeters(b, r)
+
+	tx, ty = self.MetersToTile(l, t, zoom)
+	cs, rs = self.GoogleTile(tx, ty, zoom)
+
+	tx, ty = self.MetersToTile(r, b, zoom)
+	ce, re = self.GoogleTile(tx, ty, zoom)
+	return (rs, re, cs, ce)
+
 
 #---------------------
 

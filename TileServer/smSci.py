@@ -5,31 +5,13 @@ import sys
 import os
 import math
 import scitemplate
+import srsWeb as srsweb
 
 #import math
 #import re 
 
 # 模板文件
-CACHE_40_JPG = 'cache_40_jpg.sci' # 地图缓存配置文件_4.0_jpg 
-CACHE_40_PNG = 'cache_40_png.sci' # 地图缓存配置文件_4.0_png
-CACHE_50_JPG_LOCAL = 'cache_50_jpg_local.sci' # 地图缓存配置文件_5.0_jpg_png_本地剖分 
-CACHE_50_JPG_PNG_GLOBAL = 'cache_50_jpg_png_global.sci' # 地图缓存配置文件_5.0_jpg_png_全球剖分 
-CACHE_50_JPG_PNG_LOCAL = 'cache_50_jpg_png_local.sci' # 地图缓存配置文件_5.0_jpg_本地剖分
 SCI3D = 'sci3d.sci3d' # 三维影像缓存
-
-# 版本号
-SCIVERSION401 = 401
-SCIVERSION402 = 402
-SCIVERSION501 = 502
-SCIVERSION502 = 502
-SCIVERSION503 = 503
-
-# 版本和模板映射
-DICTVERSION = {SCIVERSION401:CACHE_40_JPG,
-SCIVERSION402:CACHE_40_PNG,
-SCIVERSION501:CACHE_50_JPG_LOCAL,
-SCIVERSION502:CACHE_50_JPG_PNG_GLOBAL,
-SCIVERSION503:CACHE_50_JPG_PNG_LOCAL}
 
 KEY_CACHE_NAME='[CacheName]'
 KEY_MAP_NAME='[MapName]'
@@ -50,18 +32,30 @@ KEY_BOTTOM='[Bottom]'
 
 KEY_SCALE_VALUE='[scaleValue]'
 KEY_SCALE_CAPTION='[scaleCaption]'
+KEY_VALUE = '[value]'
+
+VER40 = 1
+VER31 = 2 # 使用新的缓存图片生成方案的 iServer 2.0 缓存
+VER30 = 3 # iServer 2.0 缓存
+VER21 = 4 
+VER20 = 5
+
+
+# =============================================================================
 
 class smSci(object):
     ''' SuperMap缓存配置文件生成 ''' 
 
     def __init__(self):
-	self.mapName='Untitled'
-	self.sciTmpFile=CACHE_50_JPG_LOCAL
-	self.idxBnd=list()
-	self.mapBnd=list()
-	self.scaleVal=0.0
-	self.scaleCap=''
-	self.lines=scitemplate.sci3d # sic文件内容
+	self.mapName = 'Untitled'
+	self.sciTmpFile = "sci.sci"
+	self.idxBnd = list()
+	self.mapBnd = list()
+	self.lines = scitemplate.sci40 # sic文件内容
+	self.sci_scale = scitemplate.sci40_scale
+	self.scales = [] # 比例尺数组
+	self.proj_lines = []
+	self.sciver = VER31
 
     def setParams(self, mapName, mapBnd, idxBnd, sciVer):
 	''' 设置生成SCI文件的参数
@@ -73,8 +67,24 @@ class smSci(object):
 	self.mapName=mapName
 	self.mapBnd=mapBnd
 	self.idxBnd=idxBnd
-	if DICTVERSION.has_key(sciVer):
-	    self.sciTmpFile=DICTVERSION[sciVer]
+	if sciVer == VER40:
+	    self.lines = scitemplate.sci40 
+	    self.sci_scale = scitemplate.sci40_scale
+	    self.sciver = VER40
+	elif sciVer == VER31:
+	    self.lines = scitemplate.sci31 
+	    self.sci_scale = scitemplate.sci31_scale
+	    self.sciver = VER31
+
+    def setWidthHeight(self, w, h):
+	''' 影像缓存最高分辨率图像的宽高(最清晰一层)的总尺寸,单位为像素 '''
+	self.width, self.height=w,h
+
+    def setScales(self, scales):
+	self.scales.extend(scales)
+
+    def setProj(self, projs):
+	self.proj_lines.extend(projs)
     
     def isValid(self):
 	if len(self.idxBnd)!=4: return False
@@ -107,52 +117,104 @@ class smSci(object):
 
 	
     def write(self, sciPath):
-	fileName=self.mapName+self.sciTmpFile[self.sciTmpFile.find('.'):]
-	desSciPath=os.path.join(sciPath, fileName)
+	if self.sciver == VER31:
+	    fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
+	    folder = "%s_256x256" % self.mapName
+	desSciPath = os.path.join(sciPath, folder, fileName)
+	outPath = os.path.dirname(desSciPath)
+	if not os.path.exists(outPath): os.makedirs(outPath)
+	
 	f=open(desSciPath, 'w+')
 	for line in self.lines:
 	    f.write(line+'\n')
 	f.close()
 
-    def replaceCacheName(self):
-	for i in xrange(len(self.lines)):
-	    line=self.lines[i]
-	    if KEY_CACHE_NAME in line:
-		line = line.replace(KEY_CACHE_NAME, self.mapName)
-		self.lines[i]=line
+    def replaceText(self, lines, k, v):
+	for i in xrange(len(lines)):
+	    line = self.lines[i]
+	    if k in line:
+		line = line.replace(KEY_VALUE, v)
+		lines[i]=line
 		break
 	return True
 
-    def relpaceBnd(self):
-	for i in xrange(len(self.lines)):
-	    line=self.lines[i]
-	    if KEY_IDXBND_LEFT in line:
-		line = line.replace(KEY_IDXBND_LEFT, self.idxBnd[0])
-	    if KEY_IDXBND_TOP in line:
-		line = line.replace(KEY_IDXBND_TOP, self.idxBnd[1])
-	    if KEY_IDXBND_RIGHT in line:
-		line = line.replace(KEY_IDXBND_RIGHT, self.idxBnd[2])
-	    if KEY_IDXBND_BOTTOM in line:
-		line = line.replace(KEY_IDXBND_BOTTOM, self.idxBnd[3])
+    def replaceInt(self, lines, k, v):
+	for i in xrange(len(lines)):
+	    line = lines[i]
+	    if k in line:
+		line = line.replace(KEY_VALUE, ('%d' % v))
+		lines[i]=line
+		break
+	return True
 
-	    if KEY_MAP_LEFT in line:
-		line = line.replace(KEY_MAP_LEFT, self.mapBnd[0])
-	    if KEY_MAP_TOP in line:
-		line = line.replace(KEY_MAP_TOP, self.mapBnd[1])
-	    if KEY_MAP_RIGHT in line:
-		line = line.replace(KEY_MAP_RIGHT, self.mapBnd[2])
-	    if KEY_MAP_BOTTOM in line:
-		line = line.replace(KEY_MAP_BOTTOM, self.mapBnd[3])
-	    self.lines[i] = line
+    def replaceDouble(self, lines, k, v, lens=9):
+	for i in xrange(len(lines)):
+	    line = lines[i]
+	    if k in line:
+		fmt = '%%.%df' % lens
+		line = line.replace(KEY_VALUE, (fmt % v))
+		lines[i]=line
+		break
+	return True
+
+    def replaceCacheName(self):
+	self.replaceText(self.lines, "CacheName", self.mapName)
+	self.replaceText(self.lines, "<sml:MapName>", self.mapName)
+	return True
+
+    def replaceWidthHeight(self):
+	self.replaceInt(self.lines, "ImageWidth", self.width)
+	self.replaceInt(self.lines, "ImageHeight", self.height)
+	return True
+
+    def replaceBnd(self):
+	self.replaceDouble(self.lines, 'ImageLeft', self.idxBnd[0])
+	self.replaceDouble(self.lines, 'ImageTop', self.idxBnd[1])
+	self.replaceDouble(self.lines, 'ImageRight', self.idxBnd[2])
+	self.replaceDouble(self.lines, 'ImageBottom', self.idxBnd[3])
+
+	self.replaceDouble(self.lines, 'MapLeft', self.mapBnd[0])
+	self.replaceDouble(self.lines, 'MapTop', self.mapBnd[1])
+	self.replaceDouble(self.lines, 'MapRight', self.mapBnd[2])
+	self.replaceDouble(self.lines, 'MapBottom', self.mapBnd[3])
+
+    def replaceScales(self):
+	if not self.scales:
+	    return 
+
+	self.scales.sort()
+	self.scales.reverse()
+	self.replaceDouble(self.lines, 'BaseScale', max(self.scales))
+
+	pos = 0
+	for i in range(len(self.lines)):
+	    if '<MapCacheState>' in self.lines[i]:
+		pos = i+1
+		break
+
+	for scale in self.scales:
+	    tmpscale = self.sci_scale[:]
+	    self.replaceDouble(tmpscale, '<sml:Scale>', scale, 20)
+	    self.replaceInt(tmpscale, '<sml:ScaleFolder>', int(1/scale))
+	    for i in range(len(tmpscale)-1, -1, -1):
+		self.lines.insert(pos, tmpscale[i])
+
+    def replaceProj(self):
+	pos = 0
+	for i in range(len(self.lines)):
+	    if '</sml:MapBounds>' in self.lines[i]:
+		pos = i+1
+		break
+
+	for i in range(len(self.proj_lines)-1, -1, -1):
+	    self.lines.insert(pos, self.proj_lines[i])
 
     def replace(self):
 	self.replaceCacheName()
 	self.replaceBnd()
-	for i in xrange(len(self.lines)):
-	    if KEY_SCALE_VALUE in line:
-		line = line.replace(KEY_SCALE_VALUE, self.scaleVal)
-	    if KEY_SCALE_CAPTION in line:
-		line = line.replace(KEY_SCALE_CAPTION, self.scaleCap)
+	self.replaceProj()
+	self.replaceWidthHeight()
+	self.replaceScales()
 
     def saveSciFile(self, sciPath):
 	''' 生成SM格式切片SCI文件 '''
@@ -163,6 +225,15 @@ class smSci(object):
 	self.write(sciPath)
 	return True
 
+    @staticmethod
+    def calcTileName(root, mapname, scale, row, col, ext, ver):
+	if ver == VER31:
+	    filename = "%d%s" % (row, ext) 
+	    mapname = "%s_256x256" % mapname
+	    strscale = "%d" % int(1/scale)
+	    strcol = "%d"% col
+	    filename = os.path.join(root, mapname, strscale, strcol, filename)
+	    return filename
 # =============================================================================
 
 class smSci3d(smSci):
@@ -176,6 +247,7 @@ class smSci3d(smSci):
 	self.startl=1
 	self.endl=2
 	self.extName='png'
+	self.lines=scitemplate.sci3d # sic文件内容
 
     def setLevels(self, s, e):
 	self.startl, self.endl=s,e
@@ -430,8 +502,33 @@ def unitTestRowCol():
 	for col in range(cs, ce+1):
 	    print row, col, smSci3d.calcBndByRowCol(row,col,level)
 
+def unitTestSci():
+    sciPath = r'E:\2013\2013-07\2013-07-24'
+    mapName = 'test'
+    l,t,r,b = 50.0004166667, 54.9995833333, 55.0004164667,49.9995835333 
+
+    mkt = srsweb.GlobalMercator() 
+    l,t = mkt.LatLonToMeters(t, l)
+    r,b = mkt.LatLonToMeters(b, r)
+    mapBnd = l,t,r,b
+
+    l,t = mkt.LatLonToMeters(90.0, -180.0)
+    r,b = mkt.LatLonToMeters(-90, 180.0)
+    idxBnd = l,t,r,b
+
+    scales = [0.1, 0.01]
+    w,h = 256, 2560
+
+    sci = smSci()
+    sci.setParams(mapName, mapBnd, idxBnd, VER31)
+    sci.setWidthHeight(w,h)
+    sci.setScales(scales)
+    sci.setProj(scitemplate.webmkt_prj)
+    sci.saveSciFile(sciPath)
+
 if __name__=='__main__':
     #unitTest()
     #unitTestLevel()
-    unitTestSct()
+    #unitTestSct()
+    unitTestSci()
     #unitTestRowCol()

@@ -3,7 +3,7 @@
 
 import os, sys
 
-VERSION = "0.4.2.102"
+VERSION = "0.4.3.103"
 APPNAME = "TileServer"
 APPTITLE = "Íßµ¶"
 APPNAME_GOOGLE_SCI3D = APPNAME + "-Google2Sic3d"
