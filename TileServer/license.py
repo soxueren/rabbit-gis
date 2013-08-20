@@ -14,60 +14,60 @@ q = 49560818395920193444455023592828568369423L
 class License(object):
     ''' –Ìø…¿‡ '''
     def __init__(self, lic=""):
-	self.lic = lic
-	self.host = ""
-	self.licNums = 0
-	self.decrypted = ""
+        self.lic = lic
+        self.host = ""
+        self.licNums = 0
+        self.decrypted = ""
 
     def setHost(self, hostName):
-	self.host = hostName
+        self.host = hostName
 
     def addApp(self, appid):
-	appids = (cm.APPID_SCI3D, cm.APPID_SCT)
-	if appid in appids:
-	    self.licNums |= appid
+        appids = (cm.APPID_SCI3D, cm.APPID_SCT)
+        if appid in appids:
+            self.licNums |= appid
     
     def create(self):
-	msg = "hostname=%s;apps=%d" % (self.host, self.licNums)
-	pub_key = rsa.PublicKey(n,e)
-	encrypted = rsa.encrypt(msg, pub_key)
-	with open(self.lic, "wb") as licfile:
-	    licfile.write(encrypted)
-	    licfile.close()
-	
+        msg = "hostname=%s;apps=%d" % (self.host, self.licNums)
+        pub_key = rsa.PublicKey(n,e)
+        encrypted = rsa.encrypt(msg, pub_key)
+        with open(self.lic, "wb") as licfile:
+            licfile.write(encrypted)
+            licfile.close()
+        
     @staticmethod
     def hostName():
-	if sys.platform == 'win32':
-	    hostname = os.getenv('computername')  
-	    return hostname  
-	return "" 
+        if sys.platform == 'win32':
+            hostname = os.getenv('computername')  
+            return hostname  
+        return "" 
 
     def verify(self, hostName, appid):
-	global n,e,d,p,q
-	priv_key = rsa.PrivateKey(n,e,d,p,q)
-	with open(self.lic, "rb") as licfile:
-	    msg = licfile.read()
-	    licfile.close()
-	    try:
-		decrypted = rsa.decrypt(msg, priv_key)
-		self.decrypted = decrypted 
-		#print decrypted
-	    except rsa.DecryptionError as e:
-		print e.read()
-		return False
-	    cons = decrypted.split(";")
-	    for con in cons:
-		lr = con.split("=")
-		if len(lr) == 2:
-		    l=lr[0].strip().lower()
-		    r=lr[1].strip().lower()
-		    if l=="hostname":
-			self.host=r
-		    elif l=="apps":
-			if r.isdigit():
-			    self.licNums=int(r)
-	    return self.host==hostName.lower() and self.licNums&appid 
-	return False
+        global n,e,d,p,q
+        priv_key = rsa.PrivateKey(n,e,d,p,q)
+        with open(self.lic, "rb") as licfile:
+            msg = licfile.read()
+            licfile.close()
+            try:
+                decrypted = rsa.decrypt(msg, priv_key)
+                self.decrypted = decrypted 
+                #print decrypted
+            except rsa.DecryptionError as e:
+                print e.read()
+                return False
+            cons = decrypted.split(";")
+            for con in cons:
+                lr = con.split("=")
+                if len(lr) == 2:
+                    l=lr[0].strip().lower()
+                    r=lr[1].strip().lower()
+                    if l=="hostname":
+                        self.host=r
+                    elif l=="apps":
+                        if r.isdigit():
+                            self.licNums=int(r)
+            return self.host==hostName.lower() and self.licNums&appid 
+        return False
 
 def unitLicense(host):
     #host = License.hostName()
@@ -90,7 +90,7 @@ def unitVerify(host):
 if __name__=="__main__":
     host = License.hostName()
     if len(sys.argv)==2:
-	host = sys.argv[1]
+        host = sys.argv[1]
     print 'host name is:', host
     unitLicense(host)
     unitVerify(host)
