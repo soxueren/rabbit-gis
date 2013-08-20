@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# --*-- coding:utf-8 --*--
+# --*-- coding: gbk --*--
 
 import os, sys
 
-VERSION = "0.4.4.105"
+VERSION = "0.4.4.106"
 APPNAME = "TileServer"
 APPTITLE = "Íßµ¶"
 APPNAME_GOOGLE_SCI3D = APPNAME + "-Google2Sic3d"

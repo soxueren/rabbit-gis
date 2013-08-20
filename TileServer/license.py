@@ -1,4 +1,4 @@
-# --*-- coding:utf-8 --*--
+# --*-- coding:gbk --*--
 import os, sys
 import rsa
 import common as cm

@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# -*- coding:gbk -*-
 
 import os, sys
 from cx_Freeze import setup, Executable
