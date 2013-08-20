@@ -28,11 +28,11 @@ def runMP(imgList, outPath, ext, bil, bboxs, q, pindex, license):
     #printLog(('开始处理第%d层数据...' % i))
     #msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
     imgtile.toTilesByBoxs(imgList, bboxs, outPath, bil, True)
-	
+        
     msg = "子进程%d, id:%d, " % (pindex, ppid)
     logs=[]
     for log in imgtile.logs:
-	logs.append(msg+log)
+        logs.append(msg+log)
     q.put(logs)
     del imgtile 
 
@@ -49,32 +49,32 @@ class TileServerFrame(wx.Frame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         wx.Frame.__init__(self, parent, ID, title, pos, size, style)
-	self.uiSplash()
-	self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
-	self.fileList=[]
-	self.license = False # 是否通过许可验证
-	self.appid = 1 
-	self.lock = mp.RLock()
+        self.uiSplash()
+        self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
+        self.fileList=[]
+        self.license = False # 是否通过许可验证
+        self.appid = 1 
+        self.lock = mp.RLock()
         self.panel=panel= wx.Panel(self, -1)
 
-	inBox = wx.StaticBox(panel, -1, "")
-	sizerIn = wx.StaticBoxSizer(inBox, wx.VERTICAL)
+        inBox = wx.StaticBox(panel, -1, "")
+        sizerIn = wx.StaticBoxSizer(inBox, wx.VERTICAL)
 
-	self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(540,-1),style=wx.TE_READONLY)
+        self.txtIn=txtin = wx.TextCtrl(panel, -1, "", size=(540,-1),style=wx.TE_READONLY)
         btnFile = wx.Button(panel, wx.ID_ANY, "文件")
         btnDir = wx.Button(panel, wx.ID_ANY, "目录")
-	label=wx.StaticText(panel, -1, "输入:")
-	box=wx.BoxSizer(wx.HORIZONTAL)
-	box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(txtin,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(btnFile,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(btnDir,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        label=wx.StaticText(panel, -1, "输入:")
+        box=wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(txtin,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(btnFile,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(btnDir,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	box=wx.StaticBox(panel,-1,"")
-	boxSiezer=wx.StaticBoxSizer(box, wx.HORIZONTAL)
-	self.txtLvlBeg=txtbeg=wx.TextCtrl(panel, -1, "1", size=(25,-1),style=wx.TE_READONLY)
-	self.txtLvlEnd=txtend=wx.TextCtrl(panel, -1, "20", size=(25,-1),style=wx.TE_READONLY)
+        box=wx.StaticBox(panel,-1,"")
+        boxSiezer=wx.StaticBoxSizer(box, wx.HORIZONTAL)
+        self.txtLvlBeg=txtbeg=wx.TextCtrl(panel, -1, "1", size=(25,-1),style=wx.TE_READONLY)
+        self.txtLvlEnd=txtend=wx.TextCtrl(panel, -1, "20", size=(25,-1),style=wx.TE_READONLY)
         self.spinLvlBeg = wx.SpinButton(panel, -1, (-1,-1), (-1,-1), wx.SP_VERTICAL)
         self.spinLvlEnd = wx.SpinButton(panel, -1, (-1,-1), (-1,-1), wx.SP_VERTICAL)
         self.spinLvlBeg.SetRange(1, 20)
@@ -85,97 +85,97 @@ class TileServerFrame(wx.Frame):
         self.Bind(wx.EVT_SPIN, self.OnSpinBeg, self.spinLvlBeg)
         self.Bind(wx.EVT_SPIN, self.OnSpinEnd, self.spinLvlEnd)
 
-	label=wx.StaticText(panel, -1, "起始层级:")
-	box=wx.BoxSizer(wx.HORIZONTAL)
-	box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(self.txtLvlBeg,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(self.spinLvlBeg,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	boxSiezer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        label=wx.StaticText(panel, -1, "起始层级:")
+        box=wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(self.txtLvlBeg,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(self.spinLvlBeg,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        boxSiezer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	label=wx.StaticText(panel, -1, "终止层级:")
-	box=wx.BoxSizer(wx.HORIZONTAL)
-	box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(self.txtLvlEnd,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(self.spinLvlEnd,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	boxSiezer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        label=wx.StaticText(panel, -1, "终止层级:")
+        box=wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(self.txtLvlEnd,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(self.spinLvlEnd,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        boxSiezer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 
-	label=wx.StaticText(panel, -1, "输出:")
-	self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(540,-1))
+        label=wx.StaticText(panel, -1, "输出:")
+        self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(540,-1))
         btnOutPath = wx.Button(panel, wx.ID_ANY, "目录")
-	box=wx.BoxSizer(wx.HORIZONTAL)
-	box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(btnOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box=wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(btnOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
         line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
-	sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	button=wx.Button(panel, -1, "运行", size=(-1,60))
-	self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
+        button=wx.Button(panel, -1, "运行", size=(-1,60))
+        self.Bind(wx.EVT_BUTTON, self.OnButtonRun, button)
 
-	box=wx.BoxSizer(wx.HORIZONTAL)
-	self.uiCacheName(box)
-	self.uiTileType(box)
-	box.Add(boxSiezer,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	box.Add(button,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box=wx.BoxSizer(wx.HORIZONTAL)
+        self.uiCacheName(box)
+        self.uiTileType(box)
+        box.Add(boxSiezer,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(button,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	
-	self.log=logText = wx.TextCtrl(panel,-1,"",size=(750,220),style=wx.TE_READONLY|wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
-	logBox = wx.StaticBox(panel, -1, "日志:")
-	sizerLog = wx.StaticBoxSizer(logBox, wx.HORIZONTAL)
-	sizerLog.Add(logText,0, wx.ALL|wx.EXPAND, 5) 
+        
+        self.log=logText = wx.TextCtrl(panel,-1,"",size=(750,220),style=wx.TE_READONLY|wx.TE_RICH|wx.TE_MULTILINE|wx.EXPAND)
+        logBox = wx.StaticBox(panel, -1, "日志:")
+        sizerLog = wx.StaticBoxSizer(logBox, wx.HORIZONTAL)
+        sizerLog.Add(logText,0, wx.ALL|wx.EXPAND, 5) 
 
-	self.psizer=sizer = wx.BoxSizer(wx.VERTICAL)
-	sizer.Add(sizerIn, 0, wx.EXPAND|wx.ALL, 25)
-	sizer.Add(sizerLog, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
+        self.psizer=sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(sizerIn, 0, wx.EXPAND|wx.ALL, 25)
+        sizer.Add(sizerLog, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
         line = wx.StaticLine(panel, -1, size=(750,-1), style=wx.LI_HORIZONTAL)
-	sizer.Add(line, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
+        sizer.Add(line, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 25)
 
-	self.uiButtonOK(sizer)
+        self.uiButtonOK(sizer)
 
-	self.Bind(wx.EVT_BUTTON, self.OnButtonFile, btnFile)
-	self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btnDir)
-	self.Bind(wx.EVT_BUTTON, self.OnButtonDirOut, btnOutPath)
-	
+        self.Bind(wx.EVT_BUTTON, self.OnButtonFile, btnFile)
+        self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btnDir)
+        self.Bind(wx.EVT_BUTTON, self.OnButtonDirOut, btnOutPath)
+        
         self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
-	panel.SetSizer(sizer)
+        panel.SetSizer(sizer)
 
-	sizer=wx.BoxSizer(wx.VERTICAL)
-	sizer.Add(panel, 0, wx.EXPAND|wx.ALL)
-	self.SetSizer(sizer)
-	#self.SetAutoLayout(1)
-	sizer.Fit(self)
-	self.Show()
+        sizer=wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(panel, 0, wx.EXPAND|wx.ALL)
+        self.SetSizer(sizer)
+        #self.SetAutoLayout(1)
+        sizer.Fit(self)
+        self.Show()
 
     def verifyLicense(self):
-	try:
-	    dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
-	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	# 打包后目录发生变化,需要去掉library.zip目录
-	dirName = dirName.replace('library.zip','')
-	pn =  self.findLicenseFile(dirName)
-	pn = os.path.abspath(pn)
-	if os.path.isfile(pn):
-	    lics = lic.License(pn)
-	    host = lics.hostName()
-	    self.license = lics.verify(host, self.appid)
+        try:
+            dirName = os.path.dirname(os.path.abspath(__file__))
+        except:
+            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+        # 打包后目录发生变化,需要去掉library.zip目录
+        dirName = dirName.replace('library.zip','')
+        pn =  self.findLicenseFile(dirName)
+        pn = os.path.abspath(pn)
+        if os.path.isfile(pn):
+            lics = lic.License(pn)
+            host = lics.hostName()
+            self.license = lics.verify(host, self.appid)
 
     def findLicenseFile(self, dirName):
-	fileList = os.listdir(dirName)
-	for fp in fileList:
-	    if fp.endswith(".lic"):
-		return os.path.join(dirName, fp)
-	return ""
+        fileList = os.listdir(dirName)
+        for fp in fileList:
+            if fp.endswith(".lic"):
+                return os.path.join(dirName, fp)
+        return ""
 
     def uiTileType(self, sizer):
-	pass
+        pass
 
     def uiCacheName(self, sizer):
-	pass
+        pass
 
     
     def uiButtonOK(self, sizer):
@@ -187,32 +187,32 @@ class TileServerFrame(wx.Frame):
         btn = wx.Button(self.panel, wx.ID_OK, "清除")
         btn.SetHelpText("The OK button completes the dialog")
         btn.SetDefault()
-	self.Bind(wx.EVT_BUTTON, self.OnButtonClear, btn)
+        self.Bind(wx.EVT_BUTTON, self.OnButtonClear, btn)
         btnsizer.AddButton(btn)
 
         btn = wx.Button(self.panel, wx.ID_CANCEL, "关闭")
         btn.SetHelpText("The Cancel button cancels the dialog.")
         btnsizer.AddButton(btn)
-	self.Bind(wx.EVT_BUTTON, self.OnCloseMe, btn)
+        self.Bind(wx.EVT_BUTTON, self.OnCloseMe, btn)
 
         btn = wx.Button(self.panel, wx.ID_HELP, "关于")
         btn.SetHelpText("The Cancel button cancels the dialog.")
         btnsizer.AddButton(btn)
         btnsizer.Realize()
-	self.Bind(wx.EVT_BUTTON, self.OnButtonHelp, btn)
+        self.Bind(wx.EVT_BUTTON, self.OnButtonHelp, btn)
 
         sizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
 
     def uiSplash(self):
-	try:
-	    dirName = os.path.dirname(os.path.abspath(__file__))
-	except:
-	    dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-	pn = os.path.join(dirName, 'logo.png')
-	# 打包后目录发生变化,需要去掉library.zip目录
-	pn = pn.replace('library.zip','')
-	pn=os.path.abspath(pn)
-	if not os.path.exists(pn):return 
+        try:
+            dirName = os.path.dirname(os.path.abspath(__file__))
+        except:
+            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+        pn = os.path.join(dirName, 'logo.png')
+        # 打包后目录发生变化,需要去掉library.zip目录
+        pn = pn.replace('library.zip','')
+        pn=os.path.abspath(pn)
+        if not os.path.exists(pn):return 
         bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
         shadow = wx.WHITE
         frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=1000,
@@ -220,7 +220,7 @@ class TileServerFrame(wx.Frame):
                                   AS.AS_CENTER_ON_PARENT |
                                   AS.AS_SHADOW_BITMAP,
                                   shadowcolour=shadow)
-	    
+            
 
     def OnCloseMe(self, event):
         self.Close(True)
@@ -229,56 +229,56 @@ class TileServerFrame(wx.Frame):
         self.Destroy()
 
     def GetLicense(self):
-	strlic = "免费试用版本."
-	if self.license:
-	    strlic = "授权版本 %s." % lic.License.hostName()
-	return strlic
+        strlic = "免费试用版本."
+        if self.license:
+            strlic = "授权版本 %s." % lic.License.hostName()
+        return strlic
 
     def OnButtonHelp(self, event):
-	# First we create and fill the info object
+        # First we create and fill the info object
         info = wx.AboutDialogInfo()
         info.Name = cm.APPTITLE+"-"+cm.APPNAME 
         info.Version = cm.VERSION 
         info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n%s\n" % self.GetLicense()
-	strdes="生成三维地形缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
-	strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
+        strdes="生成三维地形缓存工具.\n\n自动拼接,无需入库是其最大特点.\n\n"#.decode('gb2312')
+        strdes+="可直接将影像切分成三维地形缓存文件.\n\n"#.decode('gb2312')
         info.Description = wordwrap(info.Name+strdes, 350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
-	info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
+        info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
 
         #info.License = wordwrap(self.GetLicense(), 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
         
-	
+        
 
     def OnButtonDirOut(self, event):
-	dlg = wx.DirDialog(self, "Choose a directory:",
+        dlg = wx.DirDialog(self, "Choose a directory:",
                           style=wx.DD_DEFAULT_STYLE
                            #| wx.DD_DIR_MUST_EXIST
                            #| wx.DD_CHANGE_DIR
                            )
 
         if dlg.ShowModal() == wx.ID_OK:
-	    self.txtOut.Clear()
-	    self.txtOut.AppendText(dlg.GetPath())
+            self.txtOut.Clear()
+            self.txtOut.AppendText(dlg.GetPath())
         dlg.Destroy()
 
     def OnButtonDir(self, event):
-	dlg = wx.DirDialog(self, "Choose a directory:",
+        dlg = wx.DirDialog(self, "Choose a directory:",
                           style=wx.DD_DEFAULT_STYLE
                            #| wx.DD_DIR_MUST_EXIST
                            #| wx.DD_CHANGE_DIR
                            )
 
         if dlg.ShowModal() == wx.ID_OK:
-	    self.txtIn.Clear()
-	    self.txtIn.AppendText(dlg.GetPath())
+            self.txtIn.Clear()
+            self.txtIn.AppendText(dlg.GetPath())
         dlg.Destroy()
-	self.fillFileList()
+        self.fillFileList()
 
     def OnButtonFile(self, event):
-	dlg = wx.FileDialog(self, message="Choose a file",
+        dlg = wx.FileDialog(self, message="Choose a file",
             defaultDir=os.getcwd(), 
             defaultFile="",
             wildcard=g_wildcard,
@@ -286,68 +286,68 @@ class TileServerFrame(wx.Frame):
 
         if dlg.ShowModal() == wx.ID_OK:
             paths = dlg.GetPaths()
-	    self.txtIn.Clear()
-	    if len(paths)==1:
-		self.txtIn.AppendText(paths[0])
-	    else:
-		path=','.join(paths)
-		self.txtIn.AppendText(path)
+            self.txtIn.Clear()
+            if len(paths)==1:
+                self.txtIn.AppendText(paths[0])
+            else:
+                path=','.join(paths)
+                self.txtIn.AppendText(path)
         dlg.Destroy()
-	self.fillFileList()
+        self.fillFileList()
 
     def fillFileList(self):
-	txtfiles=self.txtIn.GetValue() 
-	self.fileList=[]
-	if os.path.isdir(txtfiles):
-	    imgList=i2t.Image2Tiles.listDir(txtfiles, 'tif')
-	    self.fileList.extend(imgList)
-	    imgList=i2t.Image2Tiles.listDir(txtfiles, 'tiff')
-	    self.fileList.extend(imgList)
-	    imgList=i2t.Image2Tiles.listDir(txtfiles, 'img')
-	    self.fileList.extend(imgList)
-	elif os.path.isfile(txtfiles):
-	    self.fileList.append(txtfiles)
-	elif txtfiles.find(',')!=-1:
-	    imgList=txtfiles.split(',')
-	    self.fileList.extend(imgList)
-	#self.printLog('selected files:'+str(len(self.fileList)))
-	self.checkPrj()
-	self.defaultLevels()
+        txtfiles=self.txtIn.GetValue() 
+        self.fileList=[]
+        if os.path.isdir(txtfiles):
+            imgList=i2t.Image2Tiles.listDir(txtfiles, 'tif')
+            self.fileList.extend(imgList)
+            imgList=i2t.Image2Tiles.listDir(txtfiles, 'tiff')
+            self.fileList.extend(imgList)
+            imgList=i2t.Image2Tiles.listDir(txtfiles, 'img')
+            self.fileList.extend(imgList)
+        elif os.path.isfile(txtfiles):
+            self.fileList.append(txtfiles)
+        elif txtfiles.find(',')!=-1:
+            imgList=txtfiles.split(',')
+            self.fileList.extend(imgList)
+        #self.printLog('selected files:'+str(len(self.fileList)))
+        self.checkPrj()
+        self.defaultLevels()
 
     def checkPrj(self):
-	''' 确保输入数据为经纬度坐标 '''
-	wgsList=[]
-	for f in self.fileList:
-	    ifile=imf.ImageFile(f)
-	    if ifile.isGeographic() or ifile.isInGeographic() or ifile.canbeGeographic():
-		wgsList.append(f)
-	    else:
-		wkt_srs=ifile.getProjection()
-		self.printLog(('非WGS84坐标: %s' % f))
-		if wkt_srs!="":
-		    self.printLog(wkt_srs)
-	self.fileList=wgsList
+        ''' 确保输入数据为经纬度坐标 '''
+        wgsList=[]
+        for f in self.fileList:
+            ifile=imf.ImageFile(f)
+            if ifile.isGeographic() or ifile.isInGeographic() or ifile.canbeGeographic():
+                wgsList.append(f)
+            else:
+                wkt_srs=ifile.getProjection()
+                self.printLog(('非WGS84坐标: %s' % f))
+                if wkt_srs!="":
+                    self.printLog(wkt_srs)
+        self.fileList=wgsList
 
     def defaultLevels(self):
-	''' 计算输入数据的默认起始终止层级  '''
-	if len(self.fileList)==0: return
+        ''' 计算输入数据的默认起始终止层级  '''
+        if len(self.fileList)==0: return
 
-	l,t,r,b, xres, yres = imf.calcGeographicBoundary(self.fileList)
-	mapbnd=l,t,r,b
-	endl=smSci.smSci3d.calcEndLevel(xres)
-	startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
+        l,t,r,b, xres, yres = imf.calcGeographicBoundary(self.fileList)
+        mapbnd=l,t,r,b
+        endl=smSci.smSci3d.calcEndLevel(xres)
+        startl=smSci.smSci3d.calcStartLevel(l,t,r,b,xres,endl)
         self.spinLvlBeg.SetRange(startl, endl)
         self.spinLvlEnd.SetRange(startl, endl)
         self.txtLvlBeg.SetValue(str(startl))
         self.txtLvlEnd.SetValue(str(endl))
-	#self.printLog('start:'+str(startl)+',end:'+str(endl))
+        #self.printLog('start:'+str(startl)+',end:'+str(endl))
 
     def OnButtonClear(self, event):
-	''' 清理日志信息 '''
-	self.log.Clear()
-	
+        ''' 清理日志信息 '''
+        self.log.Clear()
+        
     def EvtRadioBox(self, event):
-	pass
+        pass
         #self.log.AppendText('EvtRadioBox: %d\n' % event.GetInt())
 
     def OnSpinBeg(self, event):
@@ -355,134 +355,134 @@ class TileServerFrame(wx.Frame):
 
     def OnSpinEnd(self, event):
         self.txtLvlEnd.SetValue(str(event.GetPosition()))
-	
-	
+        
+        
     def printLog(self, msg, newline=True):
-	self.lock.acquire()
-	strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
-	strlog=strtime+msg
-	if newline: 
-	    self.log.AppendText(strlog+"\n")
-	else:
-	    self.log.AppendText(strlog+"\r")
-	self.log.Refresh()
-	self.lock.release()
+        self.lock.acquire()
+        strtime=time.strftime("%Y-%m-%d %H:%M:%S> ")
+        strlog=strtime+msg
+        if newline: 
+            self.log.AppendText(strlog+"\n")
+        else:
+            self.log.AppendText(strlog+"\r")
+        self.log.Refresh()
+        self.lock.release()
 
     def check(self):
-	if self.txtIn.GetValue()=="":
-	    self.printLog("输入路径为空.")
-	    return False
-	if self.txtOut.GetValue()=="":
-	    self.printLog("输出路径为空.")
-	    return False
-	if self.txtName.GetValue()=="":
-	    self.printLog("缓存名称为空.")
-	    return False
-	if len(self.fileList)==0:return False
-	return True
+        if self.txtIn.GetValue()=="":
+            self.printLog("输入路径为空.")
+            return False
+        if self.txtOut.GetValue()=="":
+            self.printLog("输出路径为空.")
+            return False
+        if self.txtName.GetValue()=="":
+            self.printLog("缓存名称为空.")
+            return False
+        if len(self.fileList)==0:return False
+        return True
 
 
     def OnButtonRun(self, event):
-	if not self.check():return False
+        if not self.check():return False
 
     def createProgressDialog(self, title, msg, maxstep):
-	dlg = wx.ProgressDialog(title,
+        dlg = wx.ProgressDialog(title,
                                msg,
                                maximum = maxstep,
                                #parent=self,
                                style = wx.PD_ELAPSED_TIME
-			       | wx.PD_APP_MODAL
+                               | wx.PD_APP_MODAL
                                 #| wx.PD_CAN_ABORT
                                 #| wx.PD_ELAPSED_TIME
                                 | wx.PD_ESTIMATED_TIME
                                 | wx.PD_REMAINING_TIME)
-	dlg.SetSize((400, 200))
-	return dlg
+        dlg.SetSize((400, 200))
+        return dlg
 
     def printLine(self, msg):
-	lineLen=48
-	if len(msg)>lineLen:
-	    self.printLog(msg)
-	else:
-	    line=(lineLen-len(msg))/2-1
-	    msg="="*line+" "+msg+" "+"="*line
-	    self.printLog(msg)
+        lineLen=48
+        if len(msg)>lineLen:
+            self.printLog(msg)
+        else:
+            line=(lineLen-len(msg))/2-1
+            msg="="*line+" "+msg+" "+"="*line
+            self.printLog(msg)
 
     def runSingleProcess(self, startl, endl, outPath, ext, bil=False):
-	''' 单进程模式切图 '''
-	imgtile = i2t.Image2Tiles(outPath, self.license) 
-	imgtile.hook(self.printLog)
-	imgtile.setExt(ext)
+        ''' 单进程模式切图 '''
+        imgtile = i2t.Image2Tiles(outPath, self.license) 
+        imgtile.hook(self.printLog)
+        imgtile.setExt(ext)
 
-	maxstep=endl-startl+2
-	dlg = self.createProgressDialog("生成缓存", "生成缓存", maxstep)
+        maxstep=endl-startl+2
+        dlg = self.createProgressDialog("生成缓存", "生成缓存", maxstep)
         keepGoing = True
-	
-	self.printLine("Start")
-	for i in xrange(startl, endl+1):
-	    self.printLog(('开始处理第%d层数据...' % i))
-	    msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
-	    (keepGoing, skip) = dlg.Update(i-startl+1, msg)
-	    imgtile.toTiles(self.fileList, i, outPath, bil)
-	    if i==endl: 
-		dlg.Destroy()
-	    
-	self.printLine("End, All done.")
-	del imgtile 
-	dlg.Destroy()
+        
+        self.printLine("Start")
+        for i in xrange(startl, endl+1):
+            self.printLog(('开始处理第%d层数据...' % i))
+            msg = ("正在处理第%d层数据, 共[%d,%d]层..." % (i,startl, endl))
+            (keepGoing, skip) = dlg.Update(i-startl+1, msg)
+            imgtile.toTiles(self.fileList, i, outPath, bil)
+            if i==endl: 
+                dlg.Destroy()
+            
+        self.printLine("End, All done.")
+        del imgtile 
+        dlg.Destroy()
 
     def splitBox(self, l,t,r,b, startl, endl, mpcnt):
-	''' 根据进程数目,瓦片张数划分合理的任务 '''
-	tasks = []
-	for i in range(startl, endl+1):
-	    rs,re,cs,ce=smSci.smSci3d.calcRowCol(l,t,r,b, i) 
-	    for row in range(rs, re+1):
-		for col in range(cs, ce+1):
-		    tasks.append((i, row, col))
+        ''' 根据进程数目,瓦片张数划分合理的任务 '''
+        tasks = []
+        for i in range(startl, endl+1):
+            rs,re,cs,ce=smSci.smSci3d.calcRowCol(l,t,r,b, i) 
+            for row in range(rs, re+1):
+                for col in range(cs, ce+1):
+                    tasks.append((i, row, col))
 
-	totalNums = len(tasks)
-	splitNums = totalNums / mpcnt
-	mplist = []
-	add = 0
-	for i in range(mpcnt):
-	    mplist.append( tasks[i*splitNums:(i+1)*splitNums] )
-	    add += splitNums
+        totalNums = len(tasks)
+        splitNums = totalNums / mpcnt
+        mplist = []
+        add = 0
+        for i in range(mpcnt):
+            mplist.append( tasks[i*splitNums:(i+1)*splitNums] )
+            add += splitNums
 
-	if add<totalNums:
-	    mplist[-1].extend( tasks[add-totalNums:] )
-	return mplist
-	
+        if add<totalNums:
+            mplist[-1].extend( tasks[add-totalNums:] )
+        return mplist
+        
     def runMultiProcess(self, startl, endl, outPath, ext, bil=False, mpcnt=4):
-	''' 多进程模式切图 '''
-	l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
-	boxList = self.splitBox(l,t,r,b,startl,endl,mpcnt)
-	assert(len(boxList)==mpcnt)
+        ''' 多进程模式切图 '''
+        l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
+        boxList = self.splitBox(l,t,r,b,startl,endl,mpcnt)
+        assert(len(boxList)==mpcnt)
 
-	self.printLine("Start")
-	totalLevel = endl-startl+1
-	plist = []
-	m = mp.Manager()
-	q = m.Queue()
-	for i in xrange(mpcnt):
-	    bboxs = boxList[i]
-	    p = mp.Process(target=runMP, args=(self.fileList, outPath, ext, bil, bboxs, q, i+1, self.license))
-	    plist.append(p)
+        self.printLine("Start")
+        totalLevel = endl-startl+1
+        plist = []
+        m = mp.Manager()
+        q = m.Queue()
+        for i in xrange(mpcnt):
+            bboxs = boxList[i]
+            p = mp.Process(target=runMP, args=(self.fileList, outPath, ext, bil, bboxs, q, i+1, self.license))
+            plist.append(p)
 
-	for p in plist:
-	    p.start()
+        for p in plist:
+            p.start()
 
-	for p in plist:
-	    p.join()
-	    logs = list() if q.empty() else q.get()
-	    for log in logs:
-		self.printLog(log)
-	
-	'''
-	for p in plist:
-	    print p.is_alive(), p.exitcode
-	'''
+        for p in plist:
+            p.join()
+            logs = list() if q.empty() else q.get()
+            for log in logs:
+                self.printLog(log)
+        
+        '''
+        for p in plist:
+            print p.is_alive(), p.exitcode
+        '''
 
-	self.printLine("End, All done.")
+        self.printLine("End, All done.")
 
 #---------------------------------------------------------------------------
 def unitTest():

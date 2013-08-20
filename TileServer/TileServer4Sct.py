@@ -30,49 +30,49 @@ class SctFrame(ts.TileServerFrame):
             size=(1024,600), style=wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.CAPTION|wx.CLOSE_BOX|wx.CLIP_CHILDREN):
 
         ts.TileServerFrame.__init__(self, parent, ID, title, pos, size, style)
-	self.appid = cm.APPID_SCT
-	self.verifyLicense()
+        self.appid = cm.APPID_SCT
+        self.verifyLicense()
 
     def uiCacheName(self, sizer):
-	labelName = wx.StaticText(self.panel, -1, "缓存名称:")
-	sizer.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(225,-1))
-	sizer.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        labelName = wx.StaticText(self.panel, -1, "缓存名称:")
+        sizer.Add(labelName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        self.txtName=textName=wx.TextCtrl(self.panel, -1, "", size=(225,-1))
+        sizer.Add(textName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
     def OnButtonRun(self, event):
-	if not self.check():return False
-	mapname=self.txtName.GetValue()
-	ext='bil'
-	outPath=self.txtOut.GetValue()
-	outPath=os.path.join(outPath, mapname)
-	if not os.path.exists(outPath): os.makedirs(outPath)
+        if not self.check():return False
+        mapname=self.txtName.GetValue()
+        ext='bil'
+        outPath=self.txtOut.GetValue()
+        outPath=os.path.join(outPath, mapname)
+        if not os.path.exists(outPath): os.makedirs(outPath)
 
-	l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
-	mapbnd=l,t,r,b
+        l,t,r,b, xres, yres=imf.calcGeographicBoundary(self.fileList)
+        mapbnd=l,t,r,b
 
-	endl=int(self.txtLvlEnd.GetValue())
-	startl=int(self.txtLvlBeg.GetValue())
-	w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
-	picNums = smSci.smSci3d.calcTotalTileCount(l,t,r,b,startl, endl)
-	
-	self.printLog(('文件数目:%d' % len(self.fileList)))
-	self.printLog(('地理范围:左上右下(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
-	self.printLog(('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums)))
+        endl=int(self.txtLvlEnd.GetValue())
+        startl=int(self.txtLvlBeg.GetValue())
+        w,h=smSci.smSci3d.calcWidthHeight(l,t,r,b,endl)
+        picNums = smSci.smSci3d.calcTotalTileCount(l,t,r,b,startl, endl)
+        
+        self.printLog(('文件数目:%d' % len(self.fileList)))
+        self.printLog(('地理范围:左上右下(%f,%f,%f,%f),分辨率(%f)' % (l,t,r,b,xres)))
+        self.printLog(('起始终止层级:(%d,%d), 瓦片总数%d张.' % (startl, endl, picNums)))
 
-	sci = smSci.smSct()
-	sci.setParams(mapname, mapbnd, mapbnd, '')
-	sci.setLevels(startl, endl)
-	sci.setWidthHeight(w,h)
-	sci.saveSciFile(outPath)
+        sci = smSci.smSct()
+        sci.setParams(mapname, mapbnd, mapbnd, '')
+        sci.setLevels(startl, endl)
+        sci.setWidthHeight(w,h)
+        sci.saveSciFile(outPath)
     
-	ext='.bil'
-	ini = cm.iniFile()
-	if ini.mpcnt>1:
-	    self.runMultiProcess(startl, endl, outPath, ext, True, ini.mpcnt)
-	else:
-	    self.runSingleProcess(startl, endl, outPath, ext)
+        ext='.bil'
+        ini = cm.iniFile()
+        if ini.mpcnt>1:
+            self.runMultiProcess(startl, endl, outPath, ext, True, ini.mpcnt)
+        else:
+            self.runSingleProcess(startl, endl, outPath, ext)
 
-	del sci, ini
+        del sci, ini
 
 
 #---------------------------------------------------------------------------

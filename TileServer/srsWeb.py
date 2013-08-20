@@ -152,17 +152,17 @@ class GlobalMercator(object):
 
     def LatLonToMeters(self, lat, lon ):
         "Converts given lat/lon in WGS84 Datum to XY in Spherical Mercator EPSG:900913"
-	latlimit = 85.0511287798
-	if lat>latlimit:
-	    lat = latlimit
+        latlimit = 85.0511287798
+        if lat>latlimit:
+            lat = latlimit
 
-	if lat<-latlimit:
-	    lat = -latlimit
+        if lat<-latlimit:
+            lat = -latlimit
 
         mx = lon * self.originShift / 180.0
-	my = math.log( math.tan((90 + lat) * math.pi / 360.0 )) / (math.pi / 180.0)
+        my = math.log( math.tan((90 + lat) * math.pi / 360.0 )) / (math.pi / 180.0)
 
-	my = my * self.originShift / 180.0
+        my = my * self.originShift / 180.0
         return mx, my
 
     def MetersToLatLon(self, mx, my ):
@@ -195,15 +195,15 @@ class GlobalMercator(object):
 
         tx = int( math.ceil( px / float(self.tileSize) ) - 1 )
         ty = int( math.ceil( py / float(self.tileSize) ) - 1 )
-	if tx<0: tx=0
-	if ty<0: ty=0
+        if tx<0: tx=0
+        if ty<0: ty=0
         return tx, ty
 
     def PixelsPosInTile(self, px, py):
-	''' 返回位于瓦片中的像素位置(行列号) '''
-	pixel = px % self.tileSize
-	line = 255 - (py % self.tileSize)
-	return int(line), int(pixel)
+        ''' 返回位于瓦片中的像素位置(行列号) '''
+        pixel = px % self.tileSize
+        line = 255 - (py % self.tileSize)
+        return int(line), int(pixel)
 
     def PixelsToRaster(self, px, py, zoom):
         "Move the origin of pixel coordinates to top-left corner"
@@ -238,7 +238,7 @@ class GlobalMercator(object):
 
         # coordinate origin is moved from bottom-left to top-left corner of the extent
         tx,ty = gx, (2**zoom - 1) - gy
-	#print (gx,gy), (tx,ty)
+        #print (gx,gy), (tx,ty)
         bounds = self.TileBounds( tx, ty, zoom)
         minLat, minLon = self.MetersToLatLon(bounds[0], bounds[3])
         maxLat, maxLon = self.MetersToLatLon(bounds[2], bounds[1])
@@ -252,8 +252,8 @@ class GlobalMercator(object):
         return self.initialResolution / (2**zoom)
 
     def Scale(self, zoom):
-	res = self.Resolution(zoom)
-	return float( (0.0254/96) / res )
+        res = self.Resolution(zoom)
+        return float( (0.0254/96) / res )
 
     def ZoomForPixelSize(self, pixelSize ):
         "Maximal scaledown zoom of the pyramid closest to the pixelSize."
@@ -294,15 +294,15 @@ class GlobalMercator(object):
         return quadKey
 
     def calcRowColByLatLon(self, l,t,r,b, zoom):
-	l, t = self.LatLonToMeters(t, l)
-	r, b = self.LatLonToMeters(b, r)
+        l, t = self.LatLonToMeters(t, l)
+        r, b = self.LatLonToMeters(b, r)
 
-	tx, ty = self.MetersToTile(l, t, zoom)
-	cs, rs = self.GoogleTile(tx, ty, zoom)
+        tx, ty = self.MetersToTile(l, t, zoom)
+        cs, rs = self.GoogleTile(tx, ty, zoom)
 
-	tx, ty = self.MetersToTile(r, b, zoom)
-	ce, re = self.GoogleTile(tx, ty, zoom)
-	return (rs, re, cs, ce)
+        tx, ty = self.MetersToTile(r, b, zoom)
+        ce, re = self.GoogleTile(tx, ty, zoom)
+        return (rs, re, cs, ce)
 
 
 #---------------------

@@ -19,4 +19,4 @@ def printWatermark(tile_data, xsize, ysize, buf):
 
 if __name__=="__main__":
     printWatermark()
-	
+        
