@@ -56,6 +56,7 @@ class smSci(object):
         self.scales = [] # 比例尺数组
         self.proj_lines = []
         self.sciver = VER31
+	self.file_format = 'JPG'
 
     def setParams(self, mapName, mapBnd, idxBnd, sciVer):
         ''' 设置生成SCI文件的参数
@@ -75,6 +76,17 @@ class smSci(object):
             self.lines = scitemplate.sci31 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER31
+        elif sciVer == VER30:
+            self.lines = scitemplate.sci30 
+            self.sci_scale = scitemplate.sci31_scale
+            self.sciver = VER30
+
+    def setFileFormat(self, ext):
+	ext = ext[-3:].lower()
+	if ext=='jpg':
+	    self.file_format='JPG'
+	elif ext=='png':
+	    self.file_format='PNG'
 
     def setWidthHeight(self, w, h):
         ''' 影像缓存最高分辨率图像的宽高(最清晰一层)的总尺寸,单位为像素 '''
@@ -117,12 +129,13 @@ class smSci(object):
 
         
     def write(self, sciPath):
-        if self.sciver == VER31:
+        if self.sciver == VER31 or self.sciver==VER30:
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
             folder = "%s_256x256" % self.mapName
         desSciPath = os.path.join(sciPath, folder, fileName)
         outPath = os.path.dirname(desSciPath)
-        if not os.path.exists(outPath): os.makedirs(outPath)
+        if not os.path.exists(outPath): 
+	    os.makedirs(outPath)
         
         f=open(desSciPath, 'w+')
         for line in self.lines:
@@ -160,6 +173,7 @@ class smSci(object):
     def replaceCacheName(self):
         self.replaceText(self.lines, "CacheName", self.mapName)
         self.replaceText(self.lines, "<sml:MapName>", self.mapName)
+        self.replaceText(self.lines, "<sml:ImageFormat>", self.file_format)
         return True
 
     def replaceWidthHeight(self):
@@ -188,7 +202,7 @@ class smSci(object):
 
         pos = 0
         for i in range(len(self.lines)):
-            if '<MapCacheState>' in self.lines[i]:
+            if '<MapCache>' in self.lines[i]:
                 pos = i+1
                 break
 
@@ -227,13 +241,37 @@ class smSci(object):
 
     @staticmethod
     def calcTileName(root, mapname, scale, row, col, ext, ver):
-        if ver == VER31:
-            filename = "%d%s" % (row, ext) 
+	if len(ext)>3:
+	    ext = ext[-3:].lower()
+
+        if ver == VER31 or ver==VER30:
+	    """
+	    iServer20 地图缓存文件路径规则：
+	    地图名_图片宽度x图片高度（10进制表示，以像素为单位）作为一级目录；
+	    比例尺或者比例尺倒数作为二级目录；
+	    图片在 IndexBounds 中的列索引作为三级目录；
+	    图片名称为图片在 IndexBounds 中的行索引.后缀；
+	    """
+            filename = "%d.%s" % (row, ext) 
             mapname = "%s_256x256" % mapname
             strscale = "%d" % int(1/scale)
             strcol = "%d"% col
             filename = os.path.join(root, mapname, strscale, strcol, filename)
             return filename
+	elif ver == VER21 or ver==VER20:
+	    """
+	    地图名 + 图片尺寸作为一级子目录；
+	    比例尺或者比例尺倒数作为二级子目录；
+	    中心点所在区块索引作为三级子目录；
+	    中心点近似值 + 地图散列值 + 后缀作为文件名
+	    """
+	    maphashcode = "8B185AB8FIX"
+            filename = "%d.%s" % (row, ext) 
+            mapname = "%s_256x256" % mapname
+            strscale = "%d" % int(1/scale)
+            strcol = "%d"% col
+            filename = os.path.join(root, mapname, strscale, strcol, filename)
+
 # =============================================================================
 
 class smSci3d(smSci):
