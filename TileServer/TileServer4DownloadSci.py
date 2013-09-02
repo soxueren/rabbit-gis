@@ -44,7 +44,7 @@ def downOneTile(url, fp):
 
 
 #---------------------------------------------------------------------------
-def downlaodTile(mapname, level, row, col, outPath, ext, strurl, ver, haswatermark):
+def download_tile(mapname, level, row, col, outPath, ext, strurl, ver, haswatermark):
     """ 下载瓦片到本地 """
 
     tmp = strurl 
@@ -104,7 +104,7 @@ def downlaodTile(mapname, level, row, col, outPath, ext, strurl, ver, haswaterma
 def runProcess(bboxs, mapname, outPath, ext, pindex, ver, url,haswatermark):
     """ 多进程处理切图  """
     for level, row, col in bboxs:
-        downlaodTile(mapname, level, row, col, outPath,ext, url, ver, haswatermark)
+        download_tile(mapname, level, row, col, outPath,ext, url, ver, haswatermark)
 
 # =============================================================================
 class Download(object):
@@ -255,8 +255,7 @@ class Download(object):
             scales.append(scale) 
 
         sci = smsci.smSci()
-	print self.sm_cache_ver
-        sci.setParams(self.name, mapBnd, mapBnd, self.sm_cache_ver)
+        sci.setParams(self.name, mapBnd, idxBnd, self.sm_cache_ver)
         sci.setWidthHeight(w,h)
         sci.setScales(scales)
         sci.setProj(scitemplate.webmkt_prj)
