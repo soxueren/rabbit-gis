@@ -182,15 +182,15 @@ class smSci(object):
         return True
 
     def replaceBnd(self):
-        self.replaceDouble(self.lines, 'ImageLeft', self.idxBnd[0])
-        self.replaceDouble(self.lines, 'ImageTop', self.idxBnd[1])
-        self.replaceDouble(self.lines, 'ImageRight', self.idxBnd[2])
-        self.replaceDouble(self.lines, 'ImageBottom', self.idxBnd[3])
+        self.replaceDouble(self.lines, 'MapLeft', self.idxBnd[0])
+        self.replaceDouble(self.lines, 'MapTop', self.idxBnd[1])
+        self.replaceDouble(self.lines, 'MapRight', self.idxBnd[2])
+        self.replaceDouble(self.lines, 'MapBottom', self.idxBnd[3])
 
-        self.replaceDouble(self.lines, 'MapLeft', self.mapBnd[0])
-        self.replaceDouble(self.lines, 'MapTop', self.mapBnd[1])
-        self.replaceDouble(self.lines, 'MapRight', self.mapBnd[2])
-        self.replaceDouble(self.lines, 'MapBottom', self.mapBnd[3])
+        self.replaceDouble(self.lines, 'ImageLeft', self.mapBnd[0])
+        self.replaceDouble(self.lines, 'ImageTop', self.mapBnd[1])
+        self.replaceDouble(self.lines, 'ImageRight', self.mapBnd[2])
+        self.replaceDouble(self.lines, 'ImageBottom', self.mapBnd[3])
 
     def replaceScales(self):
         if not self.scales:
@@ -265,11 +265,11 @@ class smSci(object):
 	    中心点所在区块索引作为三级子目录；
 	    中心点近似值 + 地图散列值 + 后缀作为文件名
 	    """
-	    maphashcode = "8B185AB8FIX"
-            filename = "%d.%s" % (row, ext) 
-            mapname = "%s_256x256" % mapname
+            mapname = "%s_100x100" % mapname
             strscale = "%d" % int(1/scale)
             strcol = "%d"% col
+	    maphashcode = "8B185AB8FIX"
+            filename = "%d.%s" % (row, ext) 
             filename = os.path.join(root, mapname, strscale, strcol, filename)
 
 # =============================================================================

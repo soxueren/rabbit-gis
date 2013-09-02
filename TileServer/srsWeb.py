@@ -304,6 +304,10 @@ class GlobalMercator(object):
         ce, re = self.GoogleTile(tx, ty, zoom)
         return (rs, re, cs, ce)
 
+    def calcSmCellIndex(self, x,y, zoom):
+	""" 根据瓦片行列号计算SM中IS.NET缓存策略索引编号 """
+	pass
+
 
 #---------------------
 
