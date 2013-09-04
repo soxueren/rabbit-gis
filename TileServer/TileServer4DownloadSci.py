@@ -30,6 +30,7 @@ import common as cm
 import license as lic
 import scitemplate
 
+logger = logging.getLogger("sci")
 
 #---------------------------------------------------------------------------
 def downOneTile(url, fp):
@@ -286,7 +287,7 @@ class Download(object):
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
             p = mp.Process(target=runProcess, args=(bboxs,self.name, self.out, \
-		self.file_format,i+1,smsci.VER31,self.url,self.haswatermark))
+		self.file_format,i+1, self.sm_cache_ver,self.url,self.haswatermark))
             plist.append( (p, len(bboxs)) )
 
         for p, cnt in plist:

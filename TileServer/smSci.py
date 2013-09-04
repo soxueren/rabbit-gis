@@ -40,6 +40,8 @@ VER30 = 3 # iServer 2.0 缓存
 VER21 = 4 
 VER20 = 5
 
+MAP_HASHCODE = "8B185AB8FIX"
+
 
 # =============================================================================
 
@@ -80,6 +82,10 @@ class smSci(object):
             self.lines = scitemplate.sci30 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER30
+        elif sciVer == VER21:
+            self.lines = scitemplate.sci31 
+            self.sci_scale = scitemplate.sci31_scale
+            self.sciver = VER21
 
     def setFileFormat(self, ext):
 	ext = ext[-3:].lower()
@@ -132,6 +138,9 @@ class smSci(object):
         if self.sciver == VER31 or self.sciver==VER30:
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
             folder = "%s_256x256" % self.mapName
+	elif self.sciver == VER21 or self.sciver==VER20:
+            fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
+	    folder = "%s_100x100" % self.mapName
         desSciPath = os.path.join(sciPath, folder, fileName)
         outPath = os.path.dirname(desSciPath)
         if not os.path.exists(outPath): 
@@ -142,11 +151,11 @@ class smSci(object):
             f.write(line+'\n')
         f.close()
 
-    def replaceText(self, lines, k, v):
+    def replaceText(self, lines, tag, k, v):
         for i in xrange(len(lines)):
-            line = self.lines[i]
-            if k in line:
-                line = line.replace(KEY_VALUE, v)
+            line = lines[i]
+            if tag in line:
+                line = line.replace(k, v)
                 lines[i]=line
                 break
         return True
@@ -171,9 +180,9 @@ class smSci(object):
         return True
 
     def replaceCacheName(self):
-        self.replaceText(self.lines, "CacheName", self.mapName)
-        self.replaceText(self.lines, "<sml:MapName>", self.mapName)
-        self.replaceText(self.lines, "<sml:ImageFormat>", self.file_format)
+        self.replaceText(self.lines, "CacheName",KEY_VALUE, self.mapName)
+        self.replaceText(self.lines, "<sml:MapName>",KEY_VALUE, self.mapName)
+        self.replaceText(self.lines, "<sml:ImageFormat>",KEY_VALUE, self.file_format)
         return True
 
     def replaceWidthHeight(self):
@@ -191,6 +200,15 @@ class smSci(object):
         self.replaceDouble(self.lines, 'ImageTop', self.mapBnd[1])
         self.replaceDouble(self.lines, 'ImageRight', self.mapBnd[2])
         self.replaceDouble(self.lines, 'ImageBottom', self.mapBnd[3])
+
+    def replaceHash(self, lines):
+        for i in xrange(len(lines)):
+            line = lines[i]
+            if '<sml:HashCode' in line:
+                line = line.replace('<sml:HashCode/', '<sml:HashCode>'+MAP_HASHCODE+'</sml:HashCode')
+                lines[i]=line
+                break
+        return True
 
     def replaceScales(self):
         if not self.scales:
@@ -210,6 +228,8 @@ class smSci(object):
             tmpscale = self.sci_scale[:]
             self.replaceDouble(tmpscale, '<sml:Scale>', scale, 20)
             self.replaceInt(tmpscale, '<sml:ScaleFolder>', int(1/scale))
+	    if self.sciver==VER21 or self.sciver==VER20:
+		self.replaceHash(tmpscale)
             for i in range(len(tmpscale)-1, -1, -1):
                 self.lines.insert(pos, tmpscale[i])
 
@@ -223,12 +243,17 @@ class smSci(object):
         for i in range(len(self.proj_lines)-1, -1, -1):
             self.lines.insert(pos, self.proj_lines[i])
 
+    def replaceMapCacheStrategy(self):
+	self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '0')
+
+
     def replace(self):
         self.replaceCacheName()
         self.replaceBnd()
         self.replaceProj()
         self.replaceWidthHeight()
         self.replaceScales()
+	self.replaceMapCacheStrategy()
 
     def saveSciFile(self, sciPath):
         ''' 生成SM格式切片SCI文件 '''
@@ -265,12 +290,15 @@ class smSci(object):
 	    中心点所在区块索引作为三级子目录；
 	    中心点近似值 + 地图散列值 + 后缀作为文件名
 	    """
+	    glbmkt = srsweb.GlobalMercator()
+	    col_idx, row_idx = glbmkt.calcSmCellIndex(col, row, scale)
             mapname = "%s_100x100" % mapname
             strscale = "%d" % int(1/scale)
-            strcol = "%d"% col
-	    maphashcode = "8B185AB8FIX"
-            filename = "%d.%s" % (row, ext) 
-            filename = os.path.join(root, mapname, strscale, strcol, filename)
+	    maphashcode = MAP_HASHCODE 
+	    stridx = "%dx%d" % (col_idx, row_idx)
+            filename = "%dx%d_%s.%s" % (col, row, maphashcode, ext) 
+            filename = os.path.join(root, mapname, strscale, stridx, filename)
+	    return filename
 
 # =============================================================================
 

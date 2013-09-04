@@ -1,44 +1,12 @@
 #!/usr/bin/env python
 # --*-- coding:gbk --*--
-#******************************************************************************
-#  $Id: gdal2tiles.py 25611 2013-02-07 10:24:56Z bishop $
-# 
-# Project:  Google Summer of Code 2007, 2008 (http://code.google.com/soc/)
-# Support:  BRGM (http://www.brgm.fr)
-# Purpose:  Convert a raster into TMS (Tile Map Service) tiles in a directory.
-#           - generate Google Earth metadata (KML SuperOverlay)
-#           - generate simple HTML viewer based on Google Maps and OpenLayers
-#           - support of global tiles (Spherical Mercator) for compatibility
-#               with interactive web maps a la Google Maps
-# Author:   Klokan Petr Pridal, klokan at klokan dot cz
-# Web:      http://www.klokan.cz/projects/gdal2tiles/
-# GUI:      http://www.maptiler.org/
-#
-###############################################################################
-# Copyright (c) 2008, Klokan Petr Pridal
-# 
-#  Permission is hereby granted, free of charge, to any person obtaining a
-#  copy of this software and associated documentation files (the "Software"),
-#  to deal in the Software without restriction, including without limitation
-#  the rights to use, copy, modify, merge, publish, distribute, sublicense,
-#  and/or sell copies of the Software, and to permit persons to whom the
-#  Software is furnished to do so, subject to the following conditions:
-# 
-#  The above copyright notice and this permission notice shall be included
-#  in all copies or substantial portions of the Software.
-# 
-#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-#  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-#  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-#  DEALINGS IN THE SOFTWARE.
-#******************************************************************************
 
 import sys
 import os
 import math
+import logging
+
+logger = logging.getLogger("srs_mkt")
 
 # =============================================================================
 
@@ -304,10 +272,29 @@ class GlobalMercator(object):
         ce, re = self.GoogleTile(tx, ty, zoom)
         return (rs, re, cs, ce)
 
-    def calcSmCellIndex(self, x,y, zoom):
-	""" 根据瓦片行列号计算SM中IS.NET缓存策略索引编号 """
-	pass
+    def calcSmCellIndex(self, x, y, scale):
+	""" 根据瓦片行列号(Google)计算SM中IS.NET缓存策略索引编号 """
+	def _zoom(scale):
+	    for z in xrange(21):
+		if scale==self.Scale(z):
+		    return z
+	    return None
+	zoom = _zoom(scale)
+	if zoom is None:
+	    logger.error("比例尺%lf,未能转换对应层级")
 
+	cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
+	cell_unit = 400
+	if (cell_cnt/20000.0)*(cell_cnt/20000.0) > cell_unit*cell_unit:
+	    cell_unit = 20000
+	elif (cell_cnt/20000.0)*(cell_cnt/20000.0) > 100*100:
+	    cell_unit = 20000
+	elif cell_cnt>20000:
+	    while((cell_cnt/cell_unit)*(cell_cnt/cell_unit) > (50*50)):
+		cell_unit *= 2
+	else:
+	    cell_unit = 400 
+	return x/cell_unit, y/cell_unit
 
 #---------------------
 
