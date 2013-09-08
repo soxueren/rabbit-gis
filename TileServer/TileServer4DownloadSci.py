@@ -29,6 +29,7 @@ import srsWeb as srsweb
 import common as cm
 import license as lic
 import scitemplate
+import tsk
 
 logger = logging.getLogger("sci")
 
@@ -123,7 +124,6 @@ class Download(object):
         self.haswatermark = False if self.verifyLicense() else True
         self.args = None
         self.argparse_init(argv)
-        self.log_init()
         self.parse_task()
 
     def argparse_init(self, argv):
@@ -134,7 +134,7 @@ class Download(object):
 
         parser = argparse.ArgumentParser(description="Download GoogleMaps to SuperMap tile files",
                 epilog="Author: 42848918@qq.com"+msg)
-        parser.add_argument("-f", "--file", default="g.tsk", help="task file.")
+        parser.add_argument("file", default="g.tsk", help="task file.")
         self.args = parser.parse_args(argv)
 
     def verifyLicense(self):
@@ -158,59 +158,34 @@ class Download(object):
         if not os.path.isfile(taskfile):
             taskfile = os.path.join(self.appPath(), "g.tsk")
         if not os.path.isfile(taskfile):
-            logging.error("任务文件未找到,%s" % taskfile)
+            logger.error("任务文件未找到,%s" % taskfile)
             return None
 
         f = open(taskfile, "r")
 	lines = f.readlines()
         f.close()
-
-        for line in lines:
-            line = line.strip()
-            if line=="" or line[0]=="#":continue
-            lr = line.split("=")
-            if len(lr)==2:
-                l,r = lr[0].strip().lower(), lr[1].strip()
-                if l=="bbox":
-                    bbox = r.split(",")
-                    if len(bbox)==4:
-                        for i in range(4):
-                            bbox[i] = bbox[i].strip()
-
-                        if bbox[0]: self.l = float(bbox[0]) 
-                        if bbox[1]: self.t = float(bbox[1]) 
-                        if bbox[2]: self.r = float(bbox[2]) 
-                        if bbox[3]: self.b = float(bbox[3]) 
-                elif l=="level":
-                    levels = r.split(",")
-                    for level in levels:
-                        level = level.strip()
-                        if not level.isdigit(): continue
-                        level = int(level)
-                        if level in self.levels: continue
-                        self.levels.append(level)
-                    if self.levels:
-                        self.levels.sort()
-                elif l=="out":
-                    if os.path.isdir(r):
-                        self.out = r
-                    
-                    if self.out=="":
-                        self.out = appPath()
-
-                elif l=="name":
-                    self.name = r
-		elif l=="format":
-		    self.file_format= r
-		elif l=="version":
-		    if r.lower()=="ver31":
-			self.sm_cache_ver = smsci.VER31
-		    elif r.lower()=="ver30":
-			self.sm_cache_ver = smsci.VER30
-		    elif r.lower()=="ver21":
-			self.sm_cache_ver = smsci.VER21
-		    elif r.lower()=="ver20":
-			self.sm_cache_ver = smsci.VER20
+	
+	_tsk = tsk.from_lines(lines)
+	if 'bbox' in _tsk:
+	    self.l,self.t,self.r,self.b =  _tsk['bbox']
+	if 'level' in _tsk:
+	    self.levels = _tsk['level']
+	if 'out' in _tsk:
+	    self.out = _tsk['out']
+	if 'name' in _tsk:
+	    self.name = _tsk['name']
+	if 'format' in _tsk:
+	    self.file_format= _tsk['format']
+	if 'version' in _tsk:
+	    r = _tsk['version'].lower()
+	    if r=="ver31":
+		self.sm_cache_ver = smsci.VER31
+	    elif r=="ver30":
+		self.sm_cache_ver = smsci.VER30
+	    elif r=="ver21":
+		self.sm_cache_ver = smsci.VER21
+	    elif r=="ver20":
+		self.sm_cache_ver = smsci.VER20
 
     def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
         """ 根据进程数目,瓦片张数划分合理的任务 """
@@ -275,11 +250,11 @@ class Download(object):
         for i in xrange(len(mplist)):
             picNums += len(mplist[i])
 
-	logging.info("TaskFile:%s" % self.args.file)
-        logging.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
-        logging.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
+	logger.info("TaskFile:%s" % self.args.file)
+        logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
+        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
 
-        logging.info("Start.")
+        logger.info("Start.")
         
         plist = []
         m = mp.Manager()
@@ -295,37 +270,10 @@ class Download(object):
 
         for p, cnt in plist:
             p.join()
-            logging.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
+            logger.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
 
-        logging.info("End, All done.")
-        logging.info(38 * "=")
-
-    def log_init(self):
-	""" 初始化日志 """
-        dirName = self.appPath()
-        name = time.strftime("%Y-%m-%d.log")
-        logfile = os.path.join(dirName, "log", name)
-        logfile = os.path.abspath(logfile)
-        if not os.path.exists(os.path.dirname(logfile)):
-            os.makedirs(os.path.dirname(logfile))
-
-        logger = logging.getLogger("")
-        logger.setLevel(logging.DEBUG)
-
-        fh = logging.FileHandler(logfile)
-        fh.setLevel(logging.DEBUG)
-
-        ch = logging.StreamHandler()
-        ch.setLevel(logging.DEBUG)
-
-        formatter = logging.Formatter(fmt="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S >")
-        fh.setFormatter(formatter)
-        ch.setFormatter(formatter)
-
-        logger.addHandler(fh)
-        logger.addHandler(ch)
-
-        logger.info(cm.APPNAME_GOOGLE_SCI3D) 
+        logger.info("End, All done.")
+        logger.info(38 * "=")
 
     def appPath(self):
         try:
@@ -337,8 +285,47 @@ class Download(object):
         dirName = dirName.replace("library.zip","")
         return dirName
 
+
+# =============================================================================
+def log_init():
+    """ 初始化日志 """
+    try:
+	dirName = os.path.dirname(os.path.abspath(__file__))
+    except:
+	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+
+    # 打包后目录发生变化,需要去掉library.zip目录
+    dirName = dirName.replace("library.zip","")
+    name = time.strftime("%Y-%m-%d.log")
+    logfile = os.path.join(dirName, "log", name)
+    logfile = os.path.abspath(logfile)
+    if not os.path.exists(os.path.dirname(logfile)):
+	os.makedirs(os.path.dirname(logfile))
+
+    logger = logging.getLogger("")
+    logger.setLevel(logging.DEBUG)
+
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
+    formatter = logging.Formatter(fmt="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S >")
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+
+    logger.info(cm.APPNAME_GOOGLE_SCI3D) 
+
+def main():
+    log_init()
+    Download(sys.argv[1:]).run()
+
 # =============================================================================
 if __name__=="__main__":
     mp.freeze_support()
-    Download(sys.argv[1:]).run()
+    main()
 

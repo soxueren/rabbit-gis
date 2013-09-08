@@ -135,10 +135,10 @@ class smSci(object):
 
         
     def write(self, sciPath):
-        if self.sciver == VER31 or self.sciver==VER30:
+        if self.sciver in (VER31,VER30):
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
             folder = "%s_256x256" % self.mapName
-	elif self.sciver == VER21 or self.sciver==VER20:
+	elif self.sciver in (VER21,VER20,VER40):
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
 	    folder = "%s_100x100" % self.mapName
         desSciPath = os.path.join(sciPath, folder, fileName)
@@ -227,9 +227,11 @@ class smSci(object):
         for scale in self.scales:
             tmpscale = self.sci_scale[:]
             self.replaceDouble(tmpscale, '<sml:Scale>', scale, 20)
-            self.replaceInt(tmpscale, '<sml:ScaleFolder>', int(1/scale))
+	    scale_int = int(1/scale)
 	    if self.sciver==VER21 or self.sciver==VER20:
+		scale_int = int(0.5+1/scale)
 		self.replaceHash(tmpscale)
+            self.replaceInt(tmpscale, '<sml:ScaleFolder>', scale_int)
             for i in range(len(tmpscale)-1, -1, -1):
                 self.lines.insert(pos, tmpscale[i])
 
@@ -244,7 +246,10 @@ class smSci(object):
             self.lines.insert(pos, self.proj_lines[i])
 
     def replaceMapCacheStrategy(self):
-	self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '0')
+	if self.sciver in (VER21, VER20):
+	    self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '0')
+	elif self.sciver == VER40:
+	    self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '1')
 
 
     def replace(self):
@@ -293,12 +298,27 @@ class smSci(object):
 	    glbmkt = srsweb.GlobalMercator()
 	    col_idx, row_idx = glbmkt.calcSmCellIndex(col, row, scale)
             mapname = "%s_100x100" % mapname
-            strscale = "%d" % int(1/scale)
+            strscale = "%d" % int(0.5+1/scale)
 	    maphashcode = MAP_HASHCODE 
 	    stridx = "%dx%d" % (col_idx, row_idx)
             filename = "%dx%d_%s.%s" % (col, row, maphashcode, ext) 
             filename = os.path.join(root, mapname, strscale, stridx, filename)
 	    return filename
+	elif ver == VER40:
+	    """
+	    // 地图名_图片宽度x图片高度（16进制表示，以像素为单位）作为一级目录；
+	    // 比例尺或者比例尺倒数作为二级目录；
+	    // 中心点所在 region 在 IndexBounds 中的列索引作为三级目录；
+	    // 中心点所在 region 在 IndexBounds 中的行索引作为四级目录；
+	    // 图片在所在 region 中的行索引x列索引_地图散列值.后缀作为文件名。
+	    // 例如：
+	    // Path = China400_100x100/18750000/2/0/0001x0002_C782F04CFIX.png
+	    // {MapName}_{HexPicWidth}x{HexPicHeight}/{Scale}/{RegionYIndex}/{RegionXIndex}/{PicYIndex}x{PicXIndex}_{HashCode}.{ExtName}
+	    // Region 为矩形的多个图片的集合。Region 的索引以 IndexBounds 作为参考进行计算。
+	    """
+            mapname = "%s_100x100" % mapname
+            strscale = "%d" % int(1/scale)
+	    pass
 
 # =============================================================================
 
