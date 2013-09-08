@@ -322,7 +322,7 @@ def log_init():
     logger.addHandler(fh)
     logger.addHandler(ch)
 
-    logger.info(cm.APPNAME_GOOGLE_SCI3D) 
+    logger.info("Download GoogleMaps tile files.") 
 
 def main():
     log_init()

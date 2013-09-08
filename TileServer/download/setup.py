@@ -18,7 +18,7 @@ if sys.platform == "win32":
 buildOpts = dict(
         compressed=True,
         includes=['numpy'],
-        excludes=['tk','tcl'],
+        excludes=['Tkinter','tcl'],
         #zip_includes=['smSci/sci3d.sci3d'],
         include_files=['logo.png','icon.ico','g.tsk'],
         )
