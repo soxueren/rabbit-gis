@@ -142,8 +142,7 @@ class Download(object):
             msg  = "\n免费试用版本."
 
 	msg = tileserver.__author__ + msg
-        parser = argparse.ArgumentParser(
-		description="Google Maps转超图缓存.",
+        parser = argparse.ArgumentParser(description="Google Maps转超图缓存.",
                 epilog=msg)
 
         parser.add_argument("file", default="g.tsk", help="task file.")
@@ -299,13 +298,7 @@ class Download(object):
 # =============================================================================
 def log_init():
     """ 初始化日志 """
-    try:
-	dirName = os.path.dirname(os.path.abspath(__file__))
-    except:
-	dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-    # 打包后目录发生变化,需要去掉library.zip目录
-    dirName = dirName.replace("library.zip","")
+    dirName = cm.app_path()
     name = time.strftime("%Y-%m-%d.log")
     logfile = os.path.join(dirName, "log", name)
     logfile = os.path.abspath(logfile)
