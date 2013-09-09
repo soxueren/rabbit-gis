@@ -1,6 +1,29 @@
-bbox=-180.0,90.0,180.0,-90.0
-level=0,1,2
-out=E:\2013\2013-09\2013-09-05
-name=test
-format=png
-version=
+# 出图范围(英文逗号隔开),格式为:left,top,right,bottom
+bbox = -180,90,180,-90
+#bbox = 73.6,53.1,135.2,18.3
+
+# 地图类型
+# satellite(默认),用于指定卫星图片;
+# roadmap, 用于指定标准路线图图片, 如 Google 地图网站常规所示;
+# terrain, 用于指定自然地形地图图片,其中会显示地形和植被;
+# hybrid, 用于指定卫星图和路线图的结合图片,其中卫星图片上会显示主要街道和地点名称的透明图层.
+maptype = satellite 
+
+# 级别列表(英文逗号隔开), 级别取值范围为[0,20]
+level = 0,1
+
+# 输出结果位置全路径
+out = c:\CacheData 
+
+# SuperMap结果缓存名称
+name = SuperMap
+
+# 瓦片格式[jpg, png]
+format = png
+
+# SuperMap二维地图缓存版本[ver31,ver30,ver21,ver20]
+# ver31 适用于iServer 2.0缓存,使用新的缓存图片生成方案的 iServer 2.0 缓存
+# ver30 适用于iServer 2.0缓存
+# ver21 适用于IS.NET缓存
+# ver20 适用于IS.NET缓存
+version = ver40

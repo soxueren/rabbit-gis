@@ -5,6 +5,7 @@ import sys,os
 import time
 import logging
 import multiprocessing as mp
+import ConfigParser
 
 import wx
 from wx.lib.wordwrap import wordwrap
@@ -178,11 +179,11 @@ class DownloadFrame(wx.Frame):
         info = wx.AboutDialogInfo()
         info.Name = APPNAME 
         info.Version = tileserver.__version__ 
-        info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n%s\n" % self.GetLicense()
+        info.Copyright = tileserver.__copyright__ + ("\n\n%s\n" % self.GetLicense())
 
         strdes="将Google地图下载并转存为SuperMap缓存.\n\n"
         info.Description = wordwrap(strdes, 350, wx.ClientDC(self))
-        info.WebSite = ("http://www.atolin.net", info.Name)
+        info.WebSite = (tileserver.__website__, info.Name)
         info.Developers = [ tileserver.__author__ ]
 
         #info.License = wordwrap(self.GetLicense(), 500, wx.ClientDC(self))
@@ -192,6 +193,19 @@ class DownloadFrame(wx.Frame):
 
     def saveDefaultTsk(self):
 	""" 保存以便下次启动加载值 """
+	out_path = self.txtOut.GetValue()
+	if not os.path.exists(out_path):
+	    os.makedirs(out_path)
+	
+	out_path = os.path.join(out_path, 'g.tsk') 
+	cfg_path = os.path.join(cm.app_path(), 'path.cfg')
+
+	config = ConfigParser.ConfigParser()
+	config.add_section('path')
+	config.set('path','path', out_path)
+	with open(cfg_path, 'wb') as configfile:
+	    config.write(configfile)
+
 	_tsk = {'bbox':'','level':'','name':'','format':'','version':'','out':'ver31'}
 	_tsk['bbox'] = self.txtIn.GetValue()
 	_tsk['level'] = self.txtLevels.GetValue()
@@ -200,11 +214,10 @@ class DownloadFrame(wx.Frame):
 	_tsk['name'] = self.txtName.GetValue()
 
 	lines = tsk.to_lines(_tsk)
-	dirName = cm.app_path()
-	path = os.path.join(dirName, 'g.tsk')
-	f = open(path, 'w')
+	f = open(out_path, 'w')
 	f.writelines(lines)
 	f.close()
+	return out_path
 
     def check(self):
         if self.txtIn.GetValue()=="":
@@ -227,13 +240,9 @@ class DownloadFrame(wx.Frame):
     def OnButtonRun(self, event):
         if not self.check():
 	    return False
-	self.saveDefaultTsk()
 
-	path = cm.app_path()
-	tskPath = os.path.join(path, 'g.tsk')
-	g2s.Download([tskPath]).run() 
-
-	
+	tskpath = self.saveDefaultTsk()
+	g2s.Download([tskpath]).run() 
 
     def logInit(self):
 	""" 初始化日志 """
@@ -260,8 +269,9 @@ class DownloadFrame(wx.Frame):
         logger.addHandler(ch)
 
     def loadDefaultTsk(self):
-	dirName = cm.app_path()
-	path = os.path.join(dirName, 'g.tsk')
+	path = self.config_path()
+	if not os.path.isfile(path):
+	    path = os.path.join(cm.app_path(), 'g.tsk')
 	if not os.path.isfile(path):
 	    logger.error("No file found, %s" % path)
 	    return None
@@ -287,6 +297,22 @@ class DownloadFrame(wx.Frame):
 	    self.txtName.AppendText(_tsk['name'])
 	if 'format' in _tsk:
 	    self.txtTileFormat.AppendText(_tsk['format'])
+    
+    def config_path(self):
+	path = os.path.join(cm.app_path(), 'path.cfg')
+	if os.path.isfile(path):
+	    config = ConfigParser.ConfigParser()
+	    config.read(path)
+	    path = config.get("path", "path")
+	    return path
+	else:
+	    tsk_path = os.path.join(cm.app_path(), 'g.tsk')
+	    config = ConfigParser.ConfigParser()
+	    config.add_section('path')
+	    config.set('path','path', tsk_path)
+	    with open(path, 'wb') as configfile:
+		config.write(configfile)
+	    return tsk_path
 
 #---------------------------------------------------------------------------
 def main():
