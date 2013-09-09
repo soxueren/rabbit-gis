@@ -1,3 +1,5 @@
 
+__version__ = "0.5.0.118"
 __author__ = "wenyulin.lin@gmail.com"
-__version__ = "0.4.9.116"
+__copyright__ = "(C) www.atolin.net"
+__website__ = "http://www.atolin.net"

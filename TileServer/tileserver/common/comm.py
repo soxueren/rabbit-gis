@@ -60,9 +60,10 @@ class iniFile(object):
 def app_path():
     try:
 	dirname = os.path.dirname(os.path.abspath(__file__))
+	dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
     except:
 	dirname = os.path.dirname(os.path.abspath(sys.argv[0]))
     # 打包后目录发生变化,需要去掉library.zip目录
-    dirname = dirName.replace('library.zip','')
+    dirname = dirname.replace('library.zip','')
     return dirname
     
