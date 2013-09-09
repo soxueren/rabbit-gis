@@ -9,6 +9,7 @@ import multiprocessing as mp
 import wx
 from wx.lib.wordwrap import wordwrap
 
+import tileserver
 from tileserver.common import license as lic
 from tileserver.common import comm as cm
 import tsk
@@ -97,17 +98,13 @@ class DownloadFrame(wx.Frame):
         sizer.Fit(self)
 	
 	self.logInit()
-	self.loadDefaultTsk()
+        logger.info("Google Maps转SuperMap缓存") 
 
+	self.loadDefaultTsk()
         self.Show()
 
     def verifyLicense(self):
-        try:
-            dirName = os.path.dirname(os.path.abspath(__file__))
-        except:
-            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-        # 打包后目录发生变化,需要去掉library.zip目录
-        dirName = dirName.replace('library.zip','')
+	dirName = cm.app_path()
         pn =  self.findLicenseFile(dirName)
         pn = os.path.abspath(pn)
         if os.path.isfile(pn):
@@ -146,15 +143,12 @@ class DownloadFrame(wx.Frame):
         sizer.Add(btnsizer, 0, wx.ALIGN_RIGHT|wx.ALL, 15)
 
     def uiSplash(self):
-        try:
-            dirName = os.path.dirname(os.path.abspath(__file__))
-        except:
-            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
+	dirName = cm.app_path()
         pn = os.path.join(dirName, 'logo.png')
-        # 打包后目录发生变化,需要去掉library.zip目录
-        pn = pn.replace('library.zip','')
-        pn=os.path.abspath(pn)
-        if not os.path.exists(pn):return 
+        pn = os.path.abspath(pn)
+        if not os.path.exists(pn):
+	    return 
+
         bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
         shadow = wx.WHITE
         frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=1000,
@@ -183,13 +177,13 @@ class DownloadFrame(wx.Frame):
         # First we create and fill the info object
         info = wx.AboutDialogInfo()
         info.Name = APPNAME 
-        info.Version = cm.VERSION 
+        info.Version = tileserver.__version__ 
         info.Copyright = "(C) 2013 www.atolin.net 保留所有权利.\n\n%s\n" % self.GetLicense()
 
         strdes="将Google地图下载并转存为SuperMap缓存.\n\n"
         info.Description = wordwrap(strdes, 350, wx.ClientDC(self))
         info.WebSite = ("http://www.atolin.net", info.Name)
-        info.Developers = [ "wenyulin.lin@gmail.com","qq:42848918" ]
+        info.Developers = [ tileserver.__author__ ]
 
         #info.License = wordwrap(self.GetLicense(), 500, wx.ClientDC(self))
         # Then we call wx.AboutBox giving it that info object
@@ -206,7 +200,7 @@ class DownloadFrame(wx.Frame):
 	_tsk['name'] = self.txtName.GetValue()
 
 	lines = tsk.to_lines(_tsk)
-	dirName = self.appPath()
+	dirName = cm.app_path()
 	path = os.path.join(dirName, 'g.tsk')
 	f = open(path, 'w')
 	f.writelines(lines)
@@ -235,13 +229,15 @@ class DownloadFrame(wx.Frame):
 	    return False
 	self.saveDefaultTsk()
 
-	path = self.appPath()
+	path = cm.app_path()
 	tskPath = os.path.join(path, 'g.tsk')
 	g2s.Download([tskPath]).run() 
 
+	
+
     def logInit(self):
 	""" 初始化日志 """
-        dirName = self.appPath()
+        dirName = cm.app_path()
         name = time.strftime("%Y-%m-%d.log")
         logfile = os.path.join(dirName, "log", name)
         logfile = os.path.abspath(logfile)
@@ -263,20 +259,8 @@ class DownloadFrame(wx.Frame):
         logger.addHandler(fh)
         logger.addHandler(ch)
 
-        logger.info(cm.APPNAME_GOOGLE_SCI3D) 
-
-    def appPath(self):
-        try:
-            dirName = os.path.dirname(os.path.abspath(__file__))
-        except:
-            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-        # 打包后目录发生变化,需要去掉library.zip目录
-        dirName = dirName.replace("library.zip","")
-        return dirName
-
     def loadDefaultTsk(self):
-	dirName = self.appPath()
+	dirName = cm.app_path()
 	path = os.path.join(dirName, 'g.tsk')
 	if not os.path.isfile(path):
 	    logger.error("No file found, %s" % path)
@@ -307,7 +291,8 @@ class DownloadFrame(wx.Frame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(True)  # Create a new app, don't redirect stdout/stderr to a window.
-    frame = DownloadFrame(None, wx.ID_ANY, APPNAME+cm.VERSION) # A Frame is a top-level window.
+    title = APPNAME + "V"+ tileserver.__version__
+    frame = DownloadFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
 

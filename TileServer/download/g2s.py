@@ -10,6 +10,7 @@ import logging
 import time
 import argparse
 import math
+import ConfigParser
 
 import numpy
 from array import array
@@ -24,6 +25,7 @@ except:
     print("""You are using "old gen" bindings. gdal2tiles needs "new gen" bindings.""")
     sys.exit(1)
 
+import tileserver
 from tileserver.common import watermark as wmk
 from tileserver.common import sci as smsci
 from tileserver.common import srsweb
@@ -34,6 +36,7 @@ import tsk
 import scitemplate
 
 logger = logging.getLogger("g2s")
+APP_ID = 5
 
 #---------------------------------------------------------------------------
 def downOneTile(url, fp):
@@ -127,6 +130,10 @@ class Download(object):
         self.args = None
         self.argparse_init(argv)
         self.parse_task()
+	self.mpcnt = 1
+	self.config_init()
+
+	logger.info("Google Maps转超图缓存.") 
 
     def argparse_init(self, argv):
         if self.verifyLicense():
@@ -134,15 +141,16 @@ class Download(object):
         else:
             msg  = "\n免费试用版本."
 
+	msg = tileserver.__author__ + msg
         parser = argparse.ArgumentParser(
-		description="Download GoogleMaps to SuperMap tile files",
-                epilog="Author: 42848918@qq.com"+msg)
+		description="Google Maps转超图缓存.",
+                epilog=msg)
 
         parser.add_argument("file", default="g.tsk", help="task file.")
         self.args = parser.parse_args(argv)
 
     def verifyLicense(self):
-        dirName = self.appPath()
+        dirName = cm.app_path()
         fileList = os.listdir(dirName)
         for fp in fileList:
             if fp.endswith(".lic"):
@@ -153,14 +161,14 @@ class Download(object):
         if os.path.isfile(pn):
             lics = lic.License(pn)
             host = lics.hostName()
-            return lics.verify(host, cm.APPID_GOOGLE_SIC3D)
+            return lics.verify(host, APP_ID)
         else:
             return False
 
     def parse_task(self):
         taskfile = self.args.file
         if not os.path.isfile(taskfile):
-            taskfile = os.path.join(self.appPath(), "g.tsk")
+            taskfile = os.path.join(cm.app_path(), "g.tsk")
         if not os.path.isfile(taskfile):
             logger.error("任务文件未找到,%s" % taskfile)
             return None
@@ -248,8 +256,7 @@ class Download(object):
         self.saveSciFile(l, t, r, b, startl, endl)
 
         ini = cm.iniFile()
-        mpcnt = max(1, ini.mpcnt)
-        mplist = self.splitByProcess(l,t,r,b, startl, endl, mpcnt)
+        mplist = self.splitByProcess(l,t,r,b, startl, endl, self.mpcnt)
         picNums = 0
         for i in xrange(len(mplist)):
             picNums += len(mplist[i])
@@ -279,15 +286,14 @@ class Download(object):
         logger.info("End, All done.")
         logger.info(38 * "=")
 
-    def appPath(self):
-        try:
-            dirName = os.path.dirname(os.path.abspath(__file__))
-        except:
-            dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-        # 打包后目录发生变化,需要去掉library.zip目录
-        dirName = dirName.replace("library.zip","")
-        return dirName
+    def config_init(self):
+        config = ConfigParser.ConfigParser()
+	cfg_path = os.path.join(cm.app_path(), "g2s.cfg")
+        config.read(cfg_path)
+        if config is not None:
+            self.mpcnt = config.getint("config", "multiprocess")
+            self.mpcnt = max(1, self.mpcnt) # 确保大于1
+    
 
 
 # =============================================================================
@@ -322,7 +328,6 @@ def log_init():
     logger.addHandler(fh)
     logger.addHandler(ch)
 
-    logger.info("Download GoogleMaps tile files.") 
 
 def main():
     log_init()
