@@ -61,12 +61,7 @@ def from_lines(lines):
 		break
 
 	elif l=="out":
-	    if os.path.isdir(r):
-		_tsk['out'] = r
-	    else:
-		logging.error("No dir found, %s" % line)
-		break
-
+	    _tsk['out'] = r
 	elif l=="name":
 	    _tsk['name'] = r
 	elif l=="format":
