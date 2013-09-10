@@ -26,4 +26,4 @@ format = png
 # ver30 适用于iServer 2.0缓存
 # ver21 适用于IS.NET缓存
 # ver20 适用于IS.NET缓存
-version = ver40
+version = ver31

@@ -76,10 +76,10 @@ class DownloadFrame(wx.Frame):
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
 	label = wx.StaticText(panel, -1, "缓存类型:")
-	cache_list = self.get_cache_type()
+	cache_list = self.load_cache_type()
         self.ch = choice = wx.Choice(panel, -1, (100, 50), choices = cache_list)
 	choice.SetSelection(0)
-        #self.Bind(wx.EVT_CHOICE, self.EvtChoice, self.ch)
+        self.Bind(wx.EVT_CHOICE, self.EvtChoice, self.ch)
         box = wx.BoxSizer(wx.HORIZONTAL)
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(choice,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -114,7 +114,7 @@ class DownloadFrame(wx.Frame):
 	self.loadDefaultTsk()
         self.Show()
 
-    def get_cache_type(self):
+    def load_cache_type(self):
 	path = cm.app_path()
 	path = os.path.join(path, 'gui.cfg')
 	cache_list = []
@@ -123,6 +123,8 @@ class DownloadFrame(wx.Frame):
 	    config.read(path)
 	    cachetypes = config.get("gui", "cachetype")
 	    cache_list = cachetypes.split(',')
+	    cacheindexs = config.get("gui", "cacheindex")
+	    self.index_list = cacheindexs.split(',') 
 	return cache_list
 
     def verifyLicense(self):
@@ -211,34 +213,9 @@ class DownloadFrame(wx.Frame):
         # Then we call wx.AboutBox giving it that info object
         wx.AboutBox(info)
 
+    def EvtChoice(self, event):
+	pass
 
-    def saveDefaultTsk(self):
-	""" 保存以便下次启动加载值 """
-	out_path = self.txtOut.GetValue()
-	if not os.path.exists(out_path):
-	    os.makedirs(out_path)
-	
-	out_path = os.path.join(out_path, 'g.tsk') 
-	cfg_path = os.path.join(cm.app_path(), 'path.cfg')
-
-	config = ConfigParser.ConfigParser()
-	config.add_section('path')
-	config.set('path','path', out_path)
-	with open(cfg_path, 'wb') as configfile:
-	    config.write(configfile)
-
-	_tsk = {'bbox':'','level':'','name':'','format':'','version':'','out':'ver31'}
-	_tsk['bbox'] = self.txtIn.GetValue()
-	_tsk['level'] = self.txtLevels.GetValue()
-	_tsk['format'] = self.txtTileFormat.GetValue()
-	_tsk['out'] = self.txtOut.GetValue()
-	_tsk['name'] = self.txtName.GetValue()
-
-	lines = tsk.to_lines(_tsk)
-	f = open(out_path, 'w')
-	f.writelines(lines)
-	f.close()
-	return out_path
 
     def check(self):
         if self.txtIn.GetValue()=="":
@@ -262,8 +239,12 @@ class DownloadFrame(wx.Frame):
         if not self.check():
 	    return False
 
-	tskpath = self.saveDefaultTsk()
-	g2s.Download([tskpath]).run() 
+	if 2 == self.ch.GetSelection():
+	    logger.info("生成三维场景缓存")
+	else:
+	    logger.info("生成二维地图缓存")
+	    tskpath = self.saveDefaultTsk()
+	    g2s.Download([tskpath]).run() 
 
     def logInit(self):
 	""" 初始化日志 """
@@ -319,21 +300,50 @@ class DownloadFrame(wx.Frame):
 	if 'format' in _tsk:
 	    self.txtTileFormat.AppendText(_tsk['format'])
     
-    def config_path(self):
-	path = os.path.join(cm.app_path(), 'path.cfg')
-	if os.path.isfile(path):
-	    config = ConfigParser.ConfigParser()
-	    config.read(path)
-	    path = config.get("path", "path")
-	    return path
+    def saveDefaultTsk(self):
+	""" 保存以便下次启动加载值 """
+	out_path = self.txtOut.GetValue()
+	if not os.path.exists(out_path):
+	    os.makedirs(out_path)
+	
+	out_path = os.path.join(out_path, 'g.tsk') 
+	cfg_path = os.path.join(cm.app_path(), 'gui.cfg')
+
+	config = ConfigParser.ConfigParser()
+	config.read(cfg_path)
+	config.set('path','path', out_path)
+	with open(cfg_path, 'wb') as configfile:
+	    config.write(configfile)
+
+	idx = self.ch.GetSelection()
+	idx = int(self.index_list[idx])
+	if 31==idx:
+	    strver = 'ver31'
+	elif 30==idx:
+	    strver = 'ver30'
 	else:
-	    tsk_path = os.path.join(cm.app_path(), 'g.tsk')
-	    config = ConfigParser.ConfigParser()
-	    config.add_section('path')
-	    config.set('path','path', tsk_path)
-	    with open(path, 'wb') as configfile:
-		config.write(configfile)
-	    return tsk_path
+	    strver = 'ver31'
+
+	_tsk = {'bbox':'','level':'','name':'','format':'','version':'','out':'ver31'}
+	_tsk['bbox'] = self.txtIn.GetValue()
+	_tsk['level'] = self.txtLevels.GetValue()
+	_tsk['format'] = self.txtTileFormat.GetValue()
+	_tsk['out'] = self.txtOut.GetValue()
+	_tsk['name'] = self.txtName.GetValue()
+	_tsk['version'] = strver
+
+	lines = tsk.to_lines(_tsk)
+	f = open(out_path, 'w')
+	f.writelines(lines)
+	f.close()
+	return out_path
+
+    def config_path(self):
+	path = os.path.join(cm.app_path(), 'gui.cfg')
+	config = ConfigParser.ConfigParser()
+	config.read(path)
+	path = config.get("path", "path")
+	return path
 
 #---------------------------------------------------------------------------
 def main():
