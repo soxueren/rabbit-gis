@@ -18,9 +18,9 @@ if sys.platform == "win32":
 buildOpts = dict(
         compressed=True,
         includes=['numpy'],
-        excludes=['Tkinter','tcl'],
+        excludes=['Tkinter'],
         #zip_includes=['smSci/sci3d.sci3d'],
-        include_files=['logo.png','icon.ico','g.tsk'],
+        include_files=['logo.png','icon.ico','g.tsk','gui.cfg'],
         )
 
 exeTables = [Executable("g2s.py", \
