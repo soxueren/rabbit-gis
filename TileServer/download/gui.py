@@ -75,9 +75,19 @@ class DownloadFrame(wx.Frame):
         box.Add(txtTileFormat,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
+	label = wx.StaticText(panel, -1, "ª∫¥Ê¿‡–Õ:")
+	cache_list = self.get_cache_type()
+        self.ch = choice = wx.Choice(panel, -1, (100, 50), choices = cache_list)
+	choice.SetSelection(0)
+        #self.Bind(wx.EVT_CHOICE, self.EvtChoice, self.ch)
+        box = wx.BoxSizer(wx.HORIZONTAL)
+        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        box.Add(choice,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+
 	label=wx.StaticText(panel, -1, "ª∫¥Ê√˚≥∆:")
-        self.txtName = txtName = wx.TextCtrl(panel, -1, "", size=(540,-1))
-        box = wx.BoxSizer(wx.VERTICAL)
+        self.txtName = txtName = wx.TextCtrl(panel, -1, "", size=(140,-1))
+        box = wx.BoxSizer(wx.HORIZONTAL)
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(txtName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -103,6 +113,17 @@ class DownloadFrame(wx.Frame):
 
 	self.loadDefaultTsk()
         self.Show()
+
+    def get_cache_type(self):
+	path = cm.app_path()
+	path = os.path.join(path, 'gui.cfg')
+	cache_list = []
+	if os.path.isfile(path):
+	    config = ConfigParser.ConfigParser()
+	    config.read(path)
+	    cachetypes = config.get("gui", "cachetype")
+	    cache_list = cachetypes.split(',')
+	return cache_list
 
     def verifyLicense(self):
 	dirName = cm.app_path()

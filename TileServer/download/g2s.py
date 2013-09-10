@@ -133,7 +133,7 @@ class Download(object):
 	self.mpcnt = 1
 	self.config_init()
 
-	logger.info("Google Maps×ª³¬Í¼»º´æ.") 
+	logger.info("¹È¸èµØÍ¼×ª³¬Í¼»º´æ.") 
 
     def argparse_init(self, argv):
         if self.verifyLicense():
