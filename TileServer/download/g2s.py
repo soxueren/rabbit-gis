@@ -142,7 +142,7 @@ class Download(object):
             msg  = "\nÃâ·ÑÊÔÓÃ°æ±¾."
 
 	msg = tileserver.__author__ + msg
-        parser = argparse.ArgumentParser(description="Google Maps×ª³¬Í¼»º´æ.",
+        parser = argparse.ArgumentParser(description="¹È¸èµØÍ¼×ª³¬Í¼»º´æ.",
                 epilog=msg)
 
         parser.add_argument("file", default="g.tsk", help="task file.")
@@ -254,7 +254,6 @@ class Download(object):
         l,t,r,b = self.l, self.t, self.r, self.b
         self.saveSciFile(l, t, r, b, startl, endl)
 
-        ini = cm.iniFile()
         mplist = self.splitByProcess(l,t,r,b, startl, endl, self.mpcnt)
         picNums = 0
         for i in xrange(len(mplist)):

@@ -398,6 +398,14 @@ class smSci3d(smSci):
         self.replaceLevels()
         self.replaceExtName()
 
+    def write(self, sciPath):
+        fileName = self.mapName+'.sci3d'
+        desSciPath = os.path.join(sciPath, fileName)
+        f = open(desSciPath, 'w+')
+        for line in self.lines:
+            f.write(line+'\n')
+        f.close()
+
     @staticmethod
     def calcEndLevel(res):
         ''' º∆À„÷’÷π≤„º∂  '''
