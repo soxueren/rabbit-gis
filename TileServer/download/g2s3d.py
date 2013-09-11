@@ -30,17 +30,9 @@ from tileserver.common import srsweb
 from tileserver.common import comm as cm
 from tileserver.common import license as lic
 
+import g2s
 
-#---------------------------------------------------------------------------
-def appPath():
-    try:
-        dirName = os.path.dirname(os.path.abspath(__file__))
-    except:
-        dirName = os.path.dirname(os.path.abspath(sys.argv[0]))
-
-    # 打包后目录发生变化,需要去掉library.zip目录
-    dirName = dirName.replace("library.zip","")
-    return dirName
+logger = logging.getLogger("g2s3d")
 
 #---------------------------------------------------------------------------
 def tileInGoogle(row, col, level):
@@ -55,7 +47,7 @@ def loadTiles(rs,re,cs,ce, level, outPath):
     """ 将本地瓦片加载到内存 """
 
     tiles = {}
-    gm = wmt.GlobalMercator(256)
+    gm = srsweb.GlobalMercator(256)
     for row in range(rs, re+1):
         for col in range(cs, ce+1):
             if not tileInGoogle(row, col, level):
@@ -139,9 +131,9 @@ def productSmTile(row, col, level, outPath, tiles, haswatermark):
     gdata = numpy.zeros((256, 256), numpy.uint8)
     bdata = numpy.zeros((256, 256), numpy.uint8)
     
-    gm = wmt.GlobalMercator(256)
+    gm = srsweb.GlobalMercator(256)
     tmp = os.path.join(outPath, "xxx")
-    l,t,r,b = sci3d.smSci3d.calcBndByRowCol(row, col, level)
+    l,t,r,b = smsci.smSci3d.calcBndByRowCol(row, col, level)
 
     levelRes = (180.0/256) / (1<<level) # i层分辨率
     halfRes = levelRes*0.5
@@ -165,7 +157,7 @@ def productSmTile(row, col, level, outPath, tiles, haswatermark):
     mem_ds.GetRasterBand(2).WriteArray(gdata)
     mem_ds.GetRasterBand(3).WriteArray(bdata)
 
-    fp = sci3d.smSci3d.calcTileName(level, row, col, outPath)+".png"
+    fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+".png"
     if not os.path.exists(os.path.dirname(fp)):
         os.makedirs(os.path.dirname(fp))
 
@@ -180,16 +172,16 @@ def productSmTile(row, col, level, outPath, tiles, haswatermark):
     del mem_ds, rdata, gdata, bdata 
 
 #---------------------------------------------------------------------------
-def runProcess(bboxs, outPath, tmpPath, q, pindex, haswatermark):
+def runProcess(bboxs, outPath, tmpPath,pindex, haswatermark):
     """ 多进程处理切图  """
     logger = logging.getLogger("")
 
-    gm = wmt.GlobalMercator(256)
+    gm = srsweb.GlobalMercator(256)
     url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
     for level, row, col in bboxs:
         levelRes = (180.0/256) / (1<<level) # i层分辨率
         halfRes = levelRes*0.5
-        l,t,r,b = sci3d.smSci3d.calcBndByRowCol(row, col,level)
+        l,t,r,b = smsci.smSci3d.calcBndByRowCol(row, col,level)
         x,y = gm.LatLonToMeters(t-halfRes, l+halfRes)
         tx0, ty0 = gm.MetersToTile(x,y, level+1)
         gx0, gy0 = gm.GoogleTile(tx0, ty0, level+1)
@@ -205,110 +197,26 @@ def runProcess(bboxs, outPath, tmpPath, q, pindex, haswatermark):
         logger.info("%d,%d" % (row, col))
         del tiles
 
-def verifyLicense():
-    dirName = cm.app_path()
-    fileList = os.listdir(dirName)
-    for fp in fileList:
-        if fp.endswith(".lic"):
-            dirName = os.path.join(dirName, fp)
-            break
-
-    pn = os.path.abspath(dirName)
-    if os.path.isfile(pn):
-        lics = lic.License(pn)
-        host = lics.hostName()
-        return lics.verify(host, cm.APPID_GOOGLE_SIC3D)
-    else:
-        return False
 
 
 # =============================================================================
-class Download(object):
+class Download3d(g2s.Download):
     """ 图像信息 """
 
-    def __init__(self, taskFile=None):
-        self.task = taskFile
-        self.l, self.t, self.r, self.b = -180.0, 90.0, -180.0, 90.0
-        self.level = 0
-        self.out = ""
-        self.tmp = ""
-        self.name = ""
-        self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
-        self.levels = []
-        #logging = logging.getLogger("Download")
-        self.haswatermark = False if verifyLicense() else True
-
-    def parser(self):
-        if self.task is None: return
-
-        if not os.path.isfile(self.task): return 
-        f = open(self.task, "r")
-        for line in f:
-            line = line.strip()
-            if line=="" or line[0]=="#":continue
-            lr = line.split("=")
-            if len(lr)==2:
-                l,r = lr[0].strip().lower(), lr[1].strip()
-                if l=="bbox":
-                    bbox = r.split(",")
-                    if len(bbox)==4:
-                        for i in range(4):
-                            bbox[i] = bbox[i].strip()
-
-                        if bbox[0]: self.l = float(bbox[0]) 
-                        if bbox[1]: self.t = float(bbox[1]) 
-                        if bbox[2]: self.r = float(bbox[2]) 
-                        if bbox[3]: self.b = float(bbox[3]) 
-                elif l=="level":
-                    levels = r.split(",")
-                    for level in levels:
-                        level = level.strip()
-                        if not level.isdigit(): continue
-                        level = int(level)
-                        if level in self.levels: continue
-                        self.levels.append(level)
-                elif l=="out":
-                    if os.path.isdir(r):
-                        self.out = r
-                    
-                    if self.out=="":
-                        self.out = appPath()
-
-                elif l=="name":
-                    self.name = r
-        f.close()
-
-    def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
-        """ 根据进程数目,瓦片张数划分合理的任务 """
-        tasks = []
-        for i in range(startl, endl+1):
-            rs,re,cs,ce = sci3d.smSci3d.calcRowCol(l,t,r,b, i) 
-            for row in range(rs, re+1):
-                for col in range(cs, ce+1):
-                    tasks.append((i, row, col))
-
-        totalNums = len(tasks)
-        splitNums = totalNums / mpcnt
-        mplist = []
-        add = 0
-        for i in range(mpcnt):
-            mplist.append( tasks[i*splitNums:(i+1)*splitNums] )
-            add += splitNums
-
-        if add<totalNums:
-            mplist[-1].extend( tasks[add-totalNums:] )
-        return mplist
+    def __init__(self, argv):
+	super(Download3d, self).__init__(argv)
 
     def saveSciFile(self,l,t,r,b, startl, endl):
         """ 生成SuperMap缓存配置文件 """
 
-        rs,re,cs,ce = sci3d.smSci3d.calcRowCol(l,t,r,b,endl) 
+        rs,re,cs,ce = smsci.smSci3d.calcRowCol(l,t,r,b,endl) 
         outPath = os.path.join(self.out, self.name)
-        if not os.path.exists(outPath): os.makedirs(outPath)
+        if not os.path.exists(outPath): 
+	    os.makedirs(outPath)
         
         levelRes = (180.0/256) / (1<<endl) # i层分辨率
         halfRes = levelRes*0.5
-        gm = wmt.GlobalMercator(256)
+        gm = srsweb.GlobalMercator(256)
 
         x,y = gm.LatLonToMeters(t-halfRes, l+halfRes)
         lat, lon = gm.MetersToLatLon(x,y)
@@ -319,42 +227,41 @@ class Download(object):
         b = max(b, lat)
 
         mapbnd = l,t,r,b
-        w,h = sci3d.smSci3d.calcWidthHeight(l,t,r,b, endl)
+        w,h = smsci.smSci3d.calcWidthHeight(l,t,r,b, endl)
 
-        sci3df = sci3d.smSci3d()
-        sci3df.setParams(self.name, mapbnd, mapbnd, "")
-        sci3df.setLevels(startl, endl)
-        sci3df.setExtName("png")
-        sci3df.setWidthHeight(w,h)
-        sci3df.saveSciFile(outPath)
+        _sci = smsci.smSci3d()
+        _sci.setParams(self.name, mapbnd, mapbnd, "")
+        _sci.setLevels(startl, endl)
+        _sci.setExtName(self.file_format)
+        _sci.setWidthHeight(w,h)
+        _sci.saveSciFile(outPath)
 
-    def doJob(self, startl, endl):
+    def run(self):
+        startl, endl = self.levels[0], self.levels[-1]
         l,t,r,b = self.l, self.t, self.r, self.b
         self.saveSciFile(l, t, r, b, startl, endl)
 
-        ini = cm.iniFile()
-        mpcnt = max(1, ini.mpcnt)
-        mplist = self.splitByProcess(l,t,r,b, startl, endl, mpcnt)
+        mplist = self.splitByProcess(l,t,r,b, startl, endl, self.mpcnt)
         picNums = 0
         for i in xrange(len(mplist)):
             picNums += len(mplist[i])
 
-        logging.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
-        logging.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
+        logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
+        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
 
         outPath = os.path.join(self.out, self.name)
-        if not os.path.exists(outPath): os.makedirs(outPath)
+        if not os.path.exists(outPath): 
+	    os.makedirs(outPath)
         tmpPath = os.path.join(outPath, "xxx") 
         
-        logging.info("Start.")
+        logger.info("Start.")
         
         plist = []
         m = mp.Manager()
-        q = m.Queue()
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
-            #def runProcess(bboxs, outPath, tmpPath, q, pindex, haswatermark):
-            p = mp.Process(target=runProcess, args=(bboxs, outPath, tmpPath, q, i+1, self.haswatermark))
+            p = mp.Process(target=runProcess, 
+		    args=(bboxs, outPath, tmpPath, i+1, self.haswatermark))
             plist.append( (p, len(bboxs)) )
 
         for p, cnt in plist:
@@ -364,65 +271,17 @@ class Download(object):
             p.join()
             logging.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
 
-        logging.info("End, All done.")
-        logging.info(38 * "=")
-# =============================================================================
-def run(taskfile):
-    down = Download(taskfile)
-    down.parser()
-    startl, endl = down.levels[0], down.levels[-1]
-    down.doJob(startl, endl)
+        logger.info("End, All done.")
+        logger.info(38 * "=")
 
 # =============================================================================
 
-def main(taskfile):
-    dirName = appPath()
-    #name =  time.strftime("%Y-%m-%d %H-%M-%S.log")
-    name = time.strftime("%Y-%m-%d.log")
-    logfile = os.path.join(dirName, "log", name)
-    logfile = os.path.abspath(logfile)
-    if not os.path.exists(os.path.dirname(logfile)):
-        os.makedirs(os.path.dirname(logfile))
+def main():
+    g2s.log_init()
+    Download3d(sys.argv[1:]).run()
 
-    # create logger with "spam_application"
-    logger = logging.getLogger("")
-    logger.setLevel(logging.DEBUG)
-
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler(logfile)
-    fh.setLevel(logging.DEBUG)
-
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(fmt="%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S >")
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-
-    # add the handlers to the logger
-    logger.addHandler(fh)
-    logger.addHandler(ch)
-
-    logger.info(cm.APPNAME_GOOGLE_SCI3D) 
-    if os.path.isfile(taskfile):
-        run(taskfile)
-    else:
-        logger.error("file not found, %s" % taskfile)
-
+# =============================================================================
 if __name__=="__main__":
     mp.freeze_support()
-
-    if verifyLicense():
-        msg  =strlic = "\n授权版本 %s." % lic.License.hostName()
-    else:
-        msg  = "\n免费试用版本."
-
-    parser = argparse.ArgumentParser(description="Download GoogleMaps to SuperMap tile files",
-            epilog="Author: 42848918@qq.com"+msg)
-    parser.add_argument("-f", "--file", default="g.tsk", help="task file.")
-
-    args = parser.parse_args()
-    main(args.file)
+    main()
 

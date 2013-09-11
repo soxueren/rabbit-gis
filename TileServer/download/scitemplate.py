@@ -3,7 +3,7 @@ sci3d = [
 '''<sml:Version>1.000000</sml:Version>''',
 '''<sml:NetCachePath/>''',
 '''<sml:LocalCachePath/>''',
-'''<sml:CacheName>[CacheName]</sml:CacheName>''',
+'''<sml:CacheName>[value]</sml:CacheName>''',
 '''<sml:StoreType>PureFiles</sml:StoreType>''',
 '''<sml:Description/>''',
 '''<sml:FileExtentName>[FileExtentName]</sml:FileExtentName>''',
