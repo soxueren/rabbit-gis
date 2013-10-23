@@ -200,11 +200,11 @@ def runProcess(bboxs, outPath, tmpPath,pindex, haswatermark):
 
 
 # =============================================================================
-class Download3d(g2s.Download):
+class Download(g2s.Download):
     """ 图像信息 """
 
     def __init__(self, argv):
-	super(Download3d, self).__init__(argv)
+	super(Download, self).__init__(argv)
 
     def saveSciFile(self,l,t,r,b, startl, endl):
         """ 生成SuperMap缓存配置文件 """
@@ -278,7 +278,7 @@ class Download3d(g2s.Download):
 
 def main():
     g2s.log_init()
-    Download3d(sys.argv[1:]).run()
+    Download(sys.argv[1:]).run()
 
 # =============================================================================
 if __name__=="__main__":
