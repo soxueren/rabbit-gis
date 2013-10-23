@@ -15,7 +15,7 @@ from tileserver.common import license as lic
 from tileserver.common import comm as cm
 import tsk
 import g2s
-
+import g2s3d
 
 logger = logging.getLogger("")
 
@@ -241,6 +241,8 @@ class DownloadFrame(wx.Frame):
 
 	if 2 == self.ch.GetSelection():
 	    logger.info("生成三维场景缓存")
+	    tskpath = self.saveDefaultTsk()
+	    g2s3d.Download([tskpath]).run() 
 	else:
 	    logger.info("生成二维地图缓存")
 	    tskpath = self.saveDefaultTsk()
