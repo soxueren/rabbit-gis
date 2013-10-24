@@ -8,8 +8,6 @@ buildPath=os.path.join(os.path.dirname(__file__), 'build')
 for root, dirs, files in os.walk(buildPath):
     for name in files:
         os.remove(os.path.join(root, name))
-    #for name in dirs:
-    #   os.removedirs(os.path.join(root, name))
 
 base = None
 if sys.platform == "win32":
@@ -25,6 +23,9 @@ buildOpts = dict(
 
 exeTables = [Executable("g2s.py", \
                         targetName='g2s.exe',\
+                        icon='icon.ico',base=None), \
+	    Executable("g2s3d.py", \
+                        targetName='g2s3d.exe',\
                         icon='icon.ico',base=None), \
             Executable("gui.py", \
                         targetName='gui.exe',\
