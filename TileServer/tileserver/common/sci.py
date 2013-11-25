@@ -443,15 +443,17 @@ class smSci3d(smSci):
     
     @staticmethod
     def calcRowCol(l,t,r,b,level):
-        ''' 计算全球剖分行列号 '''
+        ''' 计算l,t,r,b范围所覆盖的,全球剖分行列号 '''
         level0Res = 180.0/256 # 0层分辨率 
         levelRes = level0Res/(1<<level) # i层分辨率
+	halflevelRes = levelRes*0.5# 挺重要de... 
         '''
         startCol = math.floor((l-(-180.0)) / levelRes / 256)
         endCol = math.ceil((r-(-180.0)) / levelRes / 256)
         startRow = math.floor((90.0-t) / levelRes / 256)
         endRow = math.ceil((90.0-b) / levelRes / 256)
         '''
+	l,t,r,b = l+halflevelRes,t-halflevelRes,r-halflevelRes,b+halflevelRes 
         startCol = math.floor((l-(-180.0)) / levelRes / 256)
         endCol = math.floor((r-(-180.0)) / levelRes / 256)
         startRow = math.floor((90.0-t) / levelRes / 256)
@@ -566,7 +568,7 @@ def unitTest():
 
     sci = smSci3d()
     sci.setParams(mapName, mapBnd, mapBnd, '')
-    sci.setLevels(startl, endl)
+    sci.setLevels(0, 0)
     sci.setWidthHeight(w,h)
     sci.saveSciFile(sciPath)
     pass
@@ -621,8 +623,8 @@ def unitTestSci():
     sci.saveSciFile(sciPath)
 
 if __name__=='__main__':
-    #unitTest()
+    unitTest()
     #unitTestLevel()
     #unitTestSct()
-    unitTestSci()
+    #unitTestSci()
     #unitTestRowCol()
