@@ -44,8 +44,7 @@ def downOneTile(url, fp):
     try:
         f = urllib2.urlopen(url)
     except urllib2.URLError, e:
-        print url 
-        print e.reason
+        print url, e.reason
         return None
     return f.read()
 
@@ -108,7 +107,7 @@ def download_tile(mapname, level, row, col, outPath, ext, strurl, ver, haswaterm
         del out_drv, mem_drv
 
 #---------------------------------------------------------------------------
-def runProcess(bboxs, mapname, outPath, ext, pindex, ver, url,haswatermark):
+def multi_process_fun(bboxs, mapname, outPath, ext, pindex, ver, url,haswatermark):
     """ 多进程处理切图  """
     for level, row, col in bboxs:
         download_tile(mapname, level, row, col, outPath,ext, url, ver, haswatermark)
@@ -197,6 +196,8 @@ class Download(object):
 		self.sm_cache_ver = smsci.VER21
 	    elif r=="ver20":
 		self.sm_cache_ver = smsci.VER20
+	if 'overwrite' in _tsk:
+	    self.over_write = True if _tsk['overwrite'].lower()=='true' else False
 
     def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
         """ 根据进程数目,瓦片张数划分合理的任务 """
@@ -270,7 +271,7 @@ class Download(object):
 
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
-            p = mp.Process(target=runProcess, args=(bboxs,self.name, self.out, \
+            p = mp.Process(target=multi_process_fun, args=(bboxs,self.name, self.out, \
 		self.file_format,i+1, self.sm_cache_ver,self.url,self.haswatermark))
             plist.append( (p, len(bboxs)) )
 
@@ -291,8 +292,7 @@ class Download(object):
         if config is not None:
             self.mpcnt = config.getint("config", "multiprocess")
             self.mpcnt = max(1, self.mpcnt) # 确保大于1
-    
-
+            self.url = config.get("image", "url")
 
 # =============================================================================
 def log_init():

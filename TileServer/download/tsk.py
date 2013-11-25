@@ -68,6 +68,8 @@ def from_lines(lines):
 	    _tsk['format'] = r
 	elif l=="version":
 	    _tsk['version'] = r
+	elif l=="overwrite":
+	    _tsk['overwrite'] = r
 	
     return _tsk
 
@@ -85,6 +87,8 @@ def to_lines(_tsk):
 	lines.append("format=%s\n" % _tsk['format'])
     if 'version' in _tsk:
 	lines.append("version=%s\n" % _tsk['version'])
+    if 'overwrite' in _tsk:
+	lines.append("overwrite=%s\n" % _tsk['overwrite'])
     return lines
 	
 

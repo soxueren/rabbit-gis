@@ -27,3 +27,6 @@ format = png
 # ver21 适用于IS.NET缓存
 # ver20 适用于IS.NET缓存
 version = ver31
+
+# 是否覆盖已生成缓存,默认为不覆盖
+overwrite = false

@@ -78,14 +78,19 @@ class DownloadFrame(wx.Frame):
         box.Add(txtTileFormat,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-        label = wx.StaticText(panel, -1, "缓存类型:")
-        cache_list = self.load_cache_type()
-        self.ch = choice = wx.Choice(panel, -1, (100, 50), choices = cache_list)
-        choice.SetSelection(0)
-        box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-        box.Add(choice,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        def _add_cache_type(panel, sizer):
+            label = wx.StaticText(panel, -1, "缓存类型:")
+            cache_list = self.load_cache_type()
+            self.ch = choice = wx.Choice(panel, -1, (100, 50), choices = cache_list)
+            choice.SetSelection(0)
+            box = wx.BoxSizer(wx.HORIZONTAL)
+            box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            box.Add(choice,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            cb = self.cb = wx.CheckBox(panel, -1, "是否覆盖已生成瓦片")#, (65, 60), (150, 20), wx.NO_BORDER)
+            #cb.SetValue(True)
+            box.Add(cb,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            sizer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+        _add_cache_type(panel, sizerIn)
 
         label=wx.StaticText(panel, -1, "缓存名称:")
         self.txtName = txtName = wx.TextCtrl(panel, -1, "", size=(190,-1))
@@ -93,6 +98,7 @@ class DownloadFrame(wx.Frame):
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(txtName,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+
 
         self.psizer=sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(sizerIn, 0, wx.EXPAND|wx.ALL, 25)
@@ -111,9 +117,9 @@ class DownloadFrame(wx.Frame):
         sizer.Fit(self)
         
         self.logInit()
-        logger.info("Google Maps转SuperMap缓存") 
+        logger.info("Google Maps 转 SuperMap 缓存...") 
 
-        self.loadDefaultTsk()
+        self.load_default_task()
         self.verify_license()
         self.Show()
 
@@ -231,7 +237,7 @@ class DownloadFrame(wx.Frame):
         if not self.check():
             return None
 
-        tskpath = self.saveDefaultTsk()
+        tskpath = self.save_default_task()
         if 2 == self.ch.GetSelection():
             logger.info("生成三维场景缓存")
             g2s3d.Download([tskpath]).run() 
@@ -263,7 +269,7 @@ class DownloadFrame(wx.Frame):
         logger.addHandler(fh)
         logger.addHandler(ch)
 
-    def loadDefaultTsk(self):
+    def load_default_task(self):
         path = self.config_path()
         if not os.path.isfile(path):
             path = os.path.join(cm.app_path(), 'g.tsk')
@@ -292,8 +298,20 @@ class DownloadFrame(wx.Frame):
             self.txtName.AppendText(_tsk['name'])
         if 'format' in _tsk:
             self.txtTileFormat.AppendText(_tsk['format'])
+
+        def _select(ver, indexs):
+            for i in xrange(len(indexs)):
+                if indexs[i] in ver:
+                    return i 
+            return 0
+        if 'version' in _tsk:
+            ver = _tsk['version']
+            idx = _select(ver, self.index_list)
+            self.ch.SetSelection(idx)
+        if 'overwrite' in _tsk:
+            self.cb.SetValue( True if _tsk['overwrite'].lower()=='true' else False)
     
-    def saveDefaultTsk(self):
+    def save_default_task(self):
         """ 保存以便下次启动加载值 """
         out_path = self.txtOut.GetValue()
         if not os.path.exists(out_path):
@@ -314,6 +332,8 @@ class DownloadFrame(wx.Frame):
             strver = 'ver31'
         elif 30==idx:
             strver = 'ver30'
+        elif 33==idx:
+            strver = 'ver33'
         else:
             strver = 'ver31'
 
@@ -324,6 +344,7 @@ class DownloadFrame(wx.Frame):
         _tsk['out'] = self.txtOut.GetValue()
         _tsk['name'] = self.txtName.GetValue()
         _tsk['version'] = strver
+        _tsk['overwrite'] = 'True' if self.cb.GetValue() else 'False'
 
         lines = tsk.to_lines(_tsk)
         f = open(out_path, 'w')
