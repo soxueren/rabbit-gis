@@ -262,6 +262,7 @@ class GlobalMercator(object):
         return quadKey
 
     def calcRowColByLatLon(self, l,t,r,b, zoom):
+	""" 第zoom级别,范围l,t,r,t所覆盖的google瓦片 """
         l, t = self.LatLonToMeters(t, l)
         r, b = self.LatLonToMeters(b, r)
 
@@ -273,28 +274,28 @@ class GlobalMercator(object):
         return (rs, re, cs, ce)
 
     def calcSmCellIndex(self, x, y, scale):
-	""" 根据瓦片行列号(Google)计算SM中IS.NET缓存策略索引编号 """
-	def _zoom(scale):
-	    for z in xrange(21):
-		if scale==self.Scale(z):
-		    return z
-	    return None
-	zoom = _zoom(scale)
-	if zoom is None:
-	    logger.error("比例尺%lf,未能转换对应层级")
+        """ 根据瓦片行列号(Google)计算SM中IS.NET缓存策略索引编号 """
+        def _zoom(scale):
+            for z in xrange(21):
+                if scale==self.Scale(z):
+                    return z
+            return None
+        zoom = _zoom(scale)
+        if zoom is None:
+            logger.error("比例尺%lf,未能转换对应层级")
 
-	cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
-	cell_unit = 400
-	if (cell_cnt/20000.0)*(cell_cnt/20000.0) > cell_unit*cell_unit:
-	    cell_unit = 20000
-	elif (cell_cnt/20000.0)*(cell_cnt/20000.0) > 100*100:
-	    cell_unit = 20000
-	elif cell_cnt>20000:
-	    while((cell_cnt/cell_unit)*(cell_cnt/cell_unit) > (50*50)):
-		cell_unit *= 2
-	else:
-	    cell_unit = 400 
-	return x/cell_unit, y/cell_unit
+        cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
+        cell_unit = 400
+        if (cell_cnt/20000.0)*(cell_cnt/20000.0) > cell_unit*cell_unit:
+            cell_unit = 20000
+        elif (cell_cnt/20000.0)*(cell_cnt/20000.0) > 100*100:
+            cell_unit = 20000
+        elif cell_cnt>20000:
+            while((cell_cnt/cell_unit)*(cell_cnt/cell_unit) > (50*50)):
+                cell_unit *= 2
+        else:
+            cell_unit = 400 
+        return x/cell_unit, y/cell_unit
 
 #---------------------
 
@@ -413,5 +414,11 @@ def unitTest():
     px, py = gm.MetersToPixels(x,y,0)
     print "px:%d, py:%d" % (px,py)
 
+def unitcalcRowColByLatLon():
+    l,t,r,b, zoom = -180,90,180,-90,0
+    gm = GlobalMercator(256)
+    print gm.calcRowColByLatLon(l,t,r,b,zoom)
+
 if __name__=="__main__":
-    unitTest()
+    #unitTest()
+    unitcalcRowColByLatLon()
