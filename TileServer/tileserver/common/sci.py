@@ -330,13 +330,12 @@ class smSci3d(smSci):
         self.sciTmpFile=SCI3D
         self.width=1.0
         self.height=1.0
-        self.startl=1
-        self.endl=2
+        self.levels = list()
         self.extName='png'
         self.lines=scitemplate.sci3d # sicÎÄ¼þÄÚÈÝ
 
-    def setLevels(self, s, e):
-        self.startl, self.endl=s,e
+    def setLevels(self, level_list):
+        self.levels.extend(level_list)
 
     def setExtName(self, ext):
         self.extName=ext
@@ -373,15 +372,16 @@ class smSci3d(smSci):
         return True
     
     def replaceLevels(self):
-        ils, ile=self.startl, self.endl
         for i in xrange(len(self.lines)):
             line=self.lines[i]
             if '[Level]' in line:
-                newline = line.replace('[Level]', ('%d' % ils))
+                newline = line.replace('[Level]', ('%d' % self.levels[0]))
                 self.lines[i]=newline
-                for j in xrange(1, ile-ils+1):
-                    newline = line.replace('[Level]', ('%d' % (ils+j)))
-                    self.lines.insert(i+j,newline)
+		_idx = 1
+		for j in self.levels[1:]:
+                    newline = line.replace('[Level]', ('%d' % j))
+                    self.lines.insert(i+_idx,newline)
+		    _idx = _idx+1
                 return True
 
     def replaceExtName(self):
@@ -568,7 +568,7 @@ def unitTest():
 
     sci = smSci3d()
     sci.setParams(mapName, mapBnd, mapBnd, '')
-    sci.setLevels(0, 0)
+    sci.setLevels([0])
     sci.setWidthHeight(w,h)
     sci.saveSciFile(sciPath)
     pass
@@ -586,7 +586,7 @@ def unitTestSct():
 
     sci = smSct()
     sci.setParams(mapName, mapBnd, mapBnd, '')
-    sci.setLevels(startl, endl)
+    sci.setLevels([startl, endl])
     sci.setWidthHeight(w,h)
     sci.saveSciFile(sciPath)
 

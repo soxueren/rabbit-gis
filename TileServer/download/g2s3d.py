@@ -200,15 +200,13 @@ class Download(g2s.Download):
     def __init__(self, argv):
         super(Download, self).__init__(argv)
 
-    def saveSciFile(self,l,t,r,b, startl, endl):
+    def save_sci_file(self,l,t,r,b):
         """ 生成SuperMap缓存配置文件 """
-
-        rs,re,cs,ce = smsci.smSci3d.calcRowCol(l,t,r,b,endl) 
         outPath = os.path.join(self.out, self.name)
         if not os.path.exists(outPath): 
             os.makedirs(outPath)
         
-        levelRes = (180.0/256) / (1<<endl) # i层分辨率
+        levelRes = (180.0/256) / (1<<self.levels[-1]) # i层分辨率
         halfRes = levelRes*0.5
         gm = srsweb.GlobalMercator(256)
 
@@ -221,19 +219,19 @@ class Download(g2s.Download):
         b = max(b, lat)
 
         mapbnd = l,t,r,b
-        w,h = smsci.smSci3d.calcWidthHeight(l,t,r,b, endl)
+        w,h = smsci.smSci3d.calcWidthHeight(l,t,r,b, self.levels[-1])
 
         _sci = smsci.smSci3d()
         _sci.setParams(self.name, mapbnd, mapbnd, "")
-        _sci.setLevels(startl, endl)
+        _sci.setLevels(self.levels)
         _sci.setExtName(self.file_format)
         _sci.setWidthHeight(w,h)
         _sci.saveSciFile(outPath)
 
     def run(self):
-        def _calc_sm_tiles(l,t,r,b,startl,endl):
+        def _calc_sm_tiles(l,t,r,b,l_list):
             tiles = []
-            for i in xrange(startl, endl+1):
+            for i in l_list:
                 rs,re,cs,ce = smsci.smSci3d.calcRowCol(l,t,r,b,i)
                 for row in range(rs, re+1):
                     for col in range(cs, ce+1):
@@ -253,14 +251,13 @@ class Download(g2s.Download):
                 mplist[-1].extend( tasks[add_cnt-totalNums:] )
             return mplist
         
-        startl, endl = self.levels[0], self.levels[-1]
         l,t,r,b = self.l, self.t, self.r, self.b
-        self.saveSciFile(l, t, r, b, startl, endl)
-        sm_tiles = _calc_sm_tiles(l,t,r,b,startl,endl)
+        self.save_sci_file(l, t, r, b)
+        sm_tiles = _calc_sm_tiles(l,t,r,b,self.levels)
         mplist = _split_by_process(sm_tiles, self.mpcnt)
 
         logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
-        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, len(sm_tiles)))
+        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (self.levels[0], self.levels[-1], len(sm_tiles)))
     
         outPath = os.path.join(self.out, self.name)
         tmp_path = os.path.join(outPath, "xxx") 
@@ -295,7 +292,7 @@ class Download(g2s.Download):
             p.join()
             logger.info("子进程(id=%d), 瓦片张数(%d), 已完成." % (p.pid, cnt) )
 
-        #_create_del_temp(tmp_path, True)
+        _create_del_temp(tmp_path, True)
         logger.info("End, All done.")
         logger.info(38 * "=")
 
