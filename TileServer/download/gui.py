@@ -243,7 +243,7 @@ class DownloadFrame(wx.Frame):
             g2s3d.Download([tskpath]).run() 
         else:
             logger.info("生成二维地图缓存")
-            g2s.Download([tskpath]).run() 
+            #g2s.Download([tskpath]).run() 
 
     def logInit(self):
         """ 初始化日志 """
