@@ -58,11 +58,10 @@ class License(object):
             for con in cons:
                 lr = con.split("=")
                 if len(lr) == 2:
-                    l=lr[0].strip().lower()
-                    r=lr[1].strip().lower()
+                    l,r =lr[0].strip().lower(), lr[1].strip().lower()
                     if l=="hostname":
                         self.host=r
-                    elif l=="apps":
+                    elif l=="app_name":
                         self.app_name=r
             return self.host==hostName.lower() and self.app_name==app_name 
         return False
@@ -89,7 +88,7 @@ def verify_license(host, app_name):
     _path = "%s.lic" % host
     lics = License(_path)
     if lics.verify(host, app_name):
-        print '加密完成:', lics.decrypted
+        print '加密成功,', lics.decrypted
     else:
         print '加密失败.'
     
