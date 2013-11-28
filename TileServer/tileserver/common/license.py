@@ -1,7 +1,7 @@
 # --*-- coding:gbk --*--
 import os, sys
 import rsa
-import comm as cm
+import argparse
 
 # pub, priv = rsa.newkeys(512) 
 n = 10449857015422111869994689290495734599294620868031159468330107986132955704778293082393535355189959482153707721248713281917366331660414312517080591900364657L
@@ -16,19 +16,18 @@ class License(object):
     def __init__(self, lic=""):
         self.lic = lic
         self.host = ""
+        self.app_name = ""
         self.licNums = 0
         self.decrypted = ""
 
     def setHost(self, hostName):
         self.host = hostName
 
-    def addApp(self, appid):
-        appids = (cm.APPID_SCI3D, cm.APPID_SCT)
-        if appid in appids:
-            self.licNums |= appid
+    def setApp(self, app_name):
+        self.app_name = app_name
     
     def create(self):
-        msg = "hostname=%s;apps=%d" % (self.host, self.licNums)
+        msg = "hostname=%s;app_name=%s" % (self.host, self.app_name)
         pub_key = rsa.PublicKey(n,e)
         encrypted = rsa.encrypt(msg, pub_key)
         with open(self.lic, "wb") as licfile:
@@ -42,7 +41,7 @@ class License(object):
             return hostname  
         return "" 
 
-    def verify(self, hostName, appid):
+    def verify(self, hostName, app_name):
         global n,e,d,p,q
         priv_key = rsa.PrivateKey(n,e,d,p,q)
         with open(self.lic, "rb") as licfile:
@@ -64,33 +63,38 @@ class License(object):
                     if l=="hostname":
                         self.host=r
                     elif l=="apps":
-                        if r.isdigit():
-                            self.licNums=int(r)
-            return self.host==hostName.lower() and self.licNums&appid 
+                        self.app_name=r
+            return self.host==hostName.lower() and self.app_name==app_name 
         return False
 
-def unitLicense(host):
-    #host = License.hostName()
-    licFile = "%s.lic" % host
-    lics = License(licFile)
+def argparse_init():
+    """ 解析命令行参数 """
+    parser = argparse.ArgumentParser(description="生成许可工具.",
+            epilog="Author: wenyu.lin@autonavi.com")
+    parser.add_argument("app", default=sys.stdin,
+            help="app name.")
+    parser.add_argument("host", default=sys.stdin,
+            help="host name.")
+    args = parser.parse_args()
+    return args
+
+def creat_license(host, app_name):
+    _path = "%s.lic" % host
+    lics = License(_path)
     lics.setHost(host)
-    lics.addApp(cm.APPID_SCI3D)
-    lics.addApp(cm.APPID_SCT)
-    lics.addApp(cm.APPID_GOOGLE_SIC3D)
+    lics.setApp(app_name)
     lics.create()
 
-def unitVerify(host):
-    licFile = "%s.lic" % host
-    lics = License(licFile)
-    host = License.hostName()
-    appid = cm.APPID_SCI3D
-    lics.verify(host, appid)
-    print 'encrypted is:',lics.decrypted
+def verify_license(host, app_name):
+    _path = "%s.lic" % host
+    lics = License(_path)
+    if lics.verify(host, app_name):
+        print '加密完成:', lics.decrypted
+    else:
+        print '加密失败.'
     
 if __name__=="__main__":
-    host = License.hostName()
-    if len(sys.argv)==2:
-        host = sys.argv[1]
-    print 'host name is:', host
-    unitLicense(host)
-    unitVerify(host)
+    args = argparse_init()
+    host = args.host if args.host else License.hostName()
+    creat_license(host, args.app)
+    verify_license(host, args.app)
