@@ -35,8 +35,9 @@ from tileserver.common import license as lic
 import tsk
 import scitemplate
 
+#---------------------------------------------------------------------------
 logger = logging.getLogger("g2s")
-APP_ID = 5
+LICENSE_APP_NAME = "g2s"
 
 #---------------------------------------------------------------------------
 def downOneTile(url, fp):
@@ -159,7 +160,7 @@ class Download(object):
         if os.path.isfile(pn):
             lics = lic.License(pn)
             host = lics.hostName()
-            return lics.verify(host, APP_ID)
+            return lics.verify(host, LICENSE_APP_NAME)
         else:
             return False
 
