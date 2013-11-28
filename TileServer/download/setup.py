@@ -18,17 +18,11 @@ buildOpts = dict(
         includes=['numpy'],
         excludes=['Tkinter'],
         #zip_includes=['smSci/sci3d.sci3d'],
-        include_files=['logo.png','icon.ico','g.tsk','gui.cfg'],
+        include_files=['logo.png','icon.ico','g.tsk','g2s.cfg','gui.cfg','使用说明.pdf'],
         )
 
-exeTables = [Executable("g2s.py", \
+exeTables = [Executable("gui.py", \
                         targetName='g2s.exe',\
-                        icon='icon.ico',base=None), \
-	    Executable("g2s3d.py", \
-                        targetName='g2s3d.exe',\
-                        icon='icon.ico',base=None), \
-            Executable("gui.py", \
-                        targetName='gui.exe',\
                         icon='icon.ico',base=base),]
 setup(
         name = "TileServer",

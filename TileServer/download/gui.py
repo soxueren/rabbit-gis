@@ -25,7 +25,8 @@ except ImportError: # if it's not there locally, try the wxPython lib.
     import wx.lib.agw.advancedsplash as AS
 
 #---------------------------------------------------------------------------
-APPNAME = "谷歌地图转超图缓存"
+APPNAME = "九九下载-谷歌地图转超图缓存"
+LICENSE_APP_NAME = "g2s"
 
 #---------------------------------------------------------------------------
 class DownloadFrame(wx.Frame):
@@ -38,7 +39,6 @@ class DownloadFrame(wx.Frame):
         self.SetIcon(wx.Icon('icon.ico', wx.BITMAP_TYPE_ICO))
         self.license = False # 是否通过许可验证
 
-        self.appid = 1 
         self.panel = panel= wx.Panel(self, -1)
 
         inBox = wx.StaticBox(panel, -1, "")
@@ -152,7 +152,7 @@ class DownloadFrame(wx.Frame):
         pn = os.path.abspath(pn)
         if os.path.isfile(pn):
             lics = lic.License(pn)
-            self.license = lics.verify(lics.hostName(), self.appid)
+            self.license = lics.verify(lics.hostName(), LICENSE_APP_NAME)
 
     def uiButtonOK(self, sizer):
         btnsizer = wx.StdDialogButtonSizer()
@@ -362,7 +362,7 @@ class DownloadFrame(wx.Frame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(True)  # Create a new app, don't redirect stdout/stderr to a window.
-    title = "%s V%s" % (APPNAME, tileserver.__version__)
+    title = "%s v%s" % (APPNAME, tileserver.__version__)
     frame = DownloadFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
