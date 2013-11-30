@@ -240,15 +240,9 @@ class Download(g2s.Download):
 
         def _split_by_process(tiles, mpcnt):
             """ 根据进程数目,瓦片张数划分合理的任务 """
-            totalNums = len(tiles)
-            splitNums = totalNums / mpcnt
-            mplist = []
-            add_cnt = 0
-            for i in range(mpcnt):
-                mplist.append( tiles[i*splitNums : (i+1)*splitNums] )
-                add_cnt += splitNums
-            if add_cnt<totalNums:
-                mplist[-1].extend( tasks[add_cnt-totalNums:] )
+	    mplist = [[] for i in range(mpcnt)]
+            for i in xrange(len(tiles)):
+		mplist[i%mpcnt].append(tiles[i])
             return mplist
         
         l,t,r,b = self.l, self.t, self.r, self.b
@@ -256,8 +250,9 @@ class Download(g2s.Download):
         sm_tiles = _calc_sm_tiles(l,t,r,b,self.levels)
         mplist = _split_by_process(sm_tiles, self.mpcnt)
 
+        logger.info(38 * "- ")
         logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
-        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (self.levels[0], self.levels[-1], len(sm_tiles)))
+        logger.info("下载层级:(%s), 瓦片总数%d张." % (','.join(map(str,self.levels)), len(sm_tiles)))
     
         outPath = os.path.join(self.out, self.name)
         tmp_path = os.path.join(outPath, "xxx") 
@@ -274,13 +269,14 @@ class Download(g2s.Download):
                 if not os.path.exists(dir_path): 
                     os.makedirs(dir_path)
 
-        logger.info("Start.")
         _create_del_temp(tmp_path,False)
 
         plist = []
         m = mp.Manager()
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
+	    if not bboxs:
+		continue
             p = mp.Process(target=multi_process_fun, 
                     args=(bboxs, outPath,self.file_format,tmp_path, i+1, self.haswatermark,self.url,self.over_write))
             plist.append( (p, len(bboxs)) )

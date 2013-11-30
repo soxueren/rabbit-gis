@@ -64,19 +64,26 @@ class DownloadFrame(wx.Frame):
         line = wx.StaticLine(panel, -1, size=(_line_size,-1), style=wx.LI_HORIZONTAL)
         sizerIn.Add(line,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-        label=wx.StaticText(panel, -1, "输出结果位置目录:")
-        self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(_text_size,-1))
-        box=wx.BoxSizer(wx.VERTICAL)
-        box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-        box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-        sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-
         label=wx.StaticText(panel, -1, "输出结果瓦片类型, 取值范围为[png, jpg]:")
         self.txtTileFormat = txtTileFormat = wx.TextCtrl(panel, -1, "", size=(_text_size,-1))
         box = wx.BoxSizer(wx.VERTICAL)
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(txtTileFormat,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+
+	def _add_output_dir(panel, sizer):
+	    label=wx.StaticText(panel, -1, "输出结果位置目录:")
+	    self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(590,-1))
+	    btn_dir = wx.Button(panel, wx.ID_ANY, "目录")
+	    box=wx.BoxSizer(wx.VERTICAL)
+	    box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	    _box=wx.BoxSizer(wx.HORIZONTAL)
+	    _box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	    _box.Add(btn_dir,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	    box.Add(_box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	    sizer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+	    self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btn_dir)
+        _add_output_dir(panel, sizerIn)
 
         def _add_cache_type(panel, sizer):
             label = wx.StaticText(panel, -1, "缓存类型:")
@@ -133,7 +140,7 @@ class DownloadFrame(wx.Frame):
             cachetypes = config.get("gui", "cachetype")
             cache_list = cachetypes.split(',')
             cacheindexs = config.get("gui", "cacheindex")
-            self.index_list = cacheindexs.split(',') 
+            self.index_list = [i.strip() for i in cacheindexs.split(',')] 
         return cache_list
 
     def verify_license(self):
@@ -228,9 +235,14 @@ class DownloadFrame(wx.Frame):
         if self.txtTileFormat.GetValue()=="":
             logger.info("瓦片格式为空.")
             return False
-        if self.txtLevels.GetValue()=="":
-            logger.info("瓦片格式为空.")
-            return False
+	return True
+
+    def OnButtonDir(self, event):
+        dlg = wx.DirDialog(self, APPNAME, style=wx.DD_DEFAULT_STYLE)
+        if dlg.ShowModal() == wx.ID_OK:
+            self.txtOut.Clear()
+            self.txtOut.AppendText(dlg.GetPath())
+        dlg.Destroy()
         return True
 
     def OnButtonRun(self, event):
@@ -238,12 +250,19 @@ class DownloadFrame(wx.Frame):
             return None
 
         tskpath = self.save_default_task()
-        if 2 == self.ch.GetSelection():
-            logger.info("生成三维场景缓存")
+        idx = int(self.index_list[self.ch.GetSelection()])
+        if 33 == idx:
+            logger.info("生成三维场景缓存开始...")
             g2s3d.Download([tskpath]).run() 
         else:
-            logger.info("生成二维地图缓存")
+            #logger.info("生成二维地图缓存,暂不支持...")
+            logger.info("生成二维地图缓存开始...")
             #g2s.Download([tskpath]).run() 
+	
+	dlg = wx.MessageDialog(self, '转换完成^_^', APPNAME, wx.OK|wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
+	
 
     def logInit(self):
         """ 初始化日志 """

@@ -133,8 +133,6 @@ class Download(object):
 	self.mpcnt = 1
 	self.config_init()
 
-	logger.info("¹È¸èµØÍ¼×ª³¬Í¼»º´æ.") 
-
     def argparse_init(self, argv):
         if self.verifyLicense():
             msg  =strlic = "\nÊÚÈ¨°æ±¾ %s." % lic.License.hostName()
