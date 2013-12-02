@@ -115,11 +115,6 @@ def download_tile(tiles, outPath, strurl):
 #---------------------------------------------------------------------------
 def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark, over_write):
     """ 生成SuperMap瓦片 """
-
-    fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
-    if over_write and os.path.isfile(fp):
-        os.remove(fp)
-
     mem_drv = gdal.GetDriverByName("MEM")
     mem_ds = mem_drv.Create("", 256, 256, 3)# 输出固定为24位png或jpg
     
@@ -154,6 +149,7 @@ def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark, over_wri
     mem_ds.GetRasterBand(2).WriteArray(gdata)
     mem_ds.GetRasterBand(3).WriteArray(bdata)
 
+    fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
     if not os.path.exists(os.path.dirname(fp)):
         os.makedirs(os.path.dirname(fp))
 
@@ -182,9 +178,17 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
             for col in range(cs, ce+1):
                 tiles.append((sml+1, row, col))
         return tiles
+
     ext = '.png' if tile_ext.lower()=='png' else '.jpg'
     gm = srsweb.GlobalMercator(256)
+
     for level, row, col in bboxs:
+	fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
+	if os.path.isfile(fp):
+	    if over_write:
+		os.remove(fp)
+	    else:
+		continue
         g_tiles = _calc_g_tile(level,row,col)
         download_tile(g_tiles, tmpPath, url)
         tiles = load_local_tiles(g_tiles, tmpPath)
