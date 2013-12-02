@@ -47,10 +47,6 @@ def tile_in_google(row, col, level):
 def load_local_tiles(tiles, outPath):
     """ 将本地瓦片加载到内存 """
     mem_tiles = {}
-    def _get_rgb(ds):
-        rgb = [ds.GetRasterBand(i).ReadAsArray(0, 0, 256, 256, 256, 256) for i in (1,2,3)]
-        return rgb
-
     gm = srsweb.GlobalMercator(256)
     for level, row, col in tiles:
         if not tile_in_google(row, col, level):
@@ -62,7 +58,7 @@ def load_local_tiles(tiles, outPath):
         tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly)
         if tmp_ds is None:
             continue
-        r,g,b = _get_rgb(tmp_ds)
+        r,g,b = [tmp_ds.GetRasterBand(i).ReadAsArray(0, 0, 256, 256, 256, 256) for i in (1,2,3)]
         #tx, ty = gm.TMSTile(col, row, level)
         mem_tiles[(row,col)] = (r,g,b) 
         del tmp_ds
@@ -151,6 +147,8 @@ def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark, over_wri
                 rdata[line][pix] = r[trow][tcol]
                 gdata[line][pix] = g[trow][tcol]
                 bdata[line][pix] = b[trow][tcol]
+            else: # 没完全加载谷歌瓦片,舍弃生成瓦片
+                return None
 
     mem_ds.GetRasterBand(1).WriteArray(rdata)
     mem_ds.GetRasterBand(2).WriteArray(gdata)
@@ -240,9 +238,9 @@ class Download(g2s.Download):
 
         def _split_by_process(tiles, mpcnt):
             """ 根据进程数目,瓦片张数划分合理的任务 """
-	    mplist = [[] for i in range(mpcnt)]
+            mplist = [[] for i in range(mpcnt)]
             for i in xrange(len(tiles)):
-		mplist[i%mpcnt].append(tiles[i])
+                mplist[i%mpcnt].append(tiles[i])
             return mplist
         
         l,t,r,b = self.l, self.t, self.r, self.b
@@ -275,8 +273,8 @@ class Download(g2s.Download):
         m = mp.Manager()
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
-	    if not bboxs:
-		continue
+            if not bboxs:
+                continue
             p = mp.Process(target=multi_process_fun, 
                     args=(bboxs, outPath,self.file_format,tmp_path, i+1, self.haswatermark,self.url,self.over_write))
             plist.append( (p, len(bboxs)) )
