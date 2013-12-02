@@ -332,7 +332,7 @@ class smSci3d(smSci):
         self.height=1.0
         self.levels = list()
         self.extName='png'
-        self.lines=scitemplate.sci3d # sic文件内容
+	self.lines=scitemplate.sci3d[:] # sic文件内容
 
     def setLevels(self, level_list):
         self.levels.extend(level_list)
