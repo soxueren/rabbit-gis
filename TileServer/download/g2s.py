@@ -220,15 +220,17 @@ class Download(object):
             mplist[-1].extend( tasks[add-totalNums:] )
         return mplist
 
-    def saveSciFile(self,l,t,r,b, startl, endl):
+    def save_sci_file(self,l,t,r,b):
         """ 生成SuperMap缓存配置文件 """
         outPath = self.out
+	if not os.path.exists(outPath):
+	    os.makedirs(outPath)
 
         mkt = srsweb.GlobalMercator() 
         l,t = mkt.LatLonToMeters(t, l)
         r,b = mkt.LatLonToMeters(b, r)
         mapBnd = l,t,r,b
-        res = mkt.Resolution(endl)
+        res = mkt.Resolution(self.levels[-1])
         w,h = (r-l)/res, (t-b)/res 
         w,h = math.ceil(w), math.ceil(h)
 
@@ -237,7 +239,7 @@ class Download(object):
         idxBnd = l,t,r,b
 
         scales = []
-        for level in range(startl, endl+1):
+        for level in self.levels:
             scale = mkt.Scale(level)
             scales.append(scale) 
 
@@ -252,7 +254,7 @@ class Download(object):
     def run(self):
         startl, endl = self.levels[0], self.levels[-1]
         l,t,r,b = self.l, self.t, self.r, self.b
-        self.saveSciFile(l, t, r, b, startl, endl)
+        self.save_sci_file(l, t, r, b, startl, endl)
 
         mplist = self.splitByProcess(l,t,r,b, startl, endl, self.mpcnt)
         picNums = 0
