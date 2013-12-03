@@ -193,7 +193,7 @@ class DownloadFrame(wx.Frame):
 
         bitmap = wx.Bitmap(pn, wx.BITMAP_TYPE_PNG)
         shadow = wx.WHITE
-        frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=1000,
+        frame = AS.AdvancedSplash(self, bitmap=bitmap, timeout=1500,
                                   agwStyle=AS.AS_TIMEOUT |
                                   AS.AS_CENTER_ON_PARENT |
                                   AS.AS_SHADOW_BITMAP,

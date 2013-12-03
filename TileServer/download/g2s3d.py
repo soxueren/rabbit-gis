@@ -183,12 +183,14 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
     gm = srsweb.GlobalMercator(256)
 
     for level, row, col in bboxs:
-	fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
-	if os.path.isfile(fp):
-	    if over_write:
-		os.remove(fp)
-	    else:
-		continue
+        if level<8: #  八级以下不加水印
+            haswatermark = False
+        fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
+        if os.path.isfile(fp):
+            if over_write:
+                os.remove(fp)
+            else:
+                continue
         g_tiles = _calc_g_tile(level,row,col)
         download_tile(g_tiles, tmpPath, url)
         tiles = load_local_tiles(g_tiles, tmpPath)
@@ -252,7 +254,7 @@ class Download(g2s.Download):
         sm_tiles = _calc_sm_tiles(l,t,r,b,self.levels)
         mplist = _split_by_process(sm_tiles, self.mpcnt)
 
-        logger.info(38 * "- ")
+        logger.info(38 * "-")
         logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
         logger.info("下载层级:(%s), 瓦片总数%d张." % (','.join(map(str,self.levels)), len(sm_tiles)))
     
