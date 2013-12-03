@@ -48,7 +48,7 @@ class DownloadFrame(wx.Frame):
         _line_size = 690
 
         self.txtIn = txtin = wx.TextCtrl(panel, -1, "", size=(_text_size,-1))
-        label=wx.StaticText(panel, -1, "出图经纬度范围(英文逗号隔开), 格式为:left,top,right,bottom, 例如: -180,90,180,-90")
+        label=wx.StaticText(panel, -1, "出图经纬度范围(英文逗号隔开), 格式为:left,top,right,bottom, 单位为度, 例如: -180,90,180,-90")
         box=wx.BoxSizer(wx.VERTICAL)
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(txtin,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
