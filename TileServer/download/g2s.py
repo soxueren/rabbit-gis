@@ -40,39 +40,40 @@ logger = logging.getLogger("g2s")
 LICENSE_APP_NAME = "g2s"
 
 #---------------------------------------------------------------------------
-def downOneTile(url, fp):
-    """ 一次下载 """
-    try:
-        f = urllib2.urlopen(url)
-    except urllib2.URLError, e:
-        print url, e.reason
-        return None
-    return f.read()
-
-
-#---------------------------------------------------------------------------
-def download_tile(mapname, level, row, col, outPath, ext, strurl, ver, haswatermark):
+def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswatermark, over_write):
     """ 下载瓦片到本地 """
+    def _download_one_tile(url, fp):
+        """ 一次下载 """
+        try:
+            f = urllib2.urlopen(url)
+        except urllib2.URLError, e:
+            print url, e.reason
+            return None
+        return f.read()
 
-    tmp = strurl 
     mkt = srsweb.GlobalMercator()
     scale = mkt.Scale(level) 
-    fp = smsci.smSci.calcTileName(outPath, mapname, scale, row, col, ext, ver) 
+    fp = smsci.smSci.calcTileName(out_dir, mapname, scale, row, col, ext, ver) 
+    if os.path.isfile(fp):
+        if over_write:
+            os.remove(fp)
+        else:
+            return False
 
-    url = tmp % (random.randint(0,3), col, row, level)
-    data = downOneTile(url, fp)
+    url = strurl % (random.randint(0,3), col, row, level)
+    data = _download_one_tile(url, fp)
     if data is None:
-        data = downOneTile(url, fp) # 第2次下载
+        data = _download_one_tile(url, fp) # 第2次下载
     if data is None:
-        data = downOneTile(url, fp) # 第3次下载
+        data = _download_one_tile(url, fp) # 第3次下载
     if data is None:
         print url
         return False # 放弃吧
 
     if len(data)<1024:
-        data = downOneTile(url, fp) # 第2次下载
+        data = _download_one_tile(url, fp) # 第2次下载
     if len(data)<1024:
-        data = downOneTile(url, fp) # 第3次下载
+        data = _download_one_tile(url, fp) # 第3次下载
 
     if len(data)<1024:
         print url, len(data)
@@ -84,34 +85,29 @@ def download_tile(mapname, level, row, col, outPath, ext, strurl, ver, haswaterm
         myfile.write(data)
         myfile.close()
 
-    if haswatermark: # 加水印
-	tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly) # 假定输入数据为24位png或jpg
-	ts  = tmp_ds.RasterXSize
+    if level>3 and haswatermark:# 加水印
+        tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly) # 假定输入数据为24位png或jpg
+        ts  = tmp_ds.RasterXSize
 
         mem_drv = gdal.GetDriverByName('MEM')
         mem_ds = mem_drv.Create('', ts, ts, 3)# 输出固定为24位png或jpg
-	for i in range(1, 4):
-	    tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
-	    if i==1:
-		wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
-	    mem_ds.GetRasterBand(i).WriteArray(tile_data)
+        for i in range(1, 4):
+            tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,ts,ts,ts,ts) 
+            if i==1:
+                wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
+            mem_ds.GetRasterBand(i).WriteArray(tile_data)
 
-	ext = ext[-3:].lower() 
-	if ext == 'jpg':
-	    dirv = 'JPEG'
-	elif ext == 'png':
-	    dirv = 'PNG'
-
-        out_drv=gdal.GetDriverByName(dirv)
+        driv_name = 'PNG' if ext[-3:].lower()=='.png' else 'JPEG'
+        out_drv = gdal.GetDriverByName(driv_name)
         del tmp_ds
         out_drv.CreateCopy(fp, mem_ds, strict=0)
         del out_drv, mem_drv
 
 #---------------------------------------------------------------------------
-def multi_process_fun(bboxs, mapname, outPath, ext, pindex, ver, url,haswatermark):
+def multi_process_func(bboxs, mapname, out_dir, ext, ver, url,haswatermark, over_write):
     """ 多进程处理切图  """
     for level, row, col in bboxs:
-        download_tile(mapname, level, row, col, outPath,ext, url, ver, haswatermark)
+        download_tile(mapname, level, row, col, out_dir,ext, url, ver, haswatermark, over_write)
 
 # =============================================================================
 class Download(object):
@@ -123,15 +119,15 @@ class Download(object):
         self.tmp = ""
         self.name = ""
         self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
-	self.sm_cache_ver = smsci.VER31
-	self.file_format = 'jpg'
+        self.sm_cache_ver = smsci.VER31
+        self.file_format = 'jpg'
         self.levels = []
         self.haswatermark = False if self.verifyLicense() else True
         self.args = None
         self.argparse_init(argv)
         self.parse_task()
-	self.mpcnt = 1
-	self.config_init()
+        self.mpcnt = 1
+        self.config_init()
 
     def argparse_init(self, argv):
         if self.verifyLicense():
@@ -139,7 +135,7 @@ class Download(object):
         else:
             msg  = "\n免费试用版本."
 
-	msg = tileserver.__author__ + msg
+        msg = tileserver.__author__ + msg
         parser = argparse.ArgumentParser(description="谷歌地图转超图缓存.",
                 epilog=msg)
 
@@ -171,32 +167,32 @@ class Download(object):
             return None
 
         f = open(taskfile, "r")
-	lines = f.readlines()
+        lines = f.readlines()
         f.close()
-	
-	_tsk = tsk.from_lines(lines)
-	if 'bbox' in _tsk:
-	    self.l,self.t,self.r,self.b =  _tsk['bbox']
-	if 'level' in _tsk:
-	    self.levels = _tsk['level']
-	if 'out' in _tsk:
-	    self.out = _tsk['out']
-	if 'name' in _tsk:
-	    self.name = _tsk['name']
-	if 'format' in _tsk:
-	    self.file_format= _tsk['format']
-	if 'version' in _tsk:
-	    r = _tsk['version'].lower()
-	    if r=="ver31":
-		self.sm_cache_ver = smsci.VER31
-	    elif r=="ver30":
-		self.sm_cache_ver = smsci.VER30
-	    elif r=="ver21":
-		self.sm_cache_ver = smsci.VER21
-	    elif r=="ver20":
-		self.sm_cache_ver = smsci.VER20
-	if 'overwrite' in _tsk:
-	    self.over_write = True if _tsk['overwrite'].lower()=='true' else False
+        
+        _tsk = tsk.from_lines(lines)
+        if 'bbox' in _tsk:
+            self.l,self.t,self.r,self.b =  _tsk['bbox']
+        if 'level' in _tsk:
+            self.levels = _tsk['level']
+        if 'out' in _tsk:
+            self.out = _tsk['out']
+        if 'name' in _tsk:
+            self.name = _tsk['name']
+        if 'format' in _tsk:
+            self.file_format= _tsk['format']
+        if 'version' in _tsk:
+            r = _tsk['version'].lower()
+            if r=="ver31":
+                self.sm_cache_ver = smsci.VER31
+            elif r=="ver30":
+                self.sm_cache_ver = smsci.VER30
+            elif r=="ver21":
+                self.sm_cache_ver = smsci.VER21
+            elif r=="ver20":
+                self.sm_cache_ver = smsci.VER20
+        if 'overwrite' in _tsk:
+            self.over_write = True if _tsk['overwrite'].lower()=='true' else False
 
     def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
         """ 根据进程数目,瓦片张数划分合理的任务 """
@@ -222,9 +218,7 @@ class Download(object):
 
     def save_sci_file(self,l,t,r,b):
         """ 生成SuperMap缓存配置文件 """
-        outPath = self.out
-	if not os.path.exists(outPath):
-	    os.makedirs(outPath)
+        out_dir = self.out
 
         mkt = srsweb.GlobalMercator() 
         l,t = mkt.LatLonToMeters(t, l)
@@ -248,32 +242,48 @@ class Download(object):
         _sci.setWidthHeight(w,h)
         _sci.setScales(scales)
         _sci.setProj(scitemplate.webmkt_prj)
-	_sci.setFileFormat(self.file_format)
-        _sci.saveSciFile(outPath)
+        _sci.setFileFormat("jpg")#self.file_format
+        _sci.saveSciFile(out_dir)
 
     def run(self):
-        startl, endl = self.levels[0], self.levels[-1]
+
+        def _calc_sm_tiles(l,t,r,b,l_list):
+            tiles = []
+            mkt = srsweb.GlobalMercator() 
+            for i in l_list:
+                rs,re,cs,ce = mkt.calcRowColByLatLon(l,t,r,b, i) 
+                for row in range(rs, re+1):
+                    for col in range(cs, ce+1):
+                        tiles.append((i, row, col))
+            return tiles
+
+        def _split_by_process(tiles, mpcnt):
+            """ 根据进程数目,瓦片张数划分合理的任务 """
+            mplist = [[] for i in range(mpcnt)]
+            for i in xrange(len(tiles)):
+                mplist[i%mpcnt].append(tiles[i])
+            return mplist
+        
         l,t,r,b = self.l, self.t, self.r, self.b
-        self.save_sci_file(l, t, r, b, startl, endl)
+        self.save_sci_file(l, t, r, b)
 
-        mplist = self.splitByProcess(l,t,r,b, startl, endl, self.mpcnt)
-        picNums = 0
-        for i in xrange(len(mplist)):
-            picNums += len(mplist[i])
+        sm_tiles = _calc_sm_tiles(l,t,r,b,self.levels)
+        mplist = _split_by_process(sm_tiles, self.mpcnt)
 
-	logger.info("TaskFile:%s" % self.args.file)
+        logger.info(38 * "-")
         logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
-        logger.info("起始终止层级:(%d,%d), 瓦片总数%d张." % (startl, endl, picNums))
-
-        logger.info("Start.")
+        logger.info("下载层级:(%s), 瓦片总数%d张." % (','.join(map(str,self.levels)), len(sm_tiles)))
         
         plist = []
         m = mp.Manager()
 
         for i in xrange(len(mplist)):
             bboxs = mplist[i]
-            p = mp.Process(target=multi_process_fun, args=(bboxs,self.name, self.out, \
-		self.file_format,i+1, self.sm_cache_ver,self.url,self.haswatermark))
+            if not bboxs:
+                continue
+            ext = "jpg" # 目前下载下来的数据直接为jpg,先不用self.file_format
+            p = mp.Process(target=multi_process_func, args=(bboxs,self.name, self.out, \
+                ext,self.sm_cache_ver,self.url,self.haswatermark, self.over_write))
             plist.append( (p, len(bboxs)) )
 
         for p, cnt in plist:
@@ -288,7 +298,7 @@ class Download(object):
 
     def config_init(self):
         config = ConfigParser.ConfigParser()
-	cfg_path = os.path.join(cm.app_path(), "g2s.cfg")
+        cfg_path = os.path.join(cm.app_path(), "g2s.cfg")
         config.read(cfg_path)
         if config is not None:
             self.mpcnt = config.getint("config", "multiprocess")
@@ -303,7 +313,7 @@ def log_init():
     logfile = os.path.join(dirName, "log", name)
     logfile = os.path.abspath(logfile)
     if not os.path.exists(os.path.dirname(logfile)):
-	os.makedirs(os.path.dirname(logfile))
+        os.makedirs(os.path.dirname(logfile))
 
     logger = logging.getLogger("")
     logger.setLevel(logging.DEBUG)

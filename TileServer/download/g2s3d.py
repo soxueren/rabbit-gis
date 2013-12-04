@@ -69,7 +69,7 @@ def load_local_tiles(tiles, outPath):
 #---------------------------------------------------------------------------
 def download_tile(tiles, outPath, strurl):
     """ 下载瓦片到本地 """
-    def _down_one_tile(url):
+    def _download_one_tile(url):
         """ 一次下载 """
         try:
             f = urllib2.urlopen(url)
@@ -88,19 +88,19 @@ def download_tile(tiles, outPath, strurl):
         if os.path.isfile(fp):
             continue
 
-        data = _down_one_tile(url)
+        data = _download_one_tile(url)
         if data is None:
-            data = _down_one_tile(url) # 第2次下载
+            data = _download_one_tile(url) # 第2次下载
         if data is None:
-            data = _down_one_tile(url) # 第3次下载
+            data = _download_one_tile(url) # 第3次下载
         if data is None:
             print url
             continue # 放弃吧
 
         if len(data)<1024:
-            data = _down_one_tile(url) # 第2次下载
+            data = _download_one_tile(url) # 第2次下载
         if len(data)<1024:
-            data = _down_one_tile(url) # 第3次下载
+            data = _download_one_tile(url) # 第3次下载
 
         if len(data)<1024:
             print url, len(data)
@@ -113,7 +113,7 @@ def download_tile(tiles, outPath, strurl):
             myfile.close()
 
 #---------------------------------------------------------------------------
-def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark, over_write):
+def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark):
     """ 生成SuperMap瓦片 """
     mem_drv = gdal.GetDriverByName("MEM")
     mem_ds = mem_drv.Create("", 256, 256, 3)# 输出固定为24位png或jpg
@@ -157,7 +157,7 @@ def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark, over_wri
     tile_data = mem_ds.GetRasterBand(1).ReadAsArray(0,0,tx,ty,tx,ty) 
     if haswatermark:
         wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
-    mem_ds.GetRasterBand(1).WriteArray(tile_data)
+	mem_ds.GetRasterBand(1).WriteArray(tile_data)
     
     driv_name = 'PNG' if ext.lower()=='.png' else 'JPEG'
     out_drv = gdal.GetDriverByName(driv_name)
@@ -183,8 +183,6 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
     gm = srsweb.GlobalMercator(256)
 
     for level, row, col in bboxs:
-        if level<8: #  八级以下不加水印
-            haswatermark = False
         fp = smsci.smSci3d.calcTileName(level, row, col, outPath)+ext
         if os.path.isfile(fp):
             if over_write:
@@ -194,7 +192,10 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
         g_tiles = _calc_g_tile(level,row,col)
         download_tile(g_tiles, tmpPath, url)
         tiles = load_local_tiles(g_tiles, tmpPath)
-        save_as_sm_tile(row, col, level, outPath,ext,tiles, haswatermark, over_write)
+        if level<4: #  八级以下不加水印
+            save_as_sm_tile(row, col, level, outPath,ext,tiles, False)
+        else:
+            save_as_sm_tile(row, col, level, outPath,ext,tiles, haswatermark)
         del tiles
 
 # =============================================================================
