@@ -216,7 +216,7 @@ class smSci(object):
 
         self.scales.sort()
         self.scales.reverse()
-        self.replaceDouble(self.lines, 'BaseScale', max(self.scales), 20)
+        self.replaceDouble(self.lines, 'BaseScale', max(self.scales), 25)
 
         pos = 0
         for i in range(len(self.lines)):
@@ -226,7 +226,7 @@ class smSci(object):
 
         for scale in self.scales:
             tmpscale = self.sci_scale[:]
-            self.replaceDouble(tmpscale, '<sml:Scale>', scale, 20)
+            self.replaceDouble(tmpscale, '<sml:Scale>', scale, 25)
 	    scale_int = int(1/scale)
 	    if self.sciver==VER21 or self.sciver==VER20:
 		scale_int = int(0.5+1/scale)
@@ -262,7 +262,8 @@ class smSci(object):
 
     def saveSciFile(self, sciPath):
         ''' 生成SM格式切片SCI文件 '''
-        if not self.isValid():return False
+        if not self.isValid():
+	    return False
 
         #self.loadTemplate()
         self.replace()
