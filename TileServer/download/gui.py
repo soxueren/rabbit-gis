@@ -257,7 +257,7 @@ class DownloadFrame(wx.Frame):
         else:
             #logger.info("生成二维地图缓存,暂不支持...")
             logger.info("生成二维地图缓存开始...")
-            #g2s.Download([tskpath]).run() 
+            g2s.Download([tskpath]).run() 
 	
 	dlg = wx.MessageDialog(self, '转换完成^_^', APPNAME, wx.OK|wx.ICON_INFORMATION)
         dlg.ShowModal()
