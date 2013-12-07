@@ -74,7 +74,7 @@ def download_tile(tiles, outPath, strurl):
         try:
             f = urllib2.urlopen(url)
         except urllib2.URLError, e:
-            print url, e.reason
+            #print url, e.reason
             return None
         return f.read()
 
@@ -94,7 +94,7 @@ def download_tile(tiles, outPath, strurl):
         if data is None:
             data = _download_one_tile(url) # 第3次下载
         if data is None:
-            print url
+            #print url
             continue # 放弃吧
 
         if len(data)<1024:
@@ -103,7 +103,7 @@ def download_tile(tiles, outPath, strurl):
             data = _download_one_tile(url) # 第3次下载
 
         if len(data)<1024:
-            print url, len(data)
+            #print url, len(data)
             continue # 放弃吧
 
         if not os.path.exists(os.path.dirname(fp)):

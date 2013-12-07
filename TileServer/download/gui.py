@@ -382,6 +382,7 @@ class DownloadFrame(wx.Frame):
 def main():
     app = wx.App(True)  # Create a new app, don't redirect stdout/stderr to a window.
     title = "%s v%s" % (APPNAME, tileserver.__version__)
+    app.SetOutputWindowAttributes(title,pos=wx.DefaultPosition,size=(480,200))
     frame = DownloadFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()
