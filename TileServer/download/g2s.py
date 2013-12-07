@@ -47,7 +47,7 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
         try:
             f = urllib2.urlopen(url)
         except urllib2.URLError, e:
-            print url, e.reason
+            #print url, e.reason
             return None
         return f.read()
 
@@ -67,7 +67,7 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
     if data is None:
         data = _download_one_tile(url, fp) # 第3次下载
     if data is None:
-        print url
+        #print url
         return False # 放弃吧
 
     if len(data)<1024:
@@ -76,7 +76,7 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
         data = _download_one_tile(url, fp) # 第3次下载
 
     if len(data)<1024:
-        print url, len(data)
+        #print url, len(data)
         return False # 放弃吧
 
     if not os.path.exists(os.path.dirname(fp)):
