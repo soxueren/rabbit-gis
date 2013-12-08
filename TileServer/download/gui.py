@@ -16,6 +16,7 @@ from tileserver.common import comm as cm
 import tsk
 import g2s
 import g2s3d
+import version
 
 logger = logging.getLogger("")
 
@@ -213,13 +214,13 @@ class DownloadFrame(wx.Frame):
             return strlic if not _lic else "授权版本 %s." % lic.License.hostName() 
         info = wx.AboutDialogInfo()
         info.Name = APPNAME 
-        info.Version = tileserver.__version__ 
-        info.Copyright = tileserver.__copyright__ + ("\n\n%s\n" % _get_license(self.license))
+        info.Version = version.__version__ 
+        info.Copyright = version.__copyright__ + ("\n\n%s\n" % _get_license(self.license))
 
         strdes="将Google地图下载并转存为SuperMap缓存.\n\n"
         info.Description = wordwrap(strdes, 350, wx.ClientDC(self))
-        info.WebSite = (tileserver.__website__, info.Name)
-        info.Developers = [ tileserver.__author__ ]
+        info.WebSite = (version.__website__, info.Name)
+        info.Developers = [ version.__author__ ]
         wx.AboutBox(info)
 
     def check(self):
@@ -383,7 +384,7 @@ class DownloadFrame(wx.Frame):
 #---------------------------------------------------------------------------
 def main():
     app = wx.App(True)  # Create a new app, don't redirect stdout/stderr to a window.
-    title = "%s v%s" % (APPNAME, tileserver.__version__)
+    title = "%s v%s" % (APPNAME, version.__version__)
     app.SetOutputWindowAttributes(title,pos=wx.DefaultPosition,size=(580,220))
     frame = DownloadFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
