@@ -31,6 +31,7 @@ from tileserver.common import sci as smsci
 from tileserver.common import srsweb
 from tileserver.common import comm as cm
 from tileserver.common import license as lic
+from tileserver.common import scitemplate
 
 import tsk
 
@@ -224,7 +225,7 @@ class Download(object):
         _sci.setParams(self.name, mapBnd, idxBnd, self.sm_cache_ver)
         _sci.setWidthHeight(w,h)
         _sci.setScales(scales)
-        _sci.setProj(smsci.webmkt_prj)
+        _sci.setProj(scitemplate.webmkt_prj)
         _sci.setFileFormat("jpg")#self.file_format
         _sci.saveSciFile(out_dir)
 

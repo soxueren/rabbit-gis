@@ -2,7 +2,7 @@
 
 import os, sys
 from cx_Freeze import setup, Executable
-import tileserver
+import version
 
 buildPath=os.path.join(os.path.dirname(__file__), 'build')
 for root, dirs, files in os.walk(buildPath):
@@ -26,7 +26,7 @@ exeTables = [Executable("gui.py", \
                         icon='icon.ico',base=base),]
 setup(
         name = "TileServer",
-        version = tileserver.__version__[:tileserver.__version__.rfind('.')],
+        version = version.__version__[:version.__version__.rfind('.')],
         description = "Download Google tile files.",
         author = 'wenyulin.lin@gmail.com',
         author_email = 'wenyulin.lin@gmail.com',

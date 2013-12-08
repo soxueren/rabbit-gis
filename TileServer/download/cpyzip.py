@@ -46,8 +46,8 @@ def movefiles(app_name, tozipfile):
     shutil.move(tozipfile,pt)
 
 if __name__=='__main__':
-    import tileserver
-    ver = tileserver.__version__
+    import version 
+    ver = version.__version__
     if len(sys.argv)==2:
 	ver = sys.argv[1].strip().lower()
     app_name = "%s-v%s" % (APPNAME, ver)
