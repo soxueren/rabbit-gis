@@ -34,14 +34,13 @@ KEY_SCALE_VALUE='[scaleValue]'
 KEY_SCALE_CAPTION='[scaleCaption]'
 KEY_VALUE = '[value]'
 
-VER40 = 1
+VER40 = 1 # iServer 6R 缓存
 VER31 = 2 # 使用新的缓存图片生成方案的 iServer 2.0 缓存
 VER30 = 3 # iServer 2.0 缓存
-VER21 = 4 
-VER20 = 5
+VER21 = 4 # IS.NET 缓存
+VER20 = 5 # 使用新的地图缓存生成方案的 IS.NET 缓存
 
 MAP_HASHCODE = "8B185AB8FIX"
-
 
 # =============================================================================
 
@@ -53,12 +52,12 @@ class smSci(object):
         self.sciTmpFile = "sci.sci"
         self.idxBnd = list()
         self.mapBnd = list()
-        self.lines = scitemplate.sci40 # sic文件内容
-        self.sci_scale = scitemplate.sci40_scale
+        self.lines = scitemplate.sci40[:] # sic文件内容
+        self.sci_scale = scitemplate.sci40_scale[:]
         self.scales = [] # 比例尺数组
         self.proj_lines = []
         self.sciver = VER31
-	self.file_format = 'JPG'
+        self.file_format = 'JPG'
 
     def setParams(self, mapName, mapBnd, idxBnd, sciVer):
         ''' 设置生成SCI文件的参数
@@ -71,28 +70,28 @@ class smSci(object):
         self.mapBnd=mapBnd
         self.idxBnd=idxBnd
         if sciVer == VER40:
-            self.lines = scitemplate.sci40 
+            self.lines = scitemplate.sci40[:] 
             self.sci_scale = scitemplate.sci40_scale
             self.sciver = VER40
         elif sciVer == VER31:
-            self.lines = scitemplate.sci31 
+            self.lines = scitemplate.sci31[:] 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER31
         elif sciVer == VER30:
-            self.lines = scitemplate.sci30 
+            self.lines = scitemplate.sci30[:] 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER30
         elif sciVer == VER21:
-            self.lines = scitemplate.sci31 
+            self.lines = scitemplate.sci31[:] 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER21
 
     def setFileFormat(self, ext):
-	ext = ext[-3:].lower()
-	if ext=='jpg':
-	    self.file_format='JPG'
-	elif ext=='png':
-	    self.file_format='PNG'
+        ext = ext[-3:].lower()
+        if ext=='jpg':
+            self.file_format='JPG'
+        elif ext=='png':
+            self.file_format='PNG'
 
     def setWidthHeight(self, w, h):
         ''' 影像缓存最高分辨率图像的宽高(最清晰一层)的总尺寸,单位为像素 '''
@@ -130,7 +129,8 @@ class smSci(object):
         f.close()
         for line in lines:
             line=line.strip()
-            if line=='':continue
+            if line=='':
+                continue
             self.lines.append(line)
 
         
@@ -138,13 +138,13 @@ class smSci(object):
         if self.sciver in (VER31,VER30):
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
             folder = "%s_256x256" % self.mapName
-	elif self.sciver in (VER21,VER20,VER40):
+        elif self.sciver in (VER21,VER20,VER40):
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
-	    folder = "%s_100x100" % self.mapName
+            folder = "%s_100x100" % self.mapName
         desSciPath = os.path.join(sciPath, folder, fileName)
         outPath = os.path.dirname(desSciPath)
         if not os.path.exists(outPath): 
-	    os.makedirs(outPath)
+            os.makedirs(outPath)
         
         f=open(desSciPath, 'w+')
         for line in self.lines:
@@ -227,10 +227,12 @@ class smSci(object):
         for scale in self.scales:
             tmpscale = self.sci_scale[:]
             self.replaceDouble(tmpscale, '<sml:Scale>', scale, 25)
-	    scale_int = int(1/scale)
-	    if self.sciver==VER21 or self.sciver==VER20:
-		scale_int = int(0.5+1/scale)
-		self.replaceHash(tmpscale)
+            scale_int = int(1/scale)
+            if self.sciver==VER21 or self.sciver==VER20:
+                scale_int = int(0.5+1/scale)
+                self.replaceHash(tmpscale)
+            elif self.sciver==VER40:
+                scale_int = int(0.5+1/scale)
             self.replaceInt(tmpscale, '<sml:ScaleFolder>', scale_int)
             for i in range(len(tmpscale)-1, -1, -1):
                 self.lines.insert(pos, tmpscale[i])
@@ -246,10 +248,10 @@ class smSci(object):
             self.lines.insert(pos, self.proj_lines[i])
 
     def replaceMapCacheStrategy(self):
-	if self.sciver in (VER21, VER20):
-	    self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '0')
-	elif self.sciver == VER40:
-	    self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '1')
+        if self.sciver in (VER21, VER20):
+            self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '0')
+        elif self.sciver == VER40:
+            self.replaceText(self.lines, '<sml:MapCacheStrategy', '2', '1')
 
 
     def replace(self):
@@ -258,12 +260,12 @@ class smSci(object):
         self.replaceProj()
         self.replaceWidthHeight()
         self.replaceScales()
-	self.replaceMapCacheStrategy()
+        self.replaceMapCacheStrategy()
 
     def saveSciFile(self, sciPath):
         ''' 生成SM格式切片SCI文件 '''
         if not self.isValid():
-	    return False
+            return False
 
         #self.loadTemplate()
         self.replace()
@@ -272,54 +274,59 @@ class smSci(object):
 
     @staticmethod
     def calcTileName(root, mapname, scale, row, col, ext, ver):
-	if len(ext)>3:
-	    ext = ext[-3:].lower()
+        if len(ext)>3:
+            ext = ext[-3:].lower()
 
         if ver == VER31 or ver==VER30:
-	    """
-	    iServer20 地图缓存文件路径规则：
-	    地图名_图片宽度x图片高度（10进制表示，以像素为单位）作为一级目录；
-	    比例尺或者比例尺倒数作为二级目录；
-	    图片在 IndexBounds 中的列索引作为三级目录；
-	    图片名称为图片在 IndexBounds 中的行索引.后缀；
-	    """
+            """
+            iServer20 地图缓存文件路径规则：
+            地图名_图片宽度x图片高度（10进制表示，以像素为单位）作为一级目录；
+            比例尺或者比例尺倒数作为二级目录；
+            图片在 IndexBounds 中的列索引作为三级目录；
+            图片名称为图片在 IndexBounds 中的行索引.后缀；
+            """
             filename = "%d.%s" % (row, ext) 
             mapname = "%s_256x256" % mapname
             strscale = "%d" % int(1/scale)
             strcol = "%d"% col
             filename = os.path.join(root, mapname, strscale, strcol, filename)
             return filename
-	elif ver == VER21 or ver==VER20:
-	    """
-	    地图名 + 图片尺寸作为一级子目录；
-	    比例尺或者比例尺倒数作为二级子目录；
-	    中心点所在区块索引作为三级子目录；
-	    中心点近似值 + 地图散列值 + 后缀作为文件名
-	    """
-	    glbmkt = srsweb.GlobalMercator()
-	    col_idx, row_idx = glbmkt.calcSmCellIndex(col, row, scale)
+        elif ver == VER21 or ver==VER20:
+            """
+            地图名 + 图片尺寸作为一级子目录；
+            比例尺或者比例尺倒数作为二级子目录；
+            中心点所在区块索引作为三级子目录；
+            中心点近似值 + 地图散列值 + 后缀作为文件名
+            """
+            glbmkt = srsweb.GlobalMercator()
+            col_idx, row_idx = glbmkt.calcSmCellIndex(col, row, scale)
             mapname = "%s_100x100" % mapname
             strscale = "%d" % int(0.5+1/scale)
-	    maphashcode = MAP_HASHCODE 
-	    stridx = "%dx%d" % (col_idx, row_idx)
+            maphashcode = MAP_HASHCODE 
+            stridx = "%dx%d" % (col_idx, row_idx)
             filename = "%dx%d_%s.%s" % (col, row, maphashcode, ext) 
             filename = os.path.join(root, mapname, strscale, stridx, filename)
-	    return filename
-	elif ver == VER40:
-	    """
-	    // 地图名_图片宽度x图片高度（16进制表示，以像素为单位）作为一级目录；
-	    // 比例尺或者比例尺倒数作为二级目录；
-	    // 中心点所在 region 在 IndexBounds 中的列索引作为三级目录；
-	    // 中心点所在 region 在 IndexBounds 中的行索引作为四级目录；
-	    // 图片在所在 region 中的行索引x列索引_地图散列值.后缀作为文件名。
-	    // 例如：
-	    // Path = China400_100x100/18750000/2/0/0001x0002_C782F04CFIX.png
-	    // {MapName}_{HexPicWidth}x{HexPicHeight}/{Scale}/{RegionYIndex}/{RegionXIndex}/{PicYIndex}x{PicXIndex}_{HashCode}.{ExtName}
-	    // Region 为矩形的多个图片的集合。Region 的索引以 IndexBounds 作为参考进行计算。
-	    """
+            return filename
+        elif ver == VER40:
+            """
+            // 地图名_图片宽度x图片高度(16进制表示,以像素为单位)作为一级目录；
+            // 比例尺或者比例尺倒数作为二级目录;
+            // 中心点所在 region 在 IndexBounds 中的列索引作为三级目录;
+            // 中心点所在 region 在 IndexBounds 中的行索引作为四级目录;
+            // 图片在所在 region 中的行索引x列索引_地图散列值.后缀作为文件名.
+            // 例如:
+            // Path = China400_100x100/18750000/2/0/0001x0002_C782F04CFIX.png
+            // {MapName}_{HexPicWidth}x{HexPicHeight}/{Scale}/{RegionYIndex}/{RegionXIndex}/{PicYIndex}x{PicXIndex}_{HashCode}.{ExtName}
+            // Region 为矩形的多个图片的集合,Region的索引以IndexBounds作为参考进行计算.
+            """
             mapname = "%s_100x100" % mapname
-            strscale = "%d" % int(1/scale)
-	    pass
+            strscale = "%d" % int(0.5+1/scale)
+            glbmkt = srsweb.GlobalMercator()
+            region_x,region_y,col_idx,row_idx = glbmkt.calcReginIndexBySmUGC(col,row,scale)
+            str_region_x,str_region_y = "%d" % region_x, "%d" % region_y 
+            filename = "%04dx%04d_%s.%s" % (row_idx, col_idx, MAP_HASHCODE, ext) 
+            filename = os.path.join(root,mapname,strscale,str_region_y,str_region_x,filename)
+            return filename
 
 # =============================================================================
 
@@ -333,7 +340,7 @@ class smSci3d(smSci):
         self.height=1.0
         self.levels = list()
         self.extName='png'
-	self.lines=scitemplate.sci3d[:] # sic文件内容
+        self.lines=scitemplate.sci3d[:] # sic文件内容
 
     def setLevels(self, level_list):
         self.levels.extend(level_list)
@@ -378,11 +385,11 @@ class smSci3d(smSci):
             if '[Level]' in line:
                 newline = line.replace('[Level]', ('%d' % self.levels[0]))
                 self.lines[i]=newline
-		_idx = 1
-		for j in self.levels[1:]:
+                _idx = 1
+                for j in self.levels[1:]:
                     newline = line.replace('[Level]', ('%d' % j))
                     self.lines.insert(i+_idx,newline)
-		    _idx = _idx+1
+                    _idx = _idx+1
                 return True
 
     def replaceExtName(self):
@@ -447,14 +454,14 @@ class smSci3d(smSci):
         ''' 计算l,t,r,b范围所覆盖的,全球剖分行列号 '''
         level0Res = 180.0/256 # 0层分辨率 
         levelRes = level0Res/(1<<level) # i层分辨率
-	halflevelRes = levelRes*0.5# 挺重要de... 
+        halflevelRes = levelRes*0.5# 挺重要de... 
         '''
         startCol = math.floor((l-(-180.0)) / levelRes / 256)
         endCol = math.ceil((r-(-180.0)) / levelRes / 256)
         startRow = math.floor((90.0-t) / levelRes / 256)
         endRow = math.ceil((90.0-b) / levelRes / 256)
         '''
-	l,t,r,b = l+halflevelRes,t-halflevelRes,r-halflevelRes,b+halflevelRes 
+        l,t,r,b = l+halflevelRes,t-halflevelRes,r-halflevelRes,b+halflevelRes 
         startCol = math.floor((l-(-180.0)) / levelRes / 256)
         endCol = math.floor((r-(-180.0)) / levelRes / 256)
         startRow = math.floor((90.0-t) / levelRes / 256)

@@ -71,18 +71,18 @@ class DownloadFrame(wx.Frame):
         box.Add(txtTileFormat,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         sizerIn.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
 
-	def _add_output_dir(panel, sizer):
-	    label=wx.StaticText(panel, -1, "输出结果位置目录:")
-	    self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(590,-1))
-	    btn_dir = wx.Button(panel, wx.ID_ANY, "目录")
-	    box=wx.BoxSizer(wx.VERTICAL)
-	    box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	    _box=wx.BoxSizer(wx.HORIZONTAL)
-	    _box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	    _box.Add(btn_dir,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	    box.Add(_box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	    sizer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
-	    self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btn_dir)
+        def _add_output_dir(panel, sizer):
+            label=wx.StaticText(panel, -1, "输出结果位置目录:")
+            self.txtOut=textOutPath= wx.TextCtrl(panel, -1, "", size=(590,-1))
+            btn_dir = wx.Button(panel, wx.ID_ANY, "目录")
+            box=wx.BoxSizer(wx.VERTICAL)
+            box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            _box=wx.BoxSizer(wx.HORIZONTAL)
+            _box.Add(textOutPath,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            _box.Add(btn_dir,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            box.Add(_box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            sizer.Add(box,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
+            self.Bind(wx.EVT_BUTTON, self.OnButtonDir, btn_dir)
         _add_output_dir(panel, sizerIn)
 
         def _add_cache_type(panel, sizer):
@@ -235,7 +235,7 @@ class DownloadFrame(wx.Frame):
         if self.txtTileFormat.GetValue()=="":
             logger.info("瓦片格式为空.")
             return False
-	return True
+        return True
 
     def OnButtonDir(self, event):
         dlg = wx.DirDialog(self, APPNAME, style=wx.DD_DEFAULT_STYLE)
@@ -258,11 +258,11 @@ class DownloadFrame(wx.Frame):
             #logger.info("生成二维地图缓存,暂不支持...")
             logger.info("生成二维地图缓存开始...")
             g2s.Download([tskpath]).run() 
-	
-	dlg = wx.MessageDialog(self, '转换完成^_^', APPNAME, wx.OK|wx.ICON_INFORMATION)
+        
+        dlg = wx.MessageDialog(self, '转换完成^_^!', APPNAME, wx.OK|wx.ICON_INFORMATION)
         dlg.ShowModal()
         dlg.Destroy()
-	
+        
 
     def logInit(self):
         """ 初始化日志 """
@@ -353,6 +353,8 @@ class DownloadFrame(wx.Frame):
             strver = 'ver30'
         elif 33==idx:
             strver = 'ver33'
+        elif 40==idx:
+            strver = 'ver40'
         else:
             strver = 'ver31'
 
@@ -382,7 +384,7 @@ class DownloadFrame(wx.Frame):
 def main():
     app = wx.App(True)  # Create a new app, don't redirect stdout/stderr to a window.
     title = "%s v%s" % (APPNAME, tileserver.__version__)
-    app.SetOutputWindowAttributes(title,pos=wx.DefaultPosition,size=(480,200))
+    app.SetOutputWindowAttributes(title,pos=wx.DefaultPosition,size=(580,220))
     frame = DownloadFrame(None, wx.ID_ANY, title) # A Frame is a top-level window.
     frame.Show(True)     # Show the frame.
     app.MainLoop()

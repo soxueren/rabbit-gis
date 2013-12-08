@@ -50,14 +50,14 @@ def load_local_tiles(tiles, outPath):
     gm = srsweb.GlobalMercator(256)
     for level, row, col in tiles:
         if not tile_in_google(row, col, level):
-            continue
+            return {}
         outfile = GOOGLE_TILE_LOCAL_NAME % (level, row, col) 
         fp = os.path.join(outPath, outfile)
         if not os.path.isfile(fp):
-            continue
+            return {}
         tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly)
-        if tmp_ds is None:
-            continue
+        if not tmp_ds:
+            return {}
         r,g,b = [tmp_ds.GetRasterBand(i).ReadAsArray(0, 0, 256, 256, 256, 256) for i in (1,2,3)]
         #tx, ty = gm.TMSTile(col, row, level)
         mem_tiles[(row,col)] = (r,g,b) 
@@ -89,6 +89,10 @@ def download_tile(tiles, outPath, strurl):
             continue
 
         data = _download_one_tile(url)
+        if not data or len(data)<1024:
+            continue
+
+        '''
         if data is None:
             data = _download_one_tile(url) # 第2次下载
         if data is None:
@@ -105,6 +109,7 @@ def download_tile(tiles, outPath, strurl):
         if len(data)<1024:
             #print url, len(data)
             continue # 放弃吧
+        '''
 
         if not os.path.exists(os.path.dirname(fp)):
             os.makedirs(os.path.dirname(fp))
@@ -157,7 +162,7 @@ def save_as_sm_tile(row, col, level, outPath, ext, tiles, haswatermark):
     tile_data = mem_ds.GetRasterBand(1).ReadAsArray(0,0,tx,ty,tx,ty) 
     if haswatermark:
         wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
-	mem_ds.GetRasterBand(1).WriteArray(tile_data)
+        mem_ds.GetRasterBand(1).WriteArray(tile_data)
     
     driv_name = 'PNG' if ext.lower()=='.png' else 'JPEG'
     out_drv = gdal.GetDriverByName(driv_name)
@@ -192,6 +197,8 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
         g_tiles = _calc_g_tile(level,row,col)
         download_tile(g_tiles, tmpPath, url)
         tiles = load_local_tiles(g_tiles, tmpPath)
+        if not tiles:
+            continue
         if level<4: #  八级以下不加水印
             save_as_sm_tile(row, col, level, outPath,ext,tiles, False)
         else:

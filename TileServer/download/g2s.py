@@ -33,7 +33,6 @@ from tileserver.common import comm as cm
 from tileserver.common import license as lic
 
 import tsk
-import scitemplate
 
 #---------------------------------------------------------------------------
 logger = logging.getLogger("g2s")
@@ -62,7 +61,11 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
 
     url = strurl % (random.randint(0,3), col, row, level)
     data = _download_one_tile(url, fp)
-    if data is None:
+    if not data or len(data)<1024:
+        #print url, len(data)
+        return False # 放弃吧
+    '''
+    if not data:
         data = _download_one_tile(url, fp) # 第2次下载
     if data is None:
         data = _download_one_tile(url, fp) # 第3次下载
@@ -78,6 +81,7 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
     if len(data)<1024:
         #print url, len(data)
         return False # 放弃吧
+    '''
 
     if not os.path.exists(os.path.dirname(fp)):
         os.makedirs(os.path.dirname(fp))
@@ -116,7 +120,6 @@ class Download(object):
     def __init__(self, argv):
         self.l, self.t, self.r, self.b = -180.0, 90.0, -180.0, 90.0
         self.out = ""
-        self.tmp = ""
         self.name = ""
         self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
         self.sm_cache_ver = smsci.VER31
@@ -191,30 +194,10 @@ class Download(object):
                 self.sm_cache_ver = smsci.VER21
             elif r=="ver20":
                 self.sm_cache_ver = smsci.VER20
+            elif r=="ver40":
+                self.sm_cache_ver = smsci.VER40
         if 'overwrite' in _tsk:
             self.over_write = True if _tsk['overwrite'].lower()=='true' else False
-
-    def splitByProcess(self, l,t,r,b, startl, endl, mpcnt):
-        """ 根据进程数目,瓦片张数划分合理的任务 """
-        tasks = []
-        mkt = srsweb.GlobalMercator() 
-        for i in range(startl, endl+1):
-            rs,re,cs,ce = mkt.calcRowColByLatLon(l,t,r,b, i) 
-            for row in range(rs, re+1):
-                for col in range(cs, ce+1):
-                    tasks.append((i, row, col))
-
-        totalNums = len(tasks)
-        splitNums = totalNums / mpcnt
-        mplist = []
-        add = 0
-        for i in range(mpcnt):
-            mplist.append( tasks[i*splitNums:(i+1)*splitNums] )
-            add += splitNums
-
-        if add<totalNums:
-            mplist[-1].extend( tasks[add-totalNums:] )
-        return mplist
 
     def save_sci_file(self,l,t,r,b):
         """ 生成SuperMap缓存配置文件 """
@@ -241,7 +224,7 @@ class Download(object):
         _sci.setParams(self.name, mapBnd, idxBnd, self.sm_cache_ver)
         _sci.setWidthHeight(w,h)
         _sci.setScales(scales)
-        _sci.setProj(scitemplate.webmkt_prj)
+        _sci.setProj(smsci.webmkt_prj)
         _sci.setFileFormat("jpg")#self.file_format
         _sci.saveSciFile(out_dir)
 
