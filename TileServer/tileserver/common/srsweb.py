@@ -262,7 +262,7 @@ class GlobalMercator(object):
         return quadKey
 
     def calcRowColByLatLon(self, l,t,r,b, zoom):
-	""" 第zoom级别,范围l,t,r,t所覆盖的google瓦片 """
+        """ 第zoom级别,范围l,t,r,t所覆盖的google瓦片 """
         l, t = self.LatLonToMeters(t, l)
         r, b = self.LatLonToMeters(b, r)
 
@@ -272,6 +272,40 @@ class GlobalMercator(object):
         tx, ty = self.MetersToTile(r, b, zoom)
         ce, re = self.GoogleTile(tx, ty, zoom)
         return (rs, re, cs, ce)
+
+    def calcReginIndexBySmUGC(self, x, y, scale):
+        """ 根据瓦片行列号(Google)计算SM中iServer 6R缓存策略索引编号 """
+        def _zoom(scale):
+            for z in xrange(21):
+                if scale==self.Scale(z):
+                    return z
+            return None
+
+        zoom = _zoom(scale)
+        if zoom is None:
+            logger.error("比例尺%lf,未能转换对应层级")
+
+        tile_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
+        temp_cnt = tile_cnt
+        _level = 0
+        while(temp_cnt):
+            temp_cnt = temp_cnt>>1
+            _level = _level+1
+        
+        if 1<<(_level-1) == tile_cnt:
+            _level = _level-1
+            if not _level:
+                _level = 1
+        
+        level = (_level+_level) / 3
+        if not level:
+            level = 1
+        
+        _level_cnt = (1<<_level) / (1<<level)
+        region_idx_x,region_idx_y = x/_level_cnt, y/_level_cnt
+        x_in_region, y_in_region = x%_level_cnt, y%_level_cnt
+
+        return (region_idx_x,region_idx_y, x_in_region, y_in_region)
 
     def calcSmCellIndex(self, x, y, scale):
         """ 根据瓦片行列号(Google)计算SM中IS.NET缓存策略索引编号 """
