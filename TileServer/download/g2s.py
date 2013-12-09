@@ -255,7 +255,7 @@ class Download(object):
         mplist = _split_by_process(sm_tiles, self.mpcnt)
 
         logger.info(38 * "-")
-        logger.info("地理范围:左上右下(%f,%f,%f,%f)" % (l,t,r,b))
+        logger.info("地理范围:左(%f),上(%f),右(%f),下(%f)" % (l,t,r,b))
         logger.info("下载层级:(%s), 瓦片总数%d张." % (','.join(map(str,self.levels)), len(sm_tiles)))
         
         plist = []

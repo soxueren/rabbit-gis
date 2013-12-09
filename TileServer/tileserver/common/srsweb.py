@@ -307,7 +307,7 @@ class GlobalMercator(object):
 
         return (region_idx_x,region_idx_y, x_in_region, y_in_region)
 
-    def calcSmCellIndex(self, x, y, scale):
+    def calcReginIndexByIsDotNET(self, x, y, scale):
         """ 根据瓦片行列号(Google)计算SM中IS.NET缓存策略索引编号 """
         def _zoom(scale):
             for z in xrange(21):
@@ -320,13 +320,13 @@ class GlobalMercator(object):
 
         cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
         cell_unit = 400
-        if (cell_cnt/20000.0)*(cell_cnt/20000.0) > cell_unit*cell_unit:
+        if ((cell_cnt/20000.0)*(cell_cnt/20000.0)) > cell_unit*cell_unit:
             cell_unit = 20000
-        elif (cell_cnt/20000.0)*(cell_cnt/20000.0) > 100*100:
+        elif ((cell_cnt/20000.0)*(cell_cnt/20000.0)) > 100*100:
             cell_unit = 20000
         elif cell_cnt>20000:
-            while((cell_cnt/cell_unit)*(cell_cnt/cell_unit) > (50*50)):
-                cell_unit *= 2
+            while(((cell_cnt/cell_unit)*(cell_cnt/cell_unit)) > (50*50)):
+                cell_unit =  cell_unit*2
         else:
             cell_unit = 400 
         return x/cell_unit, y/cell_unit

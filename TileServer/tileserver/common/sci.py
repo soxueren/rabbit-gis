@@ -85,6 +85,10 @@ class smSci(object):
             self.lines = scitemplate.sci31[:] 
             self.sci_scale = scitemplate.sci31_scale
             self.sciver = VER21
+        elif sciVer == VER20:
+            self.lines = scitemplate.sci31[:] 
+            self.sci_scale = scitemplate.sci31_scale
+            self.sciver = VER21
 
     def setFileFormat(self, ext):
         ext = ext[-3:].lower()
@@ -142,6 +146,7 @@ class smSci(object):
             fileName = self.mapName + self.sciTmpFile[self.sciTmpFile.find('.'):]
             folder = "%s_100x100" % self.mapName
         desSciPath = os.path.join(sciPath, folder, fileName)
+	print self.sciver, desSciPath 
         outPath = os.path.dirname(desSciPath)
         if not os.path.exists(outPath): 
             os.makedirs(outPath)
@@ -299,9 +304,10 @@ class smSci(object):
             中心点近似值 + 地图散列值 + 后缀作为文件名
             """
             glbmkt = srsweb.GlobalMercator()
-            col_idx, row_idx = glbmkt.calcSmCellIndex(col, row, scale)
+            col_idx, row_idx = glbmkt.calcReginIndexByIsDotNET(col, row, scale)
             mapname = "%s_100x100" % mapname
-            strscale = "%d" % int(0.5+1/scale)
+            #strscale = "%d" % int(0.5+1/scale)
+            strscale = "%d" % int(1/scale)
             maphashcode = MAP_HASHCODE 
             stridx = "%dx%d" % (col_idx, row_idx)
             filename = "%dx%d_%s.%s" % (col, row, maphashcode, ext) 
