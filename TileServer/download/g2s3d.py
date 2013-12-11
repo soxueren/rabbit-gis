@@ -184,7 +184,7 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
                 tiles.append((sml+1, row, col))
         return tiles
 
-    ext = '.png' if tile_ext.lower()=='png' else '.jpg'
+    ext = '.png' if tile_ext[-3:].lower()=='png' else '.jpg'
     gm = srsweb.GlobalMercator(256)
 
     for level, row, col in bboxs:
@@ -199,7 +199,7 @@ def multi_process_fun(bboxs, outPath, tile_ext, tmpPath, pindex, haswatermark,ur
         tiles = load_local_tiles(g_tiles, tmpPath)
         if not tiles:
             continue
-        if level<4: #  八级以下不加水印
+        if level<4: #  x级以下不加水印
             save_as_sm_tile(row, col, level, outPath,ext,tiles, False)
         else:
             save_as_sm_tile(row, col, level, outPath,ext,tiles, haswatermark)

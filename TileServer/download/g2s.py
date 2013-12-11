@@ -90,7 +90,19 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
         myfile.write(data)
         myfile.close()
 
-    if level>3 and haswatermark:# 加水印
+    if ext[-3:].lower()=='png':
+	tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly)
+        mem_drv = gdal.GetDriverByName('MEM')
+        mem_ds = mem_drv.Create('', tmp_ds.RasterXSize, tmp_ds.RasterYSize, 3)# 输出固定为24位png或jpg
+        for i in range(1, 4):
+            tile_data = tmp_ds.GetRasterBand(i).ReadAsArray(0,0,tmp_ds.RasterXSize,tmp_ds.RasterYSize,tmp_ds.RasterXSize,tmp_ds.RasterYSize) 
+            mem_ds.GetRasterBand(i).WriteArray(tile_data)
+        out_drv = gdal.GetDriverByName("PNG")
+        del tmp_ds
+        out_drv.CreateCopy(fp, mem_ds, strict=0)
+        del out_drv, mem_ds, mem_drv
+
+    if level>5 and haswatermark:# 加水印
         tmp_ds = gdal.Open(fp, gdal.GA_ReadOnly) # 假定输入数据为24位png或jpg
         ts  = tmp_ds.RasterXSize
 
@@ -102,7 +114,7 @@ def download_tile(mapname, level, row, col, out_dir, ext, strurl, ver, haswaterm
                 wmk.printWatermark(tile_data, wmk.buf_xsize, wmk.buf_ysize, wmk.buf_tile_server)
             mem_ds.GetRasterBand(i).WriteArray(tile_data)
 
-        driv_name = 'PNG' if ext[-3:].lower()=='.png' else 'JPEG'
+        driv_name = 'PNG' if ext[-3:].lower()=='png' else 'JPEG'
         out_drv = gdal.GetDriverByName(driv_name)
         del tmp_ds
         out_drv.CreateCopy(fp, mem_ds, strict=0)
@@ -226,7 +238,7 @@ class Download(object):
         _sci.setWidthHeight(w,h)
         _sci.setScales(scales)
         _sci.setProj(scitemplate.webmkt_prj)
-        _sci.setFileFormat("jpg")#self.file_format
+        _sci.setFileFormat(self.file_format)
         _sci.saveSciFile(out_dir)
 
     def run(self):
@@ -265,7 +277,7 @@ class Download(object):
             bboxs = mplist[i]
             if not bboxs:
                 continue
-            ext = "jpg" # 目前下载下来的数据直接为jpg,先不用self.file_format
+            ext = self.file_format
             p = mp.Process(target=multi_process_func, args=(bboxs,self.name, self.out, \
                 ext,self.sm_cache_ver,self.url,self.haswatermark, self.over_write))
             plist.append( (p, len(bboxs)) )

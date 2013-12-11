@@ -19,7 +19,7 @@ out = c:\CacheData
 name = SuperMap
 
 # 瓦片格式[jpg, png]
-format = png
+format = jpg 
 
 # SuperMap地图缓存版本[ver31,ver30,ver21,ver20]
 # ver33 适用于三维场景缓存
