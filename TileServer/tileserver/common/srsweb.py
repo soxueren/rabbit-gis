@@ -318,18 +318,45 @@ class GlobalMercator(object):
         if zoom is None:
             logger.error("比例尺%lf,未能转换对应层级")
 
-        cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
-        cell_unit = 400
-        if ((cell_cnt/20000.0)*(cell_cnt/20000.0)) > cell_unit*cell_unit:
-            cell_unit = 20000
-        elif ((cell_cnt/20000.0)*(cell_cnt/20000.0)) > 100*100:
-            cell_unit = 20000
-        elif cell_cnt>20000:
-            while(((cell_cnt/cell_unit)*(cell_cnt/cell_unit)) > (50*50)):
-                cell_unit =  cell_unit*2
+        l,t = self.LatLonToMeters(90,-180)
+        r,b = self.LatLonToMeters(-90,180)
+        idx_bnd_width = r-l
+        idx_bnd_height = t-b
+
+        cell_bnd = self.TileBounds(x, y, zoom)
+        cell_bnd_width = cell_bnd[2]-cell_bnd[0]
+        cell_bnd_height = cell_bnd[1]-cell_bnd[3]
+        cell_center_x = cell_bnd[0]+cell_bnd_width*0.5
+        cell_center_y = cell_bnd[1]-cell_bnd_height*0.5
+
+        map_ratio_x = idx_bnd_width/20000.0
+        pix_ratio_x = cell_bnd_width/256*100
+
+        map_ratio_y = idx_bnd_height/20000.0
+        pix_ratio_y = cell_bnd_height/256*100
+
+        ratio_x = min(map_ratio_x, pix_ratio_x)
+        ratio_y = min(map_ratio_y, pix_ratio_y)
+
+        center_idx_x = int((cell_center_x-l) / ratio_x)
+        center_idx_y = int((cell_center_y-b) / ratio_y)
+        
+        cell_cnt_x = int(idx_bnd_width/ratio_x)
+        cell_cnt_y = int(idx_bnd_height/ratio_y)
+
+        #cell_cnt = 2**zoom # 对应zoom级别行列上的瓦片数目
+        cell_unit_x,cell_unit_y = 400,400
+        if ((cell_cnt_x/20000.0)*(cell_cnt_y/20000.0)) > 160000:
+            cell_unit_x, cell_unit_y = 20000, 20000
+        elif ((cell_cnt_x/20000.0)*(cell_cnt_y/20000.0)) > 100*100:
+            cell_unit_x, cell_unit_y = 20000, 20000
+        elif cell_cnt_x>20000 or cell_cnt_y>20000:
+            while ((cell_cnt_x/cell_unit_x)*(cell_cnt_y/cell_unit_y)) > (50*50):
+                cell_unit_x =  cell_unit_x*2
+                cell_unit_y =  cell_unit_y*2
         else:
-            cell_unit = 400 
-        return x/cell_unit, y/cell_unit
+            cell_unit_x, cell_unit_y = 400,400 
+        return center_idx_x/cell_unit_x,center_idx_y/cell_unit_y,center_idx_x,center_idx_y
 
 #---------------------
 
