@@ -304,13 +304,13 @@ class smSci(object):
             中心点近似值 + 地图散列值 + 后缀作为文件名
             """
             glbmkt = srsweb.GlobalMercator()
-            col_idx, row_idx = glbmkt.calcReginIndexByIsDotNET(col, row, scale)
+            col_idx, row_idx,cell_idx_x,cell_idx_y = glbmkt.calcReginIndexByIsDotNET(col, row, scale)
             mapname = "%s_100x100" % mapname
             #strscale = "%d" % int(0.5+1/scale)
             strscale = "%d" % int(1/scale)
             maphashcode = MAP_HASHCODE 
             stridx = "%dx%d" % (col_idx, row_idx)
-            filename = "%dx%d_%s.%s" % (col, row, maphashcode, ext) 
+            filename = "%dx%d_%s.%s" % (cell_idx_x,cell_idx_y, maphashcode, ext) 
             filename = os.path.join(root, mapname, strscale, stridx, filename)
             return filename
         elif ver == VER40:
