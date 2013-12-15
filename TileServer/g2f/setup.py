@@ -18,7 +18,7 @@ buildOpts = dict(
         includes=['numpy'],
         excludes=['Tkinter'],
         #zip_includes=['smSci/sci3d.sci3d'],
-        include_files=['logo.png','icon.ico','g.tsk','g2s.cfg','gui.cfg','使用说明.pdf'],
+        include_files=['logo.png','icon.ico','g.tsk','g2f.cfg','gui.cfg','使用说明.pdf'],
         )
 
 exeTables = [Executable("gui.py", targetName='g2f.exe', icon='icon.ico',base=base),]

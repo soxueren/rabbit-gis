@@ -97,11 +97,12 @@ def download_g_tiles(tile_list, out_dir, strurl, over_write, print_watermark):
         outfile = GOOGLE_TILE_LOCAL_NAME % (level, row, col) 
         fp = os.path.join(out_dir, outfile)
 
-        if os.path.isfile(fp):
+        if os.path.isfile(fp) and os.path.isfile(fp[:-3]+'wld'):
             if over_write:
                 os.remove(fp)
             else:
                 continue
+
         data = _download_one_tile(url)
         if not data or len(data)<1024:
             continue
@@ -125,7 +126,7 @@ class google2file(object):
         self.out = ""
         self.name = ""
         self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
-        self.file_format = 'jpg'
+        self.file_format = 'tif'
         self.levels = []
         self.haswatermark = not self.__verify_license()
         self.__config_init()
@@ -268,25 +269,23 @@ class google2file(object):
         rs,re,cs,ce = tms.calcRowColByLatLon(l,t,r,b, level) 
         total_pix_w, total_pix_h = (ce-cs+1)*256, (re-rs+1)*256
         out_w, out_h = self.width, self.height
-        fcnt_col, fcnt_row = int(math.ceil(total_pix_w*0.1/out_w)), int(math.ceil(total_pix_h*0.1/out_h))
-        print rs,re,cs,ce
-        print fcnt_col, fcnt_row 
-        print out_w, out_h
+        fcnt_col, fcnt_row = int(math.ceil(total_pix_w*1.0/out_w)), int(math.ceil(total_pix_h*1.0/out_h))
         ftile_list = [[] for i in range(fcnt_row*fcnt_col)]
         for row in range(rs, re+1):
-            _row = (row-rs)*256/out_w
+            _row = (row-rs)*256/out_h
             for col in range(cs, ce+1):
-                _col = (col-cs)*256/out_h 
+                _col = (col-cs)*256/out_w
                 _idx = fcnt_col * _row + _col
                 ftile_list[_idx].append((row, col))
 
         out_dir = self.out
         tmp_dir = os.path.join(out_dir, TEMP_DIR)
         cmd_mgr = os.path.join(cm.app_path(), 'gdal_merge.py')
+	ext = 'tif' if self.file_format.lower()=='tif' else 'img'
 
         for i in range(len(ftile_list)):
             tile_list = ftile_list[i]
-            _out_file = os.path.join(out_dir, "level%d_%d.tif" % (level, i))
+            _out_file = os.path.join(out_dir, "level%d_%d.%s" % (level, i, ext))
             _in_files = []
 
             for (row,col) in tile_list:
@@ -297,18 +296,46 @@ class google2file(object):
             cmd_out_file = '%s' % _out_file
             cmd_in_files = ' '.join(_in_files)
             cmd = '%s -o %s %s' % (cmd_mgr, cmd_out_file, cmd_in_files)
+	    #print cmd
             argv = cmd.split()
             gdal_merge.main(argv) 
             logger.info("第%d个文件转换完成, %s" % (i+1,cmd_out_file))
+
+    #########################################################################
+    def check_tiles(self):
+	""" 检查下载瓦片坐标完整性 """
+        l,t,r,b,level = self.l,self.t,self.r,self.b, self.levels
+        tms = srsweb.GlobalMercator() 
+        rs,re,cs,ce = tms.calcRowColByLatLon(l,t,r,b, level) 
+        out_dir = self.out
+        tmp_dir = os.path.join(out_dir, TEMP_DIR)
+	_flag = True
+        for row in range(rs, re+1):
+            for col in range(cs, ce+1):
+                _path = os.path.join(tmp_dir, GOOGLE_TILE_LOCAL_NAME % (level,row,col))
+		_jpg = os.path.isfile(_path) 
+		_wld = os.path.isfile(_path[:-3]+'wld')
+		if _jpg and _wld:
+		    continue
+		else:
+		    if not _jpg: 
+			logger.info("瓦片未找到,%s" % _path)
+		    elif not _wld: 
+			logger.info("瓦片未找到,%s" % _path)
+		    _flag = False
+	return _flag
 
     #########################################################################
     def run(self):
 
         logger.info(38 * "-")
         self.download()
-        logger.info("下载瓦片完成.")
-        self.merge()
+	if self.check_tiles():
+	    logger.info("下载瓦片完成.")
+	else:
+	    logger.info("下载瓦片未完成,请继续下载.")
 
+        self.merge()
         logger.info("End, All done.")
         logger.info(38 * "=")
 
