@@ -1,0 +1,27 @@
+[task]
+# 出图范围(英文逗号隔开),格式为:left,top,right,bottom
+#bbox = -180,90,180,-90
+bbox = 73.66,53.55,135.05,3.86
+
+# 地图类型
+# satellite(默认),用于指定卫星图片;
+# roadmap, 用于指定标准路线图图片, 如 Google 地图网站常规所示;
+# terrain, 用于指定自然地形地图图片,其中会显示地形和植被;
+# hybrid, 用于指定卫星图和路线图的结合图片,其中卫星图片上会显示主要街道和地点名称的透明图层.
+maptype = satellite 
+
+# 级别列表(英文逗号隔开), 级别取值范围为[0,20]
+level = 2 
+
+# 输出结果位置全路径
+out = c:\CacheData 
+
+# 结果文件宽度,高度
+width = 2000
+height = 2000
+
+# 瓦片格式[tif, img]
+format = tif 
+
+# 是否覆盖已生成缓存,默认为不覆盖
+overwrite = true 
