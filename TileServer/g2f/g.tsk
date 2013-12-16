@@ -24,4 +24,4 @@ height = 2000
 format = tif 
 
 # 是否覆盖已生成缓存,默认为不覆盖
-overwrite = true 
+overwrite = false 

@@ -128,11 +128,11 @@ class google2file(object):
         self.url = "http://mt%d.google.cn/vt/lyrs=s@132&x=%d&y=%d&z=%d" 
         self.file_format = 'tif'
         self.levels = []
+        self.mpcnt = 1
         self.haswatermark = not self.__verify_license()
         self.__config_init()
         self.__argparse_init(argv)
         self.__parse_task()
-        self.mpcnt = 1
 
     #########################################################################
     def __argparse_init(self,argv):
@@ -281,7 +281,7 @@ class google2file(object):
         out_dir = self.out
         tmp_dir = os.path.join(out_dir, TEMP_DIR)
         cmd_mgr = os.path.join(cm.app_path(), 'gdal_merge.py')
-	ext = 'tif' if self.file_format.lower()=='tif' else 'img'
+        ext = 'tif' if self.file_format.lower()=='tif' else 'img'
 
         for i in range(len(ftile_list)):
             tile_list = ftile_list[i]
@@ -296,48 +296,66 @@ class google2file(object):
             cmd_out_file = '%s' % _out_file
             cmd_in_files = ' '.join(_in_files)
             cmd = '%s -o %s %s' % (cmd_mgr, cmd_out_file, cmd_in_files)
-	    #print cmd
+            #print cmd
             argv = cmd.split()
             gdal_merge.main(argv) 
-            logger.info("第%d个文件转换完成, %s" % (i+1,cmd_out_file))
+            logger.info("第%d个文件拼接完成, %s" % (i+1,cmd_out_file))
 
     #########################################################################
     def check_tiles(self):
-	""" 检查下载瓦片坐标完整性 """
+        """ 检查下载瓦片坐标完整性 """
         l,t,r,b,level = self.l,self.t,self.r,self.b, self.levels
         tms = srsweb.GlobalMercator() 
         rs,re,cs,ce = tms.calcRowColByLatLon(l,t,r,b, level) 
         out_dir = self.out
         tmp_dir = os.path.join(out_dir, TEMP_DIR)
-	_flag = True
+        _flag = True
         for row in range(rs, re+1):
             for col in range(cs, ce+1):
                 _path = os.path.join(tmp_dir, GOOGLE_TILE_LOCAL_NAME % (level,row,col))
-		_jpg = os.path.isfile(_path) 
-		_wld = os.path.isfile(_path[:-3]+'wld')
-		if _jpg and _wld:
-		    continue
-		else:
-		    if not _jpg: 
-			logger.info("瓦片未找到,%s" % _path)
-		    elif not _wld: 
-			logger.info("瓦片未找到,%s" % _path)
-		    _flag = False
-	return _flag
+                _jpg = os.path.isfile(_path) 
+                _wld = os.path.isfile(_path[:-3]+'wld')
+                if _jpg and _wld:
+                    continue
+                else:
+                    if not _jpg: 
+                        logger.info("瓦片未找到,%s" % _path)
+                    elif not _wld: 
+                        logger.info("瓦片未找到,%s" % _path)
+                    _flag = False
+        return _flag
 
     #########################################################################
     def run(self):
 
         logger.info(38 * "-")
+        t1 = time.time()
         self.download()
-	if self.check_tiles():
-	    logger.info("下载瓦片完成.")
-	else:
-	    logger.info("下载瓦片未完成,请继续下载.")
+        t2 = time.time()
+        h,m,s = google2file.calc_cross_time(t1,t2)
 
+        if self.check_tiles():
+            logger.info("下载完成,耗时:%dh, %dm, %.2lfs" % (h,m,s))
+        else:
+            logger.info("下载瓦片未完成,请继续下载.")
+
+        t3 = time.time()
         self.merge()
-        logger.info("End, All done.")
+        t4 = time.time()
+        h,m,s = google2file.calc_cross_time(t3,t4)
+        logger.info("拼接完成,耗时:%dh, %dm, %.2lfs" % (h,m,s))
+
+        h,m,s = google2file.calc_cross_time(t1,t4)
+        logger.info("全部完成,总耗时:%dh, %dm, %.2lfs" % (h,m,s))
         logger.info(38 * "=")
+
+    @staticmethod
+    def calc_cross_time(t1, t2):
+        """ t1,t2分别为开始,结束时间 """
+        s = t2-t1
+        h,m = int(s/60/60), int(s/60)
+        m,s = m-h*60, s-h*60-m*60
+        return h,m,s
 
 # =============================================================================
 def log_init():
