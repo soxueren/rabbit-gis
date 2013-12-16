@@ -268,17 +268,20 @@ class DownloadFrame(wx.Frame):
         logger.addHandler(ch)
 
     def load_default_task(self):
-        path = self.config_path()
-        if not os.path.isfile(path):
-            path = os.path.join(cm.app_path(), 'g.tsk')
-        if not os.path.isfile(path):
-            logger.error("No file found, %s" % path)
-            return None
+	def _load_tsk(path):
+	    _tsk = cfg.from_file(path, 'task')
+	    if not _tsk:
+		logger.error("文件内容错误, %s" % path)
+		return None
+	    return _tsk
 
-	_tsk = cfg.from_file(path, 'task')
-	if not _tsk:
-            logger.error("文件内容错误, %s" % path)
-	    return None
+        path = self.config_path()
+        if os.path.isfile(path):
+	    _tsk = _load_tsk(path) 
+
+        if not _tsk:
+            path = os.path.join(cm.app_path(), 'g.tsk')
+	    _tsk = _load_tsk(path) 
 
         if 'bbox' in _tsk:
             self.txt_bbox.AppendText(_tsk['bbox'].strip())

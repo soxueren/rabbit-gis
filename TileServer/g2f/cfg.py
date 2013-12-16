@@ -4,13 +4,20 @@
 import os
 import sys
 import ConfigParser
+import logging
+
+logger = logging.getLogger("")
 
 def from_file(_path, _section):
     if not os.path.isfile(_path):
         return None
     _items = {}
     cfg = ConfigParser.ConfigParser()
-    cfg.read(_path)
+    try:
+	cfg.read(_path)
+    except ConfigParser.Error:
+	logger.error(ConfigParser.Error.message)
+	return None
     if cfg.has_section(_section):
         for k,v in cfg.items(_section):
             _items[k] = v
