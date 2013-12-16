@@ -187,6 +187,7 @@ class GlobalMercator(object):
 
     def TileBounds(self, tx, ty, zoom):
         "Returns bounds of the given tile in EPSG:900913 coordinates"
+        "tx,ty为TMS格式索引"
 
         minx, miny = self.PixelsToMeters( tx*self.tileSize, ty*self.tileSize, zoom )
         maxx, maxy = self.PixelsToMeters( (tx+1)*self.tileSize, (ty+1)*self.tileSize, zoom )
