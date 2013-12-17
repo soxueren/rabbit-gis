@@ -14,11 +14,11 @@ maptype = satellite
 level = 2 
 
 # 输出结果位置全路径
-out = cachedata 
+out = c:\CacheData 
 
 # 结果文件宽度,高度
-width = 2000
-height = 2000
+width = 25600 
+height = 25600
 
 # 瓦片格式[tif, img]
 format = tif 
