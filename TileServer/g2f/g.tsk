@@ -14,7 +14,7 @@ maptype = satellite
 level = 2 
 
 # 输出结果位置全路径
-out = c:\CacheData 
+out = cachedata 
 
 # 结果文件宽度,高度
 width = 2000

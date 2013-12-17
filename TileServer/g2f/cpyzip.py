@@ -18,7 +18,7 @@ def copyfiles(app_name):
             src = os.path.join(root, name)
             dst = src.replace(pf,pt)
             if not os.path.exists(os.path.dirname(dst)):
-                os.makedirs(os.path.app_name(dst))
+                os.makedirs(os.path.dirname(dst))
             print 'copied ', src 
             shutil.copy2(src,dst)
 
