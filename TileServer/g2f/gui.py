@@ -49,7 +49,7 @@ class DownloadFrame(wx.Frame):
         _line_size = 690
 
         self.txt_bbox = txtin = wx.TextCtrl(panel, -1, "", size=(_text_size,-1))
-        label=wx.StaticText(panel, -1, "谷歌地图经纬度范围, 格式为(英文逗号隔开):left,top,right,bottom, 单位为度, 例如: -180,90,180,-90")
+        label=wx.StaticText(panel, -1, "谷歌地图经纬度范围, 格式为(英文逗号隔开):最小经度,最大维度,最大经度,最小维度, 例如: -180,90,180,-90")
         box=wx.BoxSizer(wx.VERTICAL)
         box.Add(label,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
         box.Add(txtin,0, wx.ALL|wx.ALIGN_LEFT|wx.ALIGN_BOTTOM, 5) 
@@ -275,13 +275,11 @@ class DownloadFrame(wx.Frame):
 		return None
 	    return _tsk
 
-        path = self.config_path()
-        if os.path.isfile(path):
-	    _tsk = _load_tsk(path) 
-
+        _path = self.path_by_config()
+	_tsk = _load_tsk(_path) if os.path.isfile(_path) else None
         if not _tsk:
-            path = os.path.join(cm.app_path(), 'g.tsk')
-	    _tsk = _load_tsk(path) 
+            _path = os.path.join(cm.app_path(), 'g.tsk')
+	    _tsk = _load_tsk(_path) 
 
         if 'bbox' in _tsk:
             self.txt_bbox.AppendText(_tsk['bbox'].strip())
@@ -334,7 +332,7 @@ class DownloadFrame(wx.Frame):
 	_write_tsk_config(_path)
 	return _path
 
-    def config_path(self):
+    def path_by_config(self):
         path = os.path.join(cm.app_path(), 'gui.cfg')
         config = ConfigParser.ConfigParser()
         config.read(path)
