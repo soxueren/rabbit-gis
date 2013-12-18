@@ -293,7 +293,7 @@ class google2file(object):
                 if os.path.isfile(_path):
                     _in_files.append('%s' % _path)
 
-            if not _in_filles:
+            if not _in_files:
                 logger.info("没有找到要拼接的文件.")
                 return None
             cmd_out_file = '%s' % _out_file
